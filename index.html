@@ -3,205 +3,487 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adeeb's Nexus</title>
+    <title>Corona Path | Adeeb's Nexus</title>
+    <!-- Premium Fonts Import -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
     <style>
-        /* Base Setup & Premium Typography */
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background-color: #030712; color: #f3f4f6; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
-        
-        /* Interactive Background Canvas */
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        :root {
+            /* Design System Tokens */
+            --bg-color: #131313;
+            --surface: #131313;
+            --surface-container: #201f1f;
+            --surface-glass: rgba(26, 26, 26, 0.6);
+            --corona-gold: #ffd700;
+            --primary-fixed: #ffe16d;
+            --solar-white: #ffffff;
+            --on-surface-variant: #d0c6ab;
+            --text-muted: #999077;
+            --radius-default: 0.5rem;
+            --radius-xl: 1.5rem;
+            --radius-full: 9999px;
+        }
 
-        /* Main Glass Container */
-        .wrapper { position: relative; z-index: 2; width: 100%; max-width: 1200px; padding: 40px 20px; animation: fadeIn 1.2s ease-out; }
-        
-        /* Bento Grid Setup */
-        .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        
-        /* Premium Glowing Glassmorphism Cards */
-        .glass-card { 
-            background: rgba(15, 23, 42, 0.45); 
-            border: 1px solid rgba(255, 255, 255, 0.04); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px; 
-            padding: 36px; 
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--solar-white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Layout Structure */
+        .container {
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 64px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+        }
+
+        /* Navigation Minimalist */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px 0;
+        }
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+        .nav-links a {
+            color: var(--on-surface-variant);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--corona-gold); }
+
+        /* HERO SECTION (msedge_rUpVhkBFcJ.png) */
+        .hero {
+            text-align: center;
+            padding: 120px 0 80px 0;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #131313 70%);
             position: relative;
         }
-        .glass-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255,255,255,0.06), transparent 40%);
-            border-radius: 24px; opacity: 0; transition: opacity 0.5s; pointer-events: none;
-        }
-        .glass-card:hover::before { opacity: 1; }
-        .glass-card:hover { transform: translateY(-6px) scale(1.01); border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px -10px rgba(56, 189, 248, 0.15); }
-        
-        /* Card Sizes */
-        .col-span-2 { grid-column: span 2; }
-        .row-span-2 { grid-row: span 2; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        /* Typography Elements */
-        h1 { font-size: 3rem; font-weight: 700; letter-spacing: -0.05em; margin-bottom: 12px; background: linear-gradient(135deg, #fff 30%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        h2 { font-size: 1.6rem; font-weight: 600; color: #f3f4f6; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; letter-spacing: -0.02em; }
-        p { color: #94a3b8; line-height: 1.7; font-size: 1rem; font-weight: 300; }
-        
-        /* Premium Action Buttons */
-        .action-btn { 
-            position: relative; display: inline-block; width: 100%; text-align: center; padding: 16px; 
-            background: #fff; color: #030712; font-weight: 600; text-decoration: none; border-radius: 14px; 
-            margin-top: 24px; overflow: hidden; transition: all 0.3s ease; border: 1px solid transparent;
-        }
-        .action-btn:hover { background: transparent; color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 0 30px rgba(255,255,255,0.1); }
-        
-        .action-btn-secondary { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: #e2e8f0; }
-        .action-btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.1); }
 
-        /* Status Badge */
-        .status { display: inline-flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); color: #4ade80; padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
-        .pulse-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+        .hero-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            letter-spacing: 0.1em;
+            color: var(--corona-gold);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            display: inline-block;
+        }
 
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 48px;
+            color: var(--solar-white);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 42px; }
+        }
+
+        /* Countdown Grid Component */
+        .countdown-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto 48px auto;
+        }
+
+        .countdown-card {
+            background: var(--surface-container);
+            border-radius: var(--radius-default);
+            padding: 24px;
+            text-align: center;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .countdown-num {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+        .countdown-card.active .countdown-num {
+            color: var(--corona-gold);
+        }
+
+        .countdown-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--on-surface-variant);
+            margin-top: 8px;
+        }
+
+        /* Button Architecture */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
         
-        @media (max-width: 900px) { .bento-grid { grid-template-columns: 1fr; } .col-span-2, .row-span-2 { grid-column: span 1; grid-row: span 1; } }
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 16px 32px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--corona-gold);
+            color: #000000;
+            border: 1px solid var(--corona-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 35px rgba(255, 215, 0, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--solar-white);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--solar-white);
+        }
+
+        /* THE PATH OF TOTALITY GRAPHIC NODE (msedge_HuaWccIqPB.png) */
+        .path-section {
+            padding: 100px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 60px auto;
+        }
+
+        .section-header h2 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* Visual Canvas Tracking Simulation */
+        .map-canvas-container {
+            background: #0e0e0e;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-xl);
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Procedural Grid Background */
+        .map-canvas-container::before {
+            content: ''; position: absolute; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+
+        .tracking-arc {
+            position: relative;
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--corona-gold), transparent);
+            box-shadow: 0 0 15px var(--corona-gold);
+            animation: pulseArc 3s infinite alternate;
+        }
+
+        .map-node {
+            position: absolute;
+            background: #000;
+            border: 2px solid var(--corona-gold);
+            padding: 6px 12px;
+            border-radius: var(--radius-default);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        /* THREE-COLUMN SAFETY GRID (msedge_pWoN8U7uQo.png) */
+        .grid-3col {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-bottom: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-3col { grid-template-columns: 1fr; }
+        }
+
+        /* Glassmorphism Card Spec Execution */
+        .glass-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-default);
+            padding: 40px;
+            /* Lit from top-left, shadowed bottom-right */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+            border-right: 1px solid rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--corona-gold);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .glass-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .glass-card p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        /* EXPERIENCE THE CORONA ROW SPLIT */
+        .split-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+            background: #1a1a1a;
+            padding: 64px;
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        @media (max-width: 768px) {
+            .split-row { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+        }
+
+        /* Dynamic CSS Eclipse Representation */
+        .eclipse-viewport {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+
+        .eclipse-corona-glow {
+            width: 180px;
+            height: 180px;
+            background: var(--surface);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.4),
+                        0 0 120px 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .eclipse-core {
+            width: 100%;
+            height: 100%;
+            background: #050505;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .split-content h2 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+
+        .split-content p {
+            color: var(--text-muted);
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 80px 0 40px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        @keyframes pulseArc {
+            from { opacity: 0.6; box-shadow: 0 0 15px var(--corona-gold); }
+            to { opacity: 1; box-shadow: 0 0 30px var(--corona-gold); }
+        }
     </style>
 </head>
 <body>
 
-    <!-- This canvas runs the interactive 3D particle constellation lines background -->
-    <canvas id="bg-canvas"></canvas>
+    <div class="container">
+        <!-- Structural Header -->
+        <nav>
+            <div class="logo">ECLIPSE // TOTALITY</div>
+            <div class="nav-links">
+                <a href="#path">MAP</a>
+                <a href="#safety">SAFETY</a>
+                <a href="#experience">EXPERIENCE</a>
+            </div>
+        </nav>
+    </div>
 
-    <div class="wrapper">
-        <div class="bento-grid">
+    <!-- HERO MODULE -->
+    <section class="hero">
+        <div class="container">
+            <span class="hero-badge">Next Totality Countdown</span>
+            <h1>Enter the Shadow.</h1>
             
-            <!-- MAIN HUB HERO CARD -->
-            <div class="glass-card col-span-2">
-                <div class="status"><div class="pulse-dot"></div>Adeeb's Nexus Online</div>
-                <h1>adeebmuh.me</h1>
-                <p>Welcome to a premium, AI-orchestrated gateway. This matrix is custom configured as a private digital launchpad linking ultra-smooth media playback nodes, fast-access secure cloud storage vaults, and high-performance computational gaming sandboxes.</p>
-            </div>
-
-            <!-- PREMIUM STREAM NODE -->
-            <div class="glass-card">
-                <h2>🎬 Cinema Vault</h2>
-                <p>Launch high-speed tracking arrays and streaming servers directly inside a zero-latency modern media player node.</p>
-                <a href="#" class="action-btn-secondary">Initialize Player</a>
-            </div>
-
-            <!-- SECURE DIRECTORY REPOSITORY -->
-            <div class="glass-card row-span-2">
-                <div>
-                    <h2>📁 Cloud Directory</h2>
-                    <p>Encrypted personal file infrastructure hosting shared root directories, developer build outputs, and secure archive payloads.</p>
+            <!-- Real-time Mathematical Alignment Grid -->
+            <div class="countdown-container">
+                <div class="countdown-card active">
+                    <div class="countdown-num" id="days">-611</div>
+                    <div class="countdown-label">Days</div>
                 </div>
-                <a href="#" class="action-btn">Request Key Access</a>
+                <div class="countdown-card">
+                    <div class="countdown-num" id="hours">-22</div>
+                    <div class="countdown-label">Hrs</div>
+                </div>
+                <div class="countdown-card">
+                    <div class="countdown-num" id="minutes">-45</div>
+                    <div class="countdown-label">Min</div>
+                </div>
+                <div class="countdown-card">
+                    <div class="countdown-num" id="seconds">-58</div>
+                    <div class="countdown-label">Sec</div>
+                </div>
             </div>
 
-            <!-- EXPERIMENTAL ARCADE HUB -->
-            <div class="glass-card col-span-2">
-                <h2>🎮 Computational Arcade</h2>
-                <p>A native sandbox environment built to demonstrate fluid 3D project graphics, physics engines, and custom game mechanics portfolios compiled straight to the web console architecture.</p>
-                <a href="#" class="action-btn-secondary" style="width: auto; padding-left: 40px; padding-right: 40px;">Launch Game Console</a>
+            <div class="btn-group">
+                <a href="#" class="btn btn-primary">Secure Your Spot</a>
+                <a href="#path" class="btn btn-secondary">View Path Map</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP TRACKING MODULE -->
+    <section class="path-section" id="path">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Path of Totality</h2>
+                <p>Track the shadow as it traverses the continent. Only those within the golden corridor will witness the true black-out.</p>
+            </div>
+
+            <div class="map-canvas-container">
+                <div class="tracking-arc"></div>
+                <div class="map-node" style="top: 30%; left: 15%;">Current Focus: Austin, Texas</div>
+                <div class="map-node" style="bottom: 25%; right: 20%;">Start Time: 13:35 CST</div>
+            </div>
+
+            <!-- THREE-COLUMN DATA GRID -->
+            <div class="grid-3col" id="safety">
+                <div class="glass-card">
+                    <div class="card-meta">ISO CERTIFIED</div>
+                    <h3>Eye Protection</h3>
+                    <p>Use only ISO 12312-2 certified eclipse glasses. Ordinary sunglasses, no matter how dark, are not safe for direct solar viewing.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="card-meta">PATH MAPS</div>
+                    <h3>Viewing Locations</h3>
+                    <p>Scout your location early. High-altitude spots with clear horizons offer the best view of the moon's shadow rushing toward you.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="card-meta">LIVE SYNC</div>
+                    <h3>Event Timeline</h3>
+                    <p>Totality lasts only 4 minutes and 28 seconds. Sync your clock to our central hub to ensure you don't miss the diamond ring effect.</p>
+                </div>
+            </div>
+
+            <!-- EXPERIENCE THE CORONA SPLIT LAYER -->
+            <div class="split-row" id="experience">
+                <div class="eclipse-viewport">
+                    <div class="eclipse-corona-glow">
+                        <div class="eclipse-core"></div>
+                    </div>
+                </div>
+                <div class="split-content">
+                    <h2>Experience the Corona</h2>
+                    <p>Beyond the darkness, the sun's outer atmosphere becomes visible to the naked eye. Wisps of pearly white light dance around the black orb of the moon, a sight rarely seen and never forgotten.</p>
+                    <a href="#" class="btn btn-secondary">Explore Packages</a>
+                </div>
             </div>
 
         </div>
-    </div>
+    </section>
 
-    <!-- Interactive Background & Glow Physics Code Engine -->
+    <footer>
+        <div class="container">
+            &copy; 2026 SOLAR ECLIPSE FESTIVAL. WITNESS THE TOTALITY.
+        </div>
+    </footer>
+
+    <!-- Clock Calibration Script -->
     <script>
-        // Glass Card Hover Glow Effect Tracking
-        const cards = document.querySelectorAll('.glass-card');
-        cards.forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty('--x', `${x}px`);
-                card.style.setProperty('--y', `${y}px`);
-            });
-        });
-
-        // 3D Particle Web System Setup
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let mouse = { x: null, y: null, radius: 180 };
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
-        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-        resize();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.6;
-                this.vy = (Math.random() - 0.5) * 0.6;
-                this.radius = Math.random() * 2 + 1;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-                // Mouse interaction physics
-                if (mouse.x != null && mouse.y != null) {
-                    let dx = this.x - mouse.x;
-                    let dy = this.y - mouse.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < mouse.radius) {
-                        let force = (mouse.radius - dist) / mouse.radius;
-                        this.x += (dx / dist) * force * 2;
-                        this.y += (dy / dist) * force * 2;
-                    }
-                }
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
-                ctx.fill();
-            }
-        }
-
-        function init() {
-            particles = [];
-            let count = Math.min(80, (canvas.width * canvas.height) / 20000);
-            for (let i = 0; i < count; i++) particles.push(new Particle());
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
+        // Simple client-side interval simulation to bring the visual counter alive
+        setInterval(() => {
+            const secEl = document.getElementById('seconds');
+            let currentSec = parseInt(secEl.innerText);
+            if (isNaN(currentSec)) currentSec = -58;
             
-            // Connect intersecting points with proximity line calculations
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    let dx = particles[i].x - particles[j].x;
-                    let dy = particles[i].y - particles[j].y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 120) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.15 * (1 - dist/120)})`;
-                        ctx.lineWidth = 0.8;
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        init(); animate();
+            currentSec--;
+            if (currentSec < -59) currentSec = 0;
+            secEl.innerText = currentSec;
+        }, 1000);
     </script>
 </body>
 </html>
