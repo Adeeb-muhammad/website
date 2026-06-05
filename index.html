@@ -1,501 +1,406 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAULT.SYS // ARCHIVE</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@800&family=Inter:wght@400;900&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-pure: #050505;
-            --surface-base: #0a0a0a;
-            --surface-card: #121212;
-            --accent-canary: #FAFF00;
-            --border-faint: rgba(255, 255, 255, 0.05);
-            --border-active: rgba(255, 255, 255, 0.15);
-            --text-pure: #ffffff;
-            --text-muted: #666666;
-            --text-dark: #333333;
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VAULT.SYS // ARCHIVE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&amp;family=Geist:wght@400;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-size: 1.25rem;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
         body {
-            background-color: var(--bg-pure);
-            color: var(--text-pure);
-            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #e5e2e1;
             overflow-x: hidden;
-            min-height: 100vh;
-            position: relative;
+            cursor: crosshair;
         }
-
-        /* Procedural Liquid Chrome Metallic Background Backdrop */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 30% 20%, #161616 0%, transparent 40%),
-                radial-gradient(circle at 70% 60%, #0d0d0d 0%, transparent 50%),
-                radial-gradient(circle at 50% 40%, #1a1a1a 0%, #050505 70%);
-            opacity: 0.85;
-            z-index: -1;
+        .liquid-mask {
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+        .grain-overlay {
+            background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            opacity: 0.05;
             pointer-events: none;
         }
-
-        .system-wrapper {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 40px 64px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
         }
-
-        @media (max-width: 768px) {
-            .system-wrapper { padding: 24px 20px; }
+        .glass-bento {
+            backdrop-filter: blur(40px);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
-        /* TOP CORE MONITOR HEADER */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-faint);
-            padding-bottom: 24px;
-            margin-bottom: 60px;
-        }
-
-        .sys-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .sys-pulse-dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--accent-canary);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-canary);
-            animation: pulse 1.5s infinite;
-        }
-
-        .sys-version-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            background: var(--accent-canary);
-            color: #000000;
-            padding: 4px 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            border-radius: 2px;
-        }
-
-        /* HERO ARCHIVE DIRECTORY */
-        .hero-panel {
-            margin-bottom: 80px;
-        }
-
-        .hero-panel h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(48px, 8vw, 110px);
-            font-weight: 800;
-            line-height: 0.95;
-            letter-spacing: -0.05em;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-        }
-
-        .hero-meta-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-top: 1px solid var(--border-faint);
-            padding-top: 16px;
-        }
-
-        .meta-block {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .meta-block span {
-            color: var(--text-pure);
-        }
-
-        /* CORE_ARCHIVE GRID LAYER */
-        .archive-grid-header {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--accent-canary);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .core-archive-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 40px;
-            margin-bottom: 100px;
-        }
-
-        @media (max-width: 768px) {
-            .core-archive-grid { grid-template-columns: 1fr; gap: 32px; }
-        }
-
-        /* Cinematic Viewport Cards */
-        .vault-viewport-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-faint);
-            padding: 32px;
+        .cyber-underline {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 420px;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
         }
-
-        .vault-viewport-card::before {
+        .cyber-underline::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, transparent 40%, rgba(5,5,5,0.9) 100%);
-            z-index: 1;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #FAFF00;
+            transition: width 0.3s ease;
         }
-
-        /* Geometric Architectural Circle Masks */
-        .card-mask-container {
-            position: absolute;
-            top: 40px;
-            right: 40px;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 0;
-        }
-
-        /* Procedural abstract background patterns to replace images perfectly */
-        .abstract-pattern-1 {
-            width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #331a00 0%, #050505 80%);
-            position: relative;
-        }
-        .abstract-pattern-1::after {
-            content: ''; position: absolute; width: 200%; height: 2px;
-            background: var(--accent-canary); top: 50%; left: -50%; transform: rotate(-45deg);
-            opacity: 0.3;
-        }
-
-        .abstract-pattern-2 {
-            width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #001a33 0%, #050505 80%);
-            position: relative;
-        }
-        .abstract-pattern-2::after {
-            content: ''; position: absolute; width: 100%; height: 100%;
-            border: 2px dashed rgba(255,255,255,0.1); border-radius: 50%; transform: scale(0.7);
-        }
-
-        .card-top {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .card-index-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .critical-index-bar {
-            width: 60px;
-            height: 4px;
-            background-color: var(--accent-canary);
-            box-shadow: 0 0 8px var(--accent-canary);
-        }
-
-        .card-bottom {
-            position: relative;
-            z-index: 2;
-        }
-
-        .card-bottom h3 {
-            font-family: 'Syne', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-        }
-
-        .card-bottom p {
-            font-size: 14px;
-            color: var(--text-muted);
-            max-width: 280px;
-            margin-bottom: 20px;
-        }
-
-        /* Stream Navigation Action Anchor */
-        .launch-link {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--accent-canary);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            font-weight: 700;
-            transition: gap 0.2s;
-        }
-
-        .vault-viewport-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--border-active);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
-
-        .vault-viewport-card:hover .launch-link {
-            gap: 16px;
-        }
-
-        /* LOWER NAVIGATION // CONNECT PROTOCOLS MODULE */
-        .protocols-section {
-            border-top: 1px solid var(--border-faint);
-            padding-top: 40px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 80px;
-            margin-bottom: 60px;
-        }
-
-        @media (max-width: 768px) {
-            .protocols-section { grid-template-columns: 1fr; gap: 40px; }
-        }
-
-        .protocols-left h2 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--text-muted);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-        }
-
-        .protocol-links {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .protocol-anchor {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: var(--surface-base);
-            border: 1px solid var(--border-faint);
-            color: var(--text-pure);
-            text-decoration: none;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .protocol-anchor:hover {
-            background: var(--surface-card);
-            border-color: var(--accent-canary);
-            color: var(--accent-canary);
-        }
-
-        /* Radar Interface Simulation Component */
-        .protocols-right {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .radar-scope {
-            width: 200px;
-            height: 200px;
-            border: 1px dashed var(--text-dark);
-            border-radius: 50%;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .radar-scope::before {
-            content: '';
-            width: 120px;
-            height: 120px;
-            border: 1px solid var(--border-faint);
-            border-radius: 50%;
-            position: absolute;
-        }
-
-        .radar-sweep {
-            position: absolute;
-            width: 50%;
-            height: 2px;
-            background: linear-gradient(90deg, rgba(250,255,0,0.4), transparent);
-            top: 50%;
-            left: 50%;
-            transform-origin: left center;
-            animation: radarRotate 4s linear infinite;
-        }
-
-        /* SYSTEM TERMINAL FOOTER */
-        footer {
-            border-top: 1px solid var(--border-faint);
-            padding-top: 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .footer-brand {
-            color: var(--text-pure);
-            letter-spacing: 0.05em;
-        }
-
-        /* ANIMATION DECLARATIONS */
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
-        }
-
-        @keyframes radarRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .cyber-underline:hover::after {
+            width: 100%;
         }
     </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#484a00",
+                        "on-background": "#e5e2e1",
+                        "on-tertiary": "#2f3131",
+                        "surface": "#131313",
+                        "outline-variant": "#484831",
+                        "on-secondary": "#2f3131",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed": "#1c1d00",
+                        "secondary-container": "#454747",
+                        "on-surface-variant": "#c9c8aa",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary": "#c6c6c6",
+                        "cyber-gold": "#FAFF00",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#e6eb00",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-primary": "#313300",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "surface-bright": "#3a3939",
+                        "surface-tint": "#cace00",
+                        "background": "#131313",
+                        "inverse-on-surface": "#313030",
+                        "tertiary": "#ffffff",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "surface-dim": "#131313",
+                        "on-error": "#690005",
+                        "on-primary-container": "#666800",
+                        "primary": "#ffffff",
+                        "outline": "#939277",
+                        "surface-variant": "#353534",
+                        "on-surface": "#e5e2e1",
+                        "primary-fixed-dim": "#cace00",
+                        "on-secondary-container": "#b5b5b5",
+                        "surface-container-highest": "#353534",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-fixed-dim": "#c6c6c6",
+                        "border-low-opacity": "rgba(255, 255, 255, 0.03)",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "terminal-bg": "#050505",
+                        "on-tertiary-container": "#636564",
+                        "error": "#ffb4ab",
+                        "glass-surface": "rgba(10, 10, 10, 0.4)",
+                        "inverse-primary": "#606200",
+                        "on-secondary-fixed-variant": "#454747",
+                        "surface-container": "#201f1f",
+                        "primary-container": "#e6eb00",
+                        "tertiary-container": "#e2e2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0rem",
+                        "lg": "0rem",
+                        "xl": "0rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "40px",
+                        "section-gap": "160px",
+                        "unit": "8px",
+                        "bento-gap": "2px",
+                        "margin-desktop": "80px",
+                        "margin-mobile": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Syne"],
+                        "headline-xl": ["Syne"],
+                        "metadata": ["JetBrains Mono"],
+                        "display-lg": ["Syne"],
+                        "label-mono": ["JetBrains Mono"],
+                        "body-lg": ["Geist"],
+                        "headline-lg": ["Syne"],
+                        "body-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-xl": ["80px", {"lineHeight": "0.9", "letterSpacing": "-0.07em", "fontWeight": "800"}],
+                        "metadata": ["9px", {"lineHeight": "1.0", "letterSpacing": "0.15em", "fontWeight": "400"}],
+                        "display-lg": ["140px", {"lineHeight": "0.85", "letterSpacing": "-0.08em", "fontWeight": "800"}],
+                        "label-mono": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.2em", "fontWeight": "500"}],
+                        "body-lg": ["20px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-lg": ["42px", {"lineHeight": "1.1", "letterSpacing": "-0.05em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="bg-terminal-bg selection:bg-cyber-gold selection:text-black">
+<div class="grain-overlay fixed inset-0 z-[100]"></div>
+<!-- TopNavBar Navigation Shell -->
+<nav class="fixed top-0 w-full backdrop-blur-xl border-b border-border-low-opacity flex justify-between items-center px-margin-desktop h-20 z-50 bg-glass-surface">
+<div class="flex items-center gap-12">
+<span class="font-headline-lg text-headline-lg tracking-tighter text-on-background">VAULT.SYS</span>
+<div class="hidden md:flex gap-8">
+<a class="font-label-mono text-label-mono text-cyber-gold border-b-2 border-cyber-gold pb-1 transition-colors duration-300" href="#">ARCHIVE</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-cyber-gold transition-colors duration-300" href="#">SERIES</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-cyber-gold transition-colors duration-300" href="#">FILMS</a>
+<a class="font-label-mono text-label-mono text-on-surface-variant hover:text-cyber-gold transition-colors duration-300" href="#">STATUS</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="font-metadata text-metadata opacity-40 uppercase tracking-[0.3em]">adeebmuh.me</span>
+<button class="bg-cyber-gold px-10 py-3 text-black font-label-mono text-[10px] tracking-[0.2em] hover:scale-105 transition-transform duration-200 uppercase">LOGIN</button>
+</div>
+</nav>
+<!-- SideNavBar (External Links) -->
+<aside class="fixed left-0 h-full w-20 hover:w-64 transition-all duration-500 border-r border-border-low-opacity bg-surface-container-lowest flex flex-col items-center py-8 z-40 group overflow-hidden">
+<div class="mb-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-6 w-full">
+<h4 class="font-label-mono text-cyber-gold text-[10px] tracking-widest mb-1">EXTERNAL_LINKS</h4>
+<p class="font-metadata text-metadata text-on-surface-variant">V-01_IDENTITY_PROTOCOLS</p>
+</div>
+<div class="flex flex-col gap-10 w-full">
+<!-- SIDEBAR TARGET LINK 1: TWITTER/X -->
+<a class="flex items-center px-6 gap-6 text-on-surface-variant hover:text-white hover:bg-surface-container-high transition-all py-2" href="https://x.com" target="_blank">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span class="font-label-mono text-label-mono opacity-0 group-hover:opacity-100 transition-opacity">X_PROTOCOL</span>
+</a>
+<!-- SIDEBAR TARGET LINK 2: GITHUB -->
+<a class="flex items-center px-6 gap-6 text-on-surface-variant hover:text-white hover:bg-surface-container-high transition-all py-2" href="https://github.com" target="_blank">
+<span class="material-symbols-outlined" data-icon="code">code</span>
+<span class="font-label-mono text-label-mono opacity-0 group-hover:opacity-100 transition-opacity">GITHUB_CORE</span>
+</a>
+<!-- SIDEBAR TARGET LINK 3: DISCORD -->
+<a class="flex items-center px-6 gap-6 text-on-surface-variant hover:text-white hover:bg-surface-container-high transition-all py-2" href="https://discord.com" target="_blank">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-mono text-label-mono opacity-0 group-hover:opacity-100 transition-opacity">DISCORD_NET</span>
+</a>
+<a class="flex items-center px-6 gap-6 text-on-surface-variant hover:text-white hover:bg-surface-container-high transition-all py-2" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-label-mono text-label-mono opacity-0 group-hover:opacity-100 transition-opacity">DOCS</span>
+</a>
+</div>
+<div class="mt-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full px-6">
+<button class="w-full border border-cyber-gold py-3 text-cyber-gold font-label-mono text-[9px] tracking-widest">SYNC_PROFILE</button>
+</div>
+</aside>
+<main class="ml-20">
+<!-- Hero Section -->
+<section class="min-h-screen relative flex items-center justify-center px-margin-desktop pt-20">
+<div class="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+<div class="relative w-[1228px] h-[1228px] liquid-mask opacity-60">
+<img alt="Liquid texture" class="w-full h-full object-cover animate-[pulse_8s_infinite_ease-in-out]" data-alt="A macro shot of flowing, liquid metallic substance in monochromatic shades of charcoal and silver." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEgI2bvn3mf_uRvtLhUH0Mq7pA6N0nyNNtrDnw8n0L3ZfzJTJH_tuVlRkFXj9JGtaj5FJwm_UQJ8ZHxplaergHmykFC90EBnKBxmQM7mXgZ1Iw2d32wvcXYUfzQ_Zq3LAzPduzPryHwHI7FEe_GLCxJIgiSakLJfrr2LRSLDwkZVOAbKRPtpsMZadCayNCp_pSRkuEw4WMi2rIyoVdcTm-Im8gl0iGf3cXLE0HkgsBKLPb49Q3b6jlv3BQcPyuGbHn3ZAhJc9ZV0Q9"/>
+</div>
+</div>
+<div class="relative z-10 w-full">
+<div class="grid grid-cols-12 gap-gutter items-end">
+<div class="col-span-12 lg:col-span-10">
+<span class="font-metadata text-metadata text-cyber-gold mb-6 block tracking-[0.5em]">SYSTEM_VERSION_4.0.2</span>
+<h1 class="font-display-lg text-display-lg uppercase leading-[0.75] mb-8">
+                            VAULT.SYS<br/>
+<span class="text-transparent" style="-webkit-text-stroke: 1px #fff; opacity: 0.3;">ENTRIES</span>
+</h1>
+<div class="flex gap-16 items-center">
+<div class="flex items-center gap-4">
+<span class="w-12 h-[1px] bg-cyber-gold"></span>
+<span class="font-label-mono text-label-mono uppercase">System Core: Active</span>
+</div>
+<p class="max-w-md font-body-md text-body-md text-on-surface-variant">
+                                A high-fidelity cinematic archive system designed for the preservation of deep-tech narratives and visual elite status.
+                            </p>
+</div>
+</div>
+<div class="col-span-2 hidden lg:flex flex-col items-end gap-20">
+<div class="vertical-text font-metadata text-metadata opacity-30 tracking-[0.8em] uppercase">
+                            Sequence_Initiated_2024
+                        </div>
+<div class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:border-cyber-gold transition-colors">
+<span class="material-symbols-outlined text-[14px]">south</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Crosshair Focal Point -->
+<div class="absolute top-[20%] right-[15%] flex items-center gap-4 group">
+<div class="w-4 h-4 rounded-full border border-cyber-gold flex items-center justify-center">
+<div class="w-1 h-1 bg-cyber-gold animate-ping"></div>
+</div>
+<span class="font-metadata text-metadata text-cyber-gold opacity-0 group-hover:opacity-100 transition-opacity">TEXTURE_SCAN_09</span>
+</div>
+</section>
+<!-- Archive Entries Grid -->
+<section class="py-section-gap px-margin-desktop">
+<div class="flex justify-between items-end mb-16">
+<div>
+<h2 class="font-headline-lg text-headline-lg uppercase mb-4">Core_Archive</h2>
+<p class="font-metadata text-metadata opacity-50 uppercase tracking-widest">Selected Cinematic Protocol</p>
+</div>
+<div class="flex gap-4">
+<div class="p-4 border border-white/10 hover:border-cyber-gold transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</div>
+<div class="p-4 border border-white/10 hover:border-cyber-gold transition-colors">
+<span class="material-symbols-outlined">reorder</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Entry 01: Blade Runner 2049 -->
+<div class="col-span-12 md:col-span-8 group">
+<div class="glass-bento relative aspect-[16/9] overflow-hidden mb-6">
+<div class="absolute top-6 left-6 z-10">
+<span class="font-metadata text-metadata bg-black/80 px-2 py-1">ARCHIVE_ID: BR_2049</span>
+</div>
+<div class="absolute top-6 right-6 z-10">
+<span class="font-metadata text-metadata flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-cyber-gold animate-pulse"></span>
+                                SYNC_COMPLETED
+                            </span>
+</div>
+<img alt="Blade Runner Aesthetic" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter grayscale-[0.5] group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAipHwfNS901NFX3Btv41Y2SErI0dtwHm6w80Zh57Oq6a3NZiWOrvGx51oMq0wf1ig9Ko75qyvTXYtY2Sq71Ddxu1sOwETcgZkgKxWKAykmLrfUPplhcUQR1gxVTUHjfDaOiWQWeW8MwvY69W9l1sYNNUtwspf61OoKjW44zWWXPgJ_0jfI_v7YGHbpWfa335xuoiYEREZTXo78qL6lvDPGBUlI2cW22ipRO6m7koybeBY0vynX-_KXAv3siX5WsJeJj287LMcKGM9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-lg text-[32px] uppercase mb-2">Blade Runner 2049</h3>
+<div class="flex gap-1 mb-4">
+<!-- 10-star Rating System -->
+<div class="flex gap-[2px]">
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 border border-white/20"></div>
+</div>
+<span class="font-metadata text-[10px] ml-4 opacity-60">CRITICAL_INDEX: 9.4</span>
+</div>
+</div>
+<!-- STREAM STREAM EMBED LINK 1 -->
+<a href="https://vidsrc.to" target="_blank" class="font-label-mono text-label-mono cyber-underline py-2 uppercase cursor-pointer">Inspect_Entry</a>
+</div>
+</div>
+<!-- Entry 02: Perfect Blue -->
+<div class="col-span-12 md:col-span-4 group">
+<!-- Added cursor-pointer overlay to seamlessly launch second target link -->
+<a href="https://braflix.video" target="_blank" class="block">
+<div class="glass-bento relative aspect-[3/4] overflow-hidden mb-6">
+<div class="absolute top-6 left-6 z-10">
+<span class="font-metadata text-metadata bg-black/80 px-2 py-1">ARCHIVE_ID: PB_1997</span>
+</div>
+<img alt="Digital Ghost" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter grayscale opacity-50 group-hover:opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9ef--TepuoiDSZXgmBbkjpvDzrk3KPD0JR-jpujToZr9d7PVs8H23vmvw6U04jXJp-e55kvDpunl6W8299kR708vWqre1VuztC62c32CGQLjr7tdfSF6tJ3n4JT_8a_XStulIThXWYLhEsuI05HvYohUyseeJB4yoy3FzuBZD2rBRudDCrM4exhp-JWX0YxmC8aHY5bKPeDPgxIkx0A3CnS65VWPwZq2YgxCXRAPj4SzPd1bYvCgbYreDQVym1dRCiT9Lp5g-DWI7"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+</div>
+</a>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-lg text-[32px] uppercase">Perfect Blue</h3>
+<a href="https://braflix.video" target="_blank" class="font-label-mono text-label-mono cyber-underline py-1 uppercase hidden md:block">Inspect_Entry</a>
+</div>
+<div class="flex gap-[2px] mb-4">
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+<div class="w-3 h-3 bg-cyber-gold"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">
+                        A psychological masterwork detailing the erosion of identity in the digital age.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Socials / Protocols Section -->
+<section class="py-section-gap px-margin-desktop bg-surface-container-lowest">
+<div class="max-w-screen-xl mx-auto">
+<div class="grid grid-cols-12 gap-gutter items-center">
+<div class="col-span-12 lg:col-span-5">
+<h2 class="font-display-lg text-[80px] leading-tight uppercase mb-8">CONNECT //<br/>PROTOCOLS</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-12">
+                                Initialize direct communication channels with the system operator. Integration required for core access.
+                            </p>
+<div class="flex flex-col gap-4">
+<!-- PROTOCOL ROUTE LINK 1 -->
+<a class="flex items-center justify-between group border-b border-white/10 py-6 hover:border-cyber-gold transition-colors" href="https://x.com" target="_blank">
+<span class="font-headline-lg text-headline-lg group-hover:text-cyber-gold transition-colors">TWITTER/X</span>
+<span class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+</a>
+<!-- PROTOCOL ROUTE LINK 2 -->
+<a class="flex items-center justify-between group border-b border-white/10 py-6 hover:border-cyber-gold transition-colors" href="https://github.com" target="_blank">
+<span class="font-headline-lg text-headline-lg group-hover:text-cyber-gold transition-colors">GITHUB</span>
+<span class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+</a>
+<!-- PROTOCOL ROUTE LINK 3 -->
+<a class="flex items-center justify-between group border-b border-white/10 py-6 hover:border-cyber-gold transition-colors" href="https://discord.com" target="_blank">
+<span class="font-headline-lg text-headline-lg group-hover:text-cyber-gold transition-colors">DISCORD</span>
+<span class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-7 relative flex justify-center">
+<div class="w-full aspect-square max-w-[500px] border border-white/5 rounded-full flex items-center justify-center animate-[spin_20s_linear_infinite]">
+<div class="w-4/5 h-4/5 border border-cyber-gold/20 rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite_reverse]">
+<div class="w-1/2 h-1/2 border border-white/10 rounded-full flex items-center justify-center">
+<span class="font-metadata text-metadata text-cyber-gold opacity-40">SYNC_NET</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-20 border-t border-border-low-opacity bg-terminal-bg px-margin-desktop grid grid-cols-12 gap-gutter items-center">
+<div class="col-span-12 md:col-span-4">
+<span class="font-label-mono text-label-mono text-cyber-gold block mb-2 uppercase">VAULT.SYS // GLOBAL ARCHIVE v4.0.2</span>
+<p class="font-metadata text-metadata opacity-40">DESIGNED BY ADEEBMUH.ME</p>
+</div>
+<div class="col-span-12 md:col-span-8 flex flex-wrap gap-x-12 gap-y-4 md:justify-end">
+<a class="font-metadata text-metadata text-on-tertiary-container hover:text-white transition-opacity uppercase" href="#">SYSTEM_STATUS</a>
+<span class="font-metadata text-metadata text-on-tertiary-container uppercase">ENTRY_COUNT: 842,901</span>
+<a class="font-metadata text-metadata text-on-tertiary-container hover:text-white transition-opacity uppercase" href="#">CORE_SYNCED</a>
+<span class="font-metadata text-metadata text-on-tertiary-container opacity-30">©2024 VAULT_PROTOCOL</span>
+</div>
+</footer>
+</main>
+<script>
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                // Interactive trigger arrays can go here
+            });
+        });
 
-    <div class="system-wrapper">
-        
-        <header>
-            <div class="sys-title">
-                <div class="sys-pulse-dot"></div>
-                VAULT.SYS // DEPLOYED
-            </div>
-            <div class="sys-version-badge">SYS_VER_4.0.2</div>
-        </header>
+        // Parallax script loop targeting your core background image layout
+        window.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+            const heroMask = document.querySelector('.liquid-mask img');
+            if(heroMask) {
+                heroMask.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.1)`;
+            }
+        });
+    </script>
+</body></html>
 
-        <section class="hero-panel">
-            <h1>Core Archive</h1>
-            <div class="hero-meta-row">
-                <div class="meta-block">Classification: <span>Directory Node</span></div>
-                <div class="meta-block">Environment: <span>Production</span></div>
-                <div class="meta-block">Loc: <span>0x7F // SHJ</span></div>
-            </div>
-        </section>
-
-        <section>
-            <div class="archive-grid-header">
-                <span>//</span> CORE_ARCHIVE_REPOS
-            </div>
-
-            <div class="core-archive-grid">
-                
-                <div class="vault-viewport-card">
-                    <div class="card-mask-container">
-                        <div class="abstract-pattern-1"></div>
-                    </div>
-                    <div class="card-top">
-                        <div class="card-index-num">IDX_001</div>
-                        <div class="critical-index-bar"></div>
-                    </div>
-                    <div class="card-bottom">
-                        <h3>Blade Runner 2049</h3>
-                        <p>Cinematic media hub link directory tracking index streams natively.</p>
-                        <a href="https://vidsrc.to" target="_blank" class="launch-link">Initialize Stream &rarr;</a>
-                    </div>
-                </div>
-
-                <div class="vault-viewport-card">
-                    <div class="card-mask-container">
-                        <div class="abstract-pattern-2"></div>
-                    </div>
-                    <div class="card-top">
-                        <div class="card-index-num">IDX_002</div>
-                        <div class="critical-index-bar"></div>
-                    </div>
-                    <div class="card-bottom">
-                        <h3>Perfect Blue</h3>
-                        <p>High-contrast tactical animation vaults and catalog assets records.</p>
-                        <a href="https://braflix.video" target="_blank" class="launch-link">Initialize Stream &rarr;</a>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <section class="protocols-section">
-            <div class="protocols-left">
-                <h2>CONNECT // PROTOCOLS</h2>
-                <div class="protocol-links">
-                    <a href="https://github.com" target="_blank" class="protocol-anchor">
-                        <span>REPOSITORY // GITHUB</span>
-                        <span>&nearr;</span>
-                    </a>
-                    <a href="#" class="protocol-anchor">
-                        <span>PORTAL // SECURE_ACCESS</span>
-                        <span>&nearr;</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="protocols-right">
-                <div class="radar-scope">
-                    <div class="radar-sweep"></div>
-                </div>
-            </div>
-        </section>
-
-        <footer>
-            <div class="footer-brand">DESIGNED BY ADEEBMUH.ME</div>
-            <div>STATUS: OPERATIONAL [200 OK]</div>
-        </footer>
-
-    </div>
-
-</body>
-</html>
