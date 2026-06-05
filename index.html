@@ -3,487 +3,499 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corona Path | Adeeb's Nexus</title>
-    <!-- Premium Fonts Import -->
+    <title>VAULT.SYS // ARCHIVE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@800&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Design System Tokens */
-            --bg-color: #131313;
-            --surface: #131313;
-            --surface-container: #201f1f;
-            --surface-glass: rgba(26, 26, 26, 0.6);
-            --corona-gold: #ffd700;
-            --primary-fixed: #ffe16d;
-            --solar-white: #ffffff;
-            --on-surface-variant: #d0c6ab;
-            --text-muted: #999077;
-            --radius-default: 0.5rem;
-            --radius-xl: 1.5rem;
-            --radius-full: 9999px;
+            --bg-pure: #050505;
+            --surface-base: #0a0a0a;
+            --surface-card: #121212;
+            --accent-canary: #FAFF00;
+            --border-faint: rgba(255, 255, 255, 0.05);
+            --border-active: rgba(255, 255, 255, 0.15);
+            --text-pure: #ffffff;
+            --text-muted: #666666;
+            --text-dark: #333333;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--solar-white);
+            background-color: var(--bg-pure);
+            color: var(--text-pure);
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
-            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
         }
 
-        /* Layout Structure */
-        .container {
-            width: 100%;
+        /* Procedural Liquid Chrome Metallic Background Backdrop */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 30% 20%, #161616 0%, transparent 40%),
+                radial-gradient(circle at 70% 60%, #0d0d0d 0%, transparent 50%),
+                radial-gradient(circle at 50% 40%, #1a1a1a 0%, #050505 70%);
+            opacity: 0.85;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .system-wrapper {
             max-width: 1440px;
             margin: 0 auto;
-            padding: 0 64px;
+            padding: 40px 64px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         @media (max-width: 768px) {
-            .container { padding: 0 20px; }
+            .system-wrapper { padding: 24px 20px; }
         }
 
-        /* Navigation Minimalist */
-        nav {
+        /* TOP CORE MONITOR HEADER */
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 32px 0;
-        }
-        .logo {
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: 1.2rem;
-            letter-spacing: -0.02em;
-        }
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-        }
-        .nav-links a {
-            color: var(--on-surface-variant);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover { color: var(--corona-gold); }
-
-        /* HERO SECTION (msedge_rUpVhkBFcJ.png) */
-        .hero {
-            text-align: center;
-            padding: 120px 0 80px 0;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #131313 70%);
-            position: relative;
+            border-bottom: 1px solid var(--border-faint);
+            padding-bottom: 24px;
+            margin-bottom: 60px;
         }
 
-        .hero-badge {
+        .sys-title {
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
+            font-weight: 700;
             letter-spacing: 0.1em;
-            color: var(--corona-gold);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sys-pulse-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-canary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-canary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .sys-version-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: var(--accent-canary);
+            color: #000000;
+            padding: 4px 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 2px;
+        }
+
+        /* HERO ARCHIVE DIRECTORY */
+        .hero-panel {
+            margin-bottom: 80px;
+        }
+
+        .hero-panel h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(48px, 8vw, 110px);
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-top: 1px solid var(--border-faint);
+            padding-top: 16px;
+        }
+
+        .meta-block {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .meta-block span {
+            color: var(--text-pure);
+        }
+
+        /* CORE_ARCHIVE GRID LAYER */
+        .archive-grid-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-canary);
+            letter-spacing: 0.15em;
             text-transform: uppercase;
             margin-bottom: 24px;
-            display: inline-block;
-        }
-
-        .hero h1 {
-            font-size: 72px;
-            font-weight: 900;
-            letter-spacing: -0.04em;
-            line-height: 1.1;
-            margin-bottom: 48px;
-            color: var(--solar-white);
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 42px; }
-        }
-
-        /* Countdown Grid Component */
-        .countdown-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-            max-width: 800px;
-            margin: 0 auto 48px auto;
-        }
-
-        .countdown-card {
-            background: var(--surface-container);
-            border-radius: var(--radius-default);
-            padding: 24px;
-            text-align: center;
-            border-bottom: 3px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .countdown-num {
-            font-size: 48px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: var(--text-muted);
-            line-height: 1.2;
-        }
-        .countdown-card.active .countdown-num {
-            color: var(--corona-gold);
-        }
-
-        .countdown-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--on-surface-variant);
-            margin-top: 8px;
-        }
-
-        /* Button Architecture */
-        .btn-group {
             display: flex;
-            justify-content: center;
-            gap: 16px;
-        }
-        
-        .btn {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 16px 32px;
-            border-radius: var(--radius-full);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background-color: var(--corona-gold);
-            color: #000000;
-            border: 1px solid var(--corona-gold);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-        }
-        .btn-primary:hover {
-            box-shadow: 0 0 35px rgba(255, 215, 0, 0.45);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--solar-white);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: var(--solar-white);
-        }
-
-        /* THE PATH OF TOTALITY GRAPHIC NODE (msedge_HuaWccIqPB.png) */
-        .path-section {
-            padding: 100px 0;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 600px;
-            margin: 0 auto 60px auto;
-        }
-
-        .section-header h2 {
-            font-size: 48px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 16px;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            font-size: 18px;
-        }
-
-        /* Visual Canvas Tracking Simulation */
-        .map-canvas-container {
-            background: #0e0e0e;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-xl);
-            height: 400px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 80px;
-            display: flex;
-            justify-content: center;
             align-items: center;
+            gap: 8px;
         }
 
-        /* Procedural Grid Background */
-        .map-canvas-container::before {
-            content: ''; position: absolute; width: 100%; height: 100%;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
-            background-size: 24px 24px;
-        }
-
-        .tracking-arc {
-            position: relative;
-            width: 80%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--corona-gold), transparent);
-            box-shadow: 0 0 15px var(--corona-gold);
-            animation: pulseArc 3s infinite alternate;
-        }
-
-        .map-node {
-            position: absolute;
-            background: #000;
-            border: 2px solid var(--corona-gold);
-            padding: 6px 12px;
-            border-radius: var(--radius-default);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-        }
-
-        /* THREE-COLUMN SAFETY GRID (msedge_pWoN8U7uQo.png) */
-        .grid-3col {
+        .core-archive-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
             margin-bottom: 100px;
         }
 
         @media (max-width: 768px) {
-            .grid-3col { grid-template-columns: 1fr; }
+            .core-archive-grid { grid-template-columns: 1fr; gap: 32px; }
         }
 
-        /* Glassmorphism Card Spec Execution */
-        .glass-card {
-            background: var(--surface-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: var(--radius-default);
-            padding: 40px;
-            /* Lit from top-left, shadowed bottom-right */
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-            border-right: 1px solid rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-4px);
+        /* Cinematic Viewport Cards */
+        .vault-viewport-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-faint);
+            padding: 32px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 420px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
         }
 
-        .card-meta {
+        .vault-viewport-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, transparent 40%, rgba(5,5,5,0.9) 100%);
+            z-index: 1;
+        }
+
+        /* Geometric Architectural Circle Masks */
+        .card-mask-container {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        /* Procedural abstract background patterns to replace images perfectly */
+        .abstract-pattern-1 {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #331a00 0%, #050505 80%);
+            position: relative;
+        }
+        .abstract-pattern-1::after {
+            content: ''; position: absolute; width: 200%; height: 2px;
+            background: var(--accent-canary); top: 50%; left: -50%; transform: rotate(-45deg);
+            opacity: 0.3;
+        }
+
+        .abstract-pattern-2 {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #001a33 0%, #050505 80%);
+            position: relative;
+        }
+        .abstract-pattern-2::after {
+            content: ''; position: absolute; width: 100%; height: 100%;
+            border: 2px dashed rgba(255,255,255,0.1); border-radius: 50%; transform: scale(0.7);
+        }
+
+        .card-top {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-index-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .critical-index-bar {
+            width: 60px;
+            height: 4px;
+            background-color: var(--accent-canary);
+            box-shadow: 0 0 8px var(--accent-canary);
+        }
+
+        .card-bottom {
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-bottom h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .card-bottom p {
+            font-size: 14px;
+            color: var(--text-muted);
+            max-width: 280px;
+            margin-bottom: 20px;
+        }
+
+        /* Stream Navigation Action Anchor */
+        .launch-link {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: var(--corona-gold);
-            margin-bottom: 16px;
+            color: var(--accent-canary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             text-transform: uppercase;
-        }
-
-        .glass-card h3 {
-            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 16px;
+            transition: gap 0.2s;
         }
 
-        .glass-card p {
-            color: var(--text-muted);
-            font-size: 16px;
+        .vault-viewport-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-active);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        /* EXPERIENCE THE CORONA ROW SPLIT */
-        .split-row {
+        .vault-viewport-card:hover .launch-link {
+            gap: 16px;
+        }
+
+        /* LOWER NAVIGATION // CONNECT PROTOCOLS MODULE */
+        .protocols-section {
+            border-top: 1px solid var(--border-faint);
+            padding-top: 40px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 64px;
-            align-items: center;
-            background: #1a1a1a;
-            padding: 64px;
-            border-radius: var(--radius-xl);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            gap: 80px;
+            margin-bottom: 60px;
         }
 
         @media (max-width: 768px) {
-            .split-row { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+            .protocols-section { grid-template-columns: 1fr; gap: 40px; }
         }
 
-        /* Dynamic CSS Eclipse Representation */
-        .eclipse-viewport {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
-        }
-
-        .eclipse-corona-glow {
-            width: 180px;
-            height: 180px;
-            background: var(--surface);
-            border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.4),
-                        0 0 120px 40px rgba(255, 255, 255, 0.1);
-        }
-
-        .eclipse-core {
-            width: 100%;
-            height: 100%;
-            background: #050505;
-            border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .split-content h2 {
-            font-size: 48px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+        .protocols-left h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
             margin-bottom: 24px;
         }
 
-        .split-content p {
-            color: var(--text-muted);
-            font-size: 16px;
-            margin-bottom: 32px;
+        .protocol-links {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        footer {
-            text-align: center;
-            padding: 80px 0 40px 0;
+        .protocol-anchor {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--surface-base);
+            border: 1px solid var(--border-faint);
+            color: var(--text-pure);
+            text-decoration: none;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        @keyframes pulseArc {
-            from { opacity: 0.6; box-shadow: 0 0 15px var(--corona-gold); }
-            to { opacity: 1; box-shadow: 0 0 30px var(--corona-gold); }
+        .protocol-anchor:hover {
+            background: var(--surface-card);
+            border-color: var(--accent-canary);
+            color: var(--accent-canary);
+        }
+
+        /* Radar Interface Simulation Component */
+        .protocols-right {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .radar-scope {
+            width: 200px;
+            height: 200px;
+            border: 1px dashed var(--text-dark);
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .radar-scope::before {
+            content: '';
+            width: 120px;
+            height: 120px;
+            border: 1px solid var(--border-faint);
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .radar-sweep {
+            position: absolute;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(250,255,0,0.4), transparent);
+            top: 50%;
+            left: 50%;
+            transform-origin: left center;
+            animation: radarRotate 4s linear infinite;
+        }
+
+        /* SYSTEM TERMINAL FOOTER */
+        footer {
+            border-top: 1px solid var(--border-faint);
+            padding-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .footer-brand {
+            color: var(--text-pure);
+            letter-spacing: 0.05em;
+        }
+
+        /* ANIMATION DECLARATIONS */
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        @keyframes radarRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Structural Header -->
-        <nav>
-            <div class="logo">ECLIPSE // TOTALITY</div>
-            <div class="nav-links">
-                <a href="#path">MAP</a>
-                <a href="#safety">SAFETY</a>
-                <a href="#experience">EXPERIENCE</a>
+    <div class="system-wrapper">
+        
+        <header>
+            <div class="sys-title">
+                <div class="sys-pulse-dot"></div>
+                VAULT.SYS // DEPLOYED
             </div>
-        </nav>
-    </div>
+            <div class="sys-version-badge">SYS_VER_4.0.2</div>
+        </header>
 
-    <!-- HERO MODULE -->
-    <section class="hero">
-        <div class="container">
-            <span class="hero-badge">Next Totality Countdown</span>
-            <h1>Enter the Shadow.</h1>
-            
-            <!-- Real-time Mathematical Alignment Grid -->
-            <div class="countdown-container">
-                <div class="countdown-card active">
-                    <div class="countdown-num" id="days">-611</div>
-                    <div class="countdown-label">Days</div>
-                </div>
-                <div class="countdown-card">
-                    <div class="countdown-num" id="hours">-22</div>
-                    <div class="countdown-label">Hrs</div>
-                </div>
-                <div class="countdown-card">
-                    <div class="countdown-num" id="minutes">-45</div>
-                    <div class="countdown-label">Min</div>
-                </div>
-                <div class="countdown-card">
-                    <div class="countdown-num" id="seconds">-58</div>
-                    <div class="countdown-label">Sec</div>
-                </div>
+        <section class="hero-panel">
+            <h1>Core Archive</h1>
+            <div class="hero-meta-row">
+                <div class="meta-block">Classification: <span>Directory Node</span></div>
+                <div class="meta-block">Environment: <span>Production</span></div>
+                <div class="meta-block">Loc: <span>0x7F // SHJ</span></div>
+            </div>
+        </section>
+
+        <section>
+            <div class="archive-grid-header">
+                <span>//</span> CORE_ARCHIVE_REPOS
             </div>
 
-            <div class="btn-group">
-                <a href="#" class="btn btn-primary">Secure Your Spot</a>
-                <a href="#path" class="btn btn-secondary">View Path Map</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- MAP TRACKING MODULE -->
-    <section class="path-section" id="path">
-        <div class="container">
-            <div class="section-header">
-                <h2>The Path of Totality</h2>
-                <p>Track the shadow as it traverses the continent. Only those within the golden corridor will witness the true black-out.</p>
-            </div>
-
-            <div class="map-canvas-container">
-                <div class="tracking-arc"></div>
-                <div class="map-node" style="top: 30%; left: 15%;">Current Focus: Austin, Texas</div>
-                <div class="map-node" style="bottom: 25%; right: 20%;">Start Time: 13:35 CST</div>
-            </div>
-
-            <!-- THREE-COLUMN DATA GRID -->
-            <div class="grid-3col" id="safety">
-                <div class="glass-card">
-                    <div class="card-meta">ISO CERTIFIED</div>
-                    <h3>Eye Protection</h3>
-                    <p>Use only ISO 12312-2 certified eclipse glasses. Ordinary sunglasses, no matter how dark, are not safe for direct solar viewing.</p>
-                </div>
-                <div class="glass-card">
-                    <div class="card-meta">PATH MAPS</div>
-                    <h3>Viewing Locations</h3>
-                    <p>Scout your location early. High-altitude spots with clear horizons offer the best view of the moon's shadow rushing toward you.</p>
-                </div>
-                <div class="glass-card">
-                    <div class="card-meta">LIVE SYNC</div>
-                    <h3>Event Timeline</h3>
-                    <p>Totality lasts only 4 minutes and 28 seconds. Sync your clock to our central hub to ensure you don't miss the diamond ring effect.</p>
-                </div>
-            </div>
-
-            <!-- EXPERIENCE THE CORONA SPLIT LAYER -->
-            <div class="split-row" id="experience">
-                <div class="eclipse-viewport">
-                    <div class="eclipse-corona-glow">
-                        <div class="eclipse-core"></div>
+            <div class="core-archive-grid">
+                
+                <div class="vault-viewport-card">
+                    <div class="card-mask-container">
+                        <div class="abstract-pattern-1"></div>
+                    </div>
+                    <div class="card-top">
+                        <div class="card-index-num">IDX_001</div>
+                        <div class="critical-index-bar"></div>
+                    </div>
+                    <div class="card-bottom">
+                        <h3>Blade Runner 2049</h3>
+                        <p>Cinematic media hub link directory tracking index streams natively.</p>
+                        <a href="https://vidsrc.to" target="_blank" class="launch-link">Initialize Stream &rarr;</a>
                     </div>
                 </div>
-                <div class="split-content">
-                    <h2>Experience the Corona</h2>
-                    <p>Beyond the darkness, the sun's outer atmosphere becomes visible to the naked eye. Wisps of pearly white light dance around the black orb of the moon, a sight rarely seen and never forgotten.</p>
-                    <a href="#" class="btn btn-secondary">Explore Packages</a>
+
+                <div class="vault-viewport-card">
+                    <div class="card-mask-container">
+                        <div class="abstract-pattern-2"></div>
+                    </div>
+                    <div class="card-top">
+                        <div class="card-index-num">IDX_002</div>
+                        <div class="critical-index-bar"></div>
+                    </div>
+                    <div class="card-bottom">
+                        <h3>Perfect Blue</h3>
+                        <p>High-contrast tactical animation vaults and catalog assets records.</p>
+                        <a href="https://braflix.video" target="_blank" class="launch-link">Initialize Stream &rarr;</a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="protocols-section">
+            <div class="protocols-left">
+                <h2>CONNECT // PROTOCOLS</h2>
+                <div class="protocol-links">
+                    <a href="https://github.com" target="_blank" class="protocol-anchor">
+                        <span>REPOSITORY // GITHUB</span>
+                        <span>&nearr;</span>
+                    </a>
+                    <a href="#" class="protocol-anchor">
+                        <span>PORTAL // SECURE_ACCESS</span>
+                        <span>&nearr;</span>
+                    </a>
                 </div>
             </div>
 
-        </div>
-    </section>
+            <div class="protocols-right">
+                <div class="radar-scope">
+                    <div class="radar-sweep"></div>
+                </div>
+            </div>
+        </section>
 
-    <footer>
-        <div class="container">
-            &copy; 2026 SOLAR ECLIPSE FESTIVAL. WITNESS THE TOTALITY.
-        </div>
-    </footer>
+        <footer>
+            <div class="footer-brand">DESIGNED BY ADEEBMUH.ME</div>
+            <div>STATUS: OPERATIONAL [200 OK]</div>
+        </footer>
 
-    <!-- Clock Calibration Script -->
-    <script>
-        // Simple client-side interval simulation to bring the visual counter alive
-        setInterval(() => {
-            const secEl = document.getElementById('seconds');
-            let currentSec = parseInt(secEl.innerText);
-            if (isNaN(currentSec)) currentSec = -58;
-            
-            currentSec--;
-            if (currentSec < -59) currentSec = 0;
-            secEl.innerText = currentSec;
-        }, 1000);
-    </script>
+    </div>
+
 </body>
 </html>
