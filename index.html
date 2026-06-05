@@ -3,92 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adeeb's Space</title>
+    <title>Adeeb's Nexus</title>
     <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: system-ui, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+        /* Base Setup & Premium Typography */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #030712; color: #f3f4f6; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
+        
+        /* Interactive Background Canvas */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        /* Main Glass Container */
+        .wrapper { position: relative; z-index: 2; width: 100%; max-width: 1200px; padding: 40px 20px; animation: fadeIn 1.2s ease-out; }
+        
+        /* Bento Grid Setup */
+        .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        
+        /* Premium Glowing Glassmorphism Cards */
+        .glass-card { 
+            background: rgba(15, 23, 42, 0.45); 
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; 
+            padding: 36px; 
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+            position: relative;
         }
-        h1 {
-            color: #38bdf8;
-            font-size: 3rem;
-            margin-bottom: 10px;
+        .glass-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255,255,255,0.06), transparent 40%);
+            border-radius: 24px; opacity: 0; transition: opacity 0.5s; pointer-events: none;
         }
-        p {
-            color: #94a3b8;
-            font-size: 1.2rem;
+        .glass-card:hover::before { opacity: 1; }
+        .glass-card:hover { transform: translateY(-6px) scale(1.01); border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px -10px rgba(56, 189, 248, 0.15); }
+        
+        /* Card Sizes */
+        .col-span-2 { grid-column: span 2; }
+        .row-span-2 { grid-row: span 2; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* Typography Elements */
+        h1 { font-size: 3rem; font-weight: 700; letter-spacing: -0.05em; margin-bottom: 12px; background: linear-gradient(135deg, #fff 30%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.6rem; font-weight: 600; color: #f3f4f6; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; letter-spacing: -0.02em; }
+        p { color: #94a3b8; line-height: 1.7; font-size: 1rem; font-weight: 300; }
+        
+        /* Premium Action Buttons */
+        .action-btn { 
+            position: relative; display: inline-block; width: 100%; text-align: center; padding: 16px; 
+            background: #fff; color: #030712; font-weight: 600; text-decoration: none; border-radius: 14px; 
+            margin-top: 24px; overflow: hidden; transition: all 0.3s ease; border: 1px solid transparent;
         }
-    </style>
-</head>
-<body>
-    <h1>Welcome to My Site</h1>
-    <p>Vibe-coded entirely from scratch.</p>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adeeb's Hub</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: #090d16; color: #f1f5f9; min-height: 100vh; padding: 40px 20px; display: flex; justify-content: center; align-items: center; }
-        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border-radius: 20px; padding: 30px; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .card:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -15px rgba(56, 189, 248, 0.3); }
-        .large { grid-column: span 2; }
-        .tall { grid-row: span 2; display: flex; flex-direction: column; justify-content: space-between; }
-        .full { grid-column: span 3; text-align: center; }
-        h1 { font-size: 2.5rem; color: #fff; margin-bottom: 10px; background: linear-gradient(to right, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        h2 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        p { color: #94a3b8; line-height: 1.6; font-size: 0.95rem; }
-        .btn { display: inline-block; width: 100%; text-align: center; padding: 12px; background: linear-gradient(135deg, #38bdf8, #0284c7); color: white; font-weight: 600; text-decoration: none; border-radius: 12px; margin-top: 15px; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.9; }
-        .btn-alt { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
-        .btn-alt:hover { background: rgba(255, 255, 255, 0.1); border-color: #a855f7; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } .large, .tall, .full { grid-column: span 1; grid-row: span 1; } }
+        .action-btn:hover { background: transparent; color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 0 30px rgba(255,255,255,0.1); }
+        
+        .action-btn-secondary { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: #e2e8f0; }
+        .action-btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.1); }
+
+        /* Status Badge */
+        .status { display: inline-flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); color: #4ade80; padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+        .pulse-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
+        
+        @media (max-width: 900px) { .bento-grid { grid-template-columns: 1fr; } .col-span-2, .row-span-2 { grid-column: span 1; grid-row: span 1; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- HEADER PORTFOLIO CARD -->
-        <div class="card large">
-            <h1>Adeeb Muhammad</h1>
-            <p>Welcome to my private digital nexus. Vibe-coded to serve as a premium shortcut hub for high-speed media streaming, active cloud files, and personal gaming projects.</p>
-        </div>
+    <!-- This canvas runs the interactive 3D particle constellation lines background -->
+    <canvas id="bg-canvas"></canvas>
 
-        <!-- FILE ACCESS VAULT -->
-        <div class="card tall">
-            <div>
-                <h2>📁 Cloud Vault</h2>
-                <p>Secure, premium access gateway for shared directory assets, build files, and open-source project documents.</p>
+    <div class="wrapper">
+        <div class="bento-grid">
+            
+            <!-- MAIN HUB HERO CARD -->
+            <div class="glass-card col-span-2">
+                <div class="status"><div class="pulse-dot"></div>Adeeb's Nexus Online</div>
+                <h1>adeebmuh.me</h1>
+                <p>Welcome to a premium, AI-orchestrated gateway. This matrix is custom configured as a private digital launchpad linking ultra-smooth media playback nodes, fast-access secure cloud storage vaults, and high-performance computational gaming sandboxes.</p>
             </div>
-            <a href="#" class="btn">Request Access</a>
-        </div>
 
-        <!-- MOVIES / STREAM ZONE -->
-        <div class="card">
-            <h2>🎬 Cinema Zone</h2>
-            <p>Instant links to premium, clean setups to track and stream your global entertainment library.</p>
-            <a href="#" class="btn btn-alt">Launch Player</a>
-        </div>
+            <!-- PREMIUM STREAM NODE -->
+            <div class="glass-card">
+                <h2>🎬 Cinema Vault</h2>
+                <p>Launch high-speed tracking arrays and streaming servers directly inside a zero-latency modern media player node.</p>
+                <a href="#" class="action-btn-secondary">Initialize Player</a>
+            </div>
 
-        <!-- GAMES ARCADE -->
-        <div class="card">
-            <h2>🎮 Arcade Lounge</h2>
-            <p>A playground built to host native custom web builds, project portfolios, and game design concepts.</p>
-            <a href="#" class="btn btn-alt">Enter Arcade</a>
+            <!-- SECURE DIRECTORY REPOSITORY -->
+            <div class="glass-card row-span-2">
+                <div>
+                    <h2>📁 Cloud Directory</h2>
+                    <p>Encrypted personal file infrastructure hosting shared root directories, developer build outputs, and secure archive payloads.</p>
+                </div>
+                <a href="#" class="action-btn">Request Key Access</a>
+            </div>
+
+            <!-- EXPERIMENTAL ARCADE HUB -->
+            <div class="glass-card col-span-2">
+                <h2>🎮 Computational Arcade</h2>
+                <p>A native sandbox environment built to demonstrate fluid 3D project graphics, physics engines, and custom game mechanics portfolios compiled straight to the web console architecture.</p>
+                <a href="#" class="action-btn-secondary" style="width: auto; padding-left: 40px; padding-right: 40px;">Launch Game Console</a>
+            </div>
+
         </div>
     </div>
 
+    <!-- Interactive Background & Glow Physics Code Engine -->
+    <script>
+        // Glass Card Hover Glow Effect Tracking
+        const cards = document.querySelectorAll('.glass-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            });
+        });
+
+        // 3D Particle Web System Setup
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 180 };
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6;
+                this.radius = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // Mouse interaction physics
+                if (mouse.x != null && mouse.y != null) {
+                    let dx = this.x - mouse.x;
+                    let dy = this.y - mouse.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        let force = (mouse.radius - dist) / mouse.radius;
+                        this.x += (dx / dist) * force * 2;
+                        this.y += (dy / dist) * force * 2;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            particles = [];
+            let count = Math.min(80, (canvas.width * canvas.height) / 20000);
+            for (let i = 0; i < count; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            
+            // Connect intersecting points with proximity line calculations
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${0.15 * (1 - dist/120)})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        init(); animate();
+    </script>
 </body>
 </html>
