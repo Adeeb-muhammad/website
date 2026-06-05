@@ -32,3 +32,63 @@
     <p>Vibe-coded entirely from scratch.</p>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adeeb's Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: #090d16; color: #f1f5f9; min-height: 100vh; padding: 40px 20px; display: flex; justify-content: center; align-items: center; }
+        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border-radius: 20px; padding: 30px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .card:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -15px rgba(56, 189, 248, 0.3); }
+        .large { grid-column: span 2; }
+        .tall { grid-row: span 2; display: flex; flex-direction: column; justify-content: space-between; }
+        .full { grid-column: span 3; text-align: center; }
+        h1 { font-size: 2.5rem; color: #fff; margin-bottom: 10px; background: linear-gradient(to right, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        p { color: #94a3b8; line-height: 1.6; font-size: 0.95rem; }
+        .btn { display: inline-block; width: 100%; text-align: center; padding: 12px; background: linear-gradient(135deg, #38bdf8, #0284c7); color: white; font-weight: 600; text-decoration: none; border-radius: 12px; margin-top: 15px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-alt { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
+        .btn-alt:hover { background: rgba(255, 255, 255, 0.1); border-color: #a855f7; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } .large, .tall, .full { grid-column: span 1; grid-row: span 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER PORTFOLIO CARD -->
+        <div class="card large">
+            <h1>Adeeb Muhammad</h1>
+            <p>Welcome to my private digital nexus. Vibe-coded to serve as a premium shortcut hub for high-speed media streaming, active cloud files, and personal gaming projects.</p>
+        </div>
+
+        <!-- FILE ACCESS VAULT -->
+        <div class="card tall">
+            <div>
+                <h2>📁 Cloud Vault</h2>
+                <p>Secure, premium access gateway for shared directory assets, build files, and open-source project documents.</p>
+            </div>
+            <a href="#" class="btn">Request Access</a>
+        </div>
+
+        <!-- MOVIES / STREAM ZONE -->
+        <div class="card">
+            <h2>🎬 Cinema Zone</h2>
+            <p>Instant links to premium, clean setups to track and stream your global entertainment library.</p>
+            <a href="#" class="btn btn-alt">Launch Player</a>
+        </div>
+
+        <!-- GAMES ARCADE -->
+        <div class="card">
+            <h2>🎮 Arcade Lounge</h2>
+            <p>A playground built to host native custom web builds, project portfolios, and game design concepts.</p>
+            <a href="#" class="btn btn-alt">Enter Arcade</a>
+        </div>
+    </div>
+
+</body>
+</html>
