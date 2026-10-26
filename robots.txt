@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /studio.html
+
+Sitemap: https://adeebmuh.me/sitemap.xml

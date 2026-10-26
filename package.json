@@ -1,0 +1,12 @@
+{
+  "name": "adeeb-personal-vault",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check assets/js/app.js && node --check assets/js/studio.js && npm test && npm run build"
+  }
+}

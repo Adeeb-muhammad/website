@@ -1,0 +1,190 @@
+import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js';
+
+const $ = selector => document.querySelector(selector);
+let archive;
+let collection = 'films';
+let lastRoute = 'films';
+let layout = 'grid';
+let toastTimer;
+let entryFocus;
+const collectionInfo = {
+  films: ['THE WATCHED FILES / A PERSONAL COLLECTION', 'FILM_', 'ARCHIVE', 'Films, ratings, and the thoughts that stay after the credits.'],
+  series: ['THE LONGER STORIES / EPISODE BY EPISODE', 'SERIES_', 'ARCHIVE', 'Series and anime. Some finished, some still unfolding.'],
+  watchlist: ['THE UNWATCHED FILES / UP NEXT', 'THE_', 'WATCHLIST', 'Not watched. Not forgotten. Just waiting for the right evening.']
+};
+
+function toast(message) {
+  clearTimeout(toastTimer);
+  $('#toast').textContent = message;
+  $('#toast').classList.add('visible');
+  toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 3200);
+}
+
+async function copy(text) {
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else {
+      const field = document.createElement('textarea');
+      field.value = text; field.style.cssText = 'position:fixed;opacity:0';
+      document.body.append(field); field.select();
+      const copied = document.execCommand('copy'); field.remove();
+      if (!copied) throw new Error('Copy unavailable');
+    }
+    toast('LINK COPIED. SEND IT SOMEWHERE GOOD.');
+  } catch { toast('Could not copy automatically. Copy the link from your address bar.'); }
+}
+
+function poster(entry, { featured = false, index = 0 } = {}) {
+  const image = safeURL(featured ? entry.image || entry.poster : entry.poster, { image: true });
+  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}"><div class="poster-fallback" aria-hidden="true"><span class="micro">VAULT.SYS / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="512" height="512"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
+}
+
+function filmCard(entry, index, featured = false) {
+  return `<article class="${featured ? 'featured-card' : 'film-card'}"><a class="film-card-link" href="#film/${e(entry.id)}" aria-label="Open ${e(entry.title)}"><div class="card-record"><span>REC_${String(index + 1).padStart(3, '0')}</span><span>${entry.status === 'watchlist' ? 'ON THE RADAR' : entry.isSample ? 'STARTER ENTRY' : entry.status === 'watching' ? 'IN PROGRESS' : 'ON RECORD'}</span></div>${poster(entry, { featured, index })}<div class="film-card-content"><div class="film-meta"><span>${e(entry.year)}</span><span>${e(entry.genres.slice(0, 2).join(' / '))}</span>${featured && entry.runtime ? `<span>${entry.runtime} MIN</span>` : ''}</div><h3>${e(entry.title)}</h3><div class="card-rating">${entry.status === 'watchlist' ? '<span class="unrated">WAITING FOR THE RIGHT EVENING</span>' : ratingMarkup(entry.rating, { sample: entry.isSample, favourite: entry.favourite })}</div>${featured ? `<p>${e(entry.review || 'A story waiting to be put on record.')}</p><span class="text-link card-inspect">INSPECT ENTRY <span>↗</span></span>` : `<p class="card-director">${e(entry.director || (entry.type === 'series' ? 'Series' : 'Film'))}</p>`}</div></a></article>`;
+}
+
+function projectVisual(project, scope = 'home') {
+  const patternId = `mech-grid-${project.id}-${scope}`;
+  if (project.visual === 'mech') return `<svg viewBox="0 0 420 280" class="project-diagram" aria-label="Mech assembly illustration" role="img"><defs><pattern id="${patternId}" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0v28" fill="none" stroke="currentColor" stroke-width=".4" opacity=".2"/></pattern></defs><path fill="url(#${patternId})" d="M0 0h420v280H0z"/><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M177 70h66l15 20v63l-18 17h-60l-18-17V90zM181 78h58v38h-58zM188 132h44v22h-44zM180 170v43h-25v13h48v-56M240 170v43h25v13h-48v-56M162 98h-34v50h34M258 98h34v50h-34M117 90h-36v24h47M292 90h47v24h-47M180 56V42h-48v23h30M240 56V42h48v23h-30M197 125h26"/><circle cx="210" cy="98" r="10"/><path d="M44 65v-20h20M376 65v-20h-20M44 215v20h20M376 215v20h-20" opacity=".5"/></g><g fill="currentColor" font-family="monospace" font-size="8" opacity=".6"><text x="52" y="258">MODULAR ASSEMBLY / MK.01</text><text x="305" y="258">PROTOTYPE</text></g></svg>`;
+  if (project.visual === 'aura') return `<svg viewBox="0 0 420 280" class="project-diagram" aria-label="Environmental monitoring drone concept illustration" role="img"><g fill="none" stroke="currentColor"><circle cx="210" cy="135" r="102" opacity=".12"/><circle cx="210" cy="135" r="77" stroke-dasharray="3 7" opacity=".35"/><path d="M210 15v240M90 135h240" opacity=".15"/><g stroke-width="2"><path d="m190 115-54-40M230 115l54-40M190 155l-54 40M230 155l54 40"/><rect x="186" y="108" width="48" height="55" rx="12"/><circle cx="126" cy="67" r="31"/><circle cx="294" cy="67" r="31"/><circle cx="126" cy="203" r="31"/><circle cx="294" cy="203" r="31"/><path d="m105 67 42 0M126 46v42M273 67h42M294 46v42M105 203h42M126 182v42M273 203h42M294 182v42" stroke-width="1"/><circle cx="210" cy="136" r="8"/></g><path d="M55 135h80M285 135h80" stroke-dasharray="3 5" opacity=".5"/></g><text x="36" y="262" fill="currentColor" opacity=".6" font-family="monospace" font-size="8">AURA / AIR-QUALITY ASSESSMENT CONCEPT</text></svg>`;
+  return '<div class="vault-project-mark" aria-hidden="true">V<span>_</span></div>';
+}
+
+function projectCard(project, index, full = false) {
+  const url = safeURL(project.url);
+  return `<article class="${full ? 'project-full' : 'project-card'}"><div class="project-visual project-visual-${['mech', 'aura', 'vault'].includes(project.visual) ? project.visual : 'vault'}"><div class="project-visual-meta"><span>EXP_${String(index + 1).padStart(2, '0')}</span><span>${e(project.status)}</span></div>${projectVisual(project, full ? 'project' : 'home')}</div><div class="project-content"><p class="eyebrow">${e(project.category)}</p><h${full ? '2' : '3'}>${e(project.name)}</h${full ? '2' : '3'}><p>${e(project.description)}</p>${full ? `<p class="project-note">${e(project.note || '')}</p>` : ''}<div class="tag-list">${project.tags.map(tag => `<span>${e(tag)}</span>`).join('')}</div>${url ? `<a href="${e(url)}" class="text-link" target="_blank" rel="noopener noreferrer">${e(project.linkLabel || 'VIEW PROJECT')} <span>↗</span></a>` : `<span class="micro project-coming">${e(project.linkLabel || 'IN DEVELOPMENT')}</span>`}</div></article>`;
+}
+
+function renderHome() {
+  const films = selectEntries(archive.entries).slice(0, 5);
+  $('#featured-grid').innerHTML = films.length ? films.map((entry, index) => filmCard(entry, index, true)).join('') : '<div class="empty-state"><h3>THE FIRST RECORD IS STILL TO COME.</h3><p>For now, have a look at what I’m building.</p><a class="text-link" href="#projects">EXPLORE MY PROJECTS ↗</a></div>';
+  $('#home-sample-note').hidden = !films.some(x => x.isSample);
+  const stats = archiveStats(archive.entries);
+  const starter = stats.watched === 0 && stats.samples > 0;
+  const facts = starter ? [[films.length, 'FILM STARTERS'], [archive.entries.filter(x => x.status === 'watchlist').length, 'WATCHLIST STARTERS'], [archive.projects.length, 'ONGOING PROJECTS'], ['∞', 'REASONS TO BE CURIOUS']] : [[stats.watched, 'WATCHED & LOGGED'], [stats.average === null ? '—' : stats.average.toFixed(1), 'AVERAGE RATING / 5'], [stats.watchlist, 'ON THE WATCHLIST'], [archive.projects.length, 'ONGOING PROJECTS']];
+  $('#archive-summary').innerHTML = facts.map(([value, label]) => `<div><strong>${typeof value === 'number' && Number.isInteger(value) ? String(value).padStart(2, '0') : value}</strong><span>${label}</span></div>`).join('');
+  $('#home-projects').innerHTML = archive.projects.slice(0, 2).map((project, index) => projectCard(project, index)).join('');
+  $('#project-list').innerHTML = archive.projects.map((project, index) => projectCard(project, index, true)).join('');
+  $('#profile-name').textContent = `${archive.profile.shortName.toUpperCase()}.`;
+  $('#profile-full-name').textContent = archive.profile.name;
+  $('#profile-bio').textContent = archive.profile.bio;
+  $('#profile-note').textContent = archive.profile.note;
+  $('#interest-tags').innerHTML = archive.profile.interests.map(interest => `<span>${e(interest)}</span>`).join('');
+  $('#copyright-year').textContent = new Date().getFullYear();
+  for (const name of ['films', 'series', 'watchlist']) $(`#${name}-tab-count`).textContent = selectEntries(archive.entries, { collection: name }).length;
+}
+
+function renderCollection(reset = false) {
+  const [eyebrow, title, outline, description] = collectionInfo[collection];
+  $('#collection-eyebrow').textContent = eyebrow;
+  $('#collection-title').innerHTML = `${title}<span class="outline-text">${outline}</span>`;
+  $('#collection-description').textContent = description;
+  const base = selectEntries(archive.entries, { collection });
+  if (reset) {
+    $('#archive-search').value = '';
+    $('#genre-filter').innerHTML = '<option value="all">ALL GENRES</option>' + [...new Set(base.flatMap(x => x.genres))].sort().map(genre => `<option value="${e(genre)}">${e(genre.toUpperCase())}</option>`).join('');
+    $('#archive-sort').value = 'recent';
+  }
+  const query = $('#archive-search').value, genre = $('#genre-filter').value, sort = $('#archive-sort').value;
+  const entries = selectEntries(archive.entries, { collection, query, genre, sort });
+  document.querySelectorAll('[data-collection]').forEach(link => { link.classList.toggle('active', link.dataset.collection === collection); if (link.dataset.collection === collection) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+  $('#collection-grid').innerHTML = entries.map((entry, index) => filmCard(entry, index)).join('');
+  $('#collection-grid').classList.toggle('list-layout', layout === 'list');
+  $('#results-count').textContent = `${String(entries.length).padStart(2, '0')} ${entries.length === 1 ? 'RECORD' : 'RECORDS'}${query.trim() || genre !== 'all' ? ` / ${base.length} TOTAL` : ' ON FILE'}`;
+  $('#clear-filters').hidden = !query.trim() && genre === 'all' && sort === 'recent';
+  $('#collection-sample-note').hidden = !entries.some(x => x.isSample);
+  $('#collection-empty').hidden = entries.length > 0;
+  $('#empty-title').textContent = base.length ? 'NO MATCHING RECORDS.' : collection === 'series' ? 'NO SERIES ON RECORD. YET.' : collection === 'watchlist' ? 'AN OPEN EVENING.' : 'THE FIRST RECORD IS STILL TO COME.';
+  $('#empty-copy').textContent = base.length ? 'Try another search or a different genre.' : collection === 'series' ? 'This part of the archive is still unwritten. Explore the films in the meantime.' : collection === 'watchlist' ? 'There’s nothing waiting on this list right now.' : 'A personal archive starts with a single film.';
+  $('#empty-link').hidden = collection === 'films';
+}
+
+function showView(view) {
+  document.querySelectorAll('.view').forEach(section => { section.hidden = section.dataset.view !== view; section.classList.toggle('active', !section.hidden); });
+  const key = view === 'collection' ? 'films' : view;
+  document.querySelectorAll('[data-nav]').forEach(link => { const active = link.dataset.nav === key; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+  $('#mobile-nav').hidden = true;
+  $('.menu-toggle').setAttribute('aria-expanded', 'false');
+  $('.menu-toggle').setAttribute('aria-label', 'Open navigation');
+}
+
+function openEntry(id) {
+  const entry = archive.entries.find(x => x.id === id);
+  if (!entry) { location.hash = '#films'; toast('That record is not in the archive.'); return; }
+  const art = safeURL(entry.image || entry.poster, { image: true });
+  const watchedDate = entry.watchedOn ? new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${entry.watchedOn}T12:00:00Z`)) : '';
+  $('#entry-details').innerHTML = `<div class="dialog-art poster-tone-2">${art ? `<img src="${e(art)}" alt="${e(entry.title)} artwork" width="512" height="512">` : `<span class="poster-type">${e(entry.title)}</span>`}<span class="micro">REC / ${e(entry.id.toUpperCase())}</span></div><div class="dialog-copy"><p class="eyebrow">${entry.isSample ? 'STARTER ENTRY / SAMPLE RATING' : entry.status === 'watchlist' ? 'ON THE WATCHLIST' : entry.status === 'watching' ? 'CURRENTLY WATCHING' : 'FROM MY ARCHIVE'}</p><h2 id="entry-title">${e(entry.title)}</h2><p class="dialog-subtitle">${entry.year}${entry.runtime ? ` · ${entry.runtime} MIN` : ''}${entry.director ? ` · ${e(entry.director)}` : ''}</p><div class="tag-list">${entry.genres.map(genre => `<span>${e(genre)}</span>`).join('')}</div><div class="dialog-rating">${entry.status === 'watchlist' ? '<span class="unrated">YET TO BE WATCHED</span>' : ratingMarkup(entry.rating, { sample: entry.isSample, favourite: entry.favourite })}</div><p class="eyebrow">${entry.isSample ? 'A NOTE FROM THE ORIGINAL DESIGN' : 'MY AFTERTHOUGHTS'}</p><p class="review-text">${e(entry.review || (entry.status === 'watchlist' ? 'Waiting for the right evening.' : 'No notes yet. Sometimes a rating is enough.')).replace(/\n/g, '<br>')}</p>${watchedDate ? `<p class="micro watched-date">WATCHED / ${e(watchedDate)}</p>` : ''}${entry.isSample ? '<p class="sample-disclaimer">This entry is sample content from the original design, not a confirmed personal rating.</p>' : ''}<div class="dialog-actions"><button class="button button-outline" data-copy-entry="${e(entry.id)}">COPY ENTRY LINK ↗</button><a class="text-link" href="https://www.themoviedb.org/search?query=${encodeURIComponent(entry.title)}" target="_blank" rel="noopener noreferrer">FILM DETAILS ↗</a></div></div>`;
+  entryFocus = entry.id;
+  if (!$('#entry-dialog').open) $('#entry-dialog').showModal();
+  document.body.classList.add('dialog-open');
+  document.title = `${entry.title} // Adeeb’s archive`;
+}
+
+function route() {
+  if (!archive) return;
+  let hash;
+  try { hash = decodeURIComponent(location.hash.slice(1) || 'home'); } catch { hash = 'home'; }
+  if (hash.startsWith('film/')) {
+    const entry = archive.entries.find(x => x.id === hash.slice(5));
+    const target = entry?.status === 'watchlist' ? 'watchlist' : entry?.type === 'series' ? 'series' : 'films';
+    const reset = collection !== target;
+    collection = target; showView('collection'); renderCollection(reset || !$('#genre-filter').options.length || $('#genre-filter').options.length === 1);
+    openEntry(hash.slice(5)); return;
+  }
+  const closingEntry = $('#entry-dialog').open ? entryFocus : null;
+  if ($('#entry-dialog').open) $('#entry-dialog').close();
+  document.body.classList.remove('dialog-open');
+  if (['films', 'series', 'watchlist'].includes(hash)) {
+    const reset = lastRoute !== hash;
+    collection = hash; showView('collection'); renderCollection(reset || $('#genre-filter').options.length === 1);
+    document.title = `${hash === 'films' ? 'Film archive' : hash === 'series' ? 'Series archive' : 'Watchlist'} // Adeeb`;
+  } else {
+    const view = ['projects', 'about'].includes(hash) ? hash : 'home';
+    showView(view);
+    document.title = view === 'home' ? 'Adeeb // VAULT.SYS' : `${view === 'about' ? 'The operator' : 'Projects'} // Adeeb`;
+  }
+  lastRoute = ['films', 'series', 'watchlist'].includes(hash) ? hash : 'films';
+  if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
+  else window.scrollTo({ top: 0, behavior: 'instant' });
+  if (closingEntry && ['films', 'series', 'watchlist'].includes(hash)) {
+    $(`#collection-grid a[href="#film/${closingEntry}"]`)?.focus({ preventScroll: true });
+  }
+}
+
+function closeEntry() {
+  if (location.hash.startsWith('#film/')) { location.hash = `#${collection}`; return; }
+  $('#entry-dialog').close(); document.body.classList.remove('dialog-open');
+}
+
+document.addEventListener('error', event => {
+  if (event.target instanceof HTMLImageElement) { event.target.hidden = true; event.target.parentElement.classList.add('image-unavailable'); }
+}, true);
+$('#retry-load').addEventListener('click', init);
+$('.menu-toggle').addEventListener('click', () => { const open = $('#mobile-nav').hidden; $('#mobile-nav').hidden = !open; $('.menu-toggle').setAttribute('aria-expanded', String(open)); $('.menu-toggle').setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); });
+$('#mobile-nav').addEventListener('click', event => { if (event.target.closest('a')) { $('#mobile-nav').hidden = true; $('.menu-toggle').setAttribute('aria-expanded', 'false'); } });
+$('#archive-search').addEventListener('input', () => renderCollection());
+$('#genre-filter').addEventListener('change', () => renderCollection());
+$('#archive-sort').addEventListener('change', () => renderCollection());
+$('#clear-filters').addEventListener('click', () => { renderCollection(true); $('#archive-search').focus(); });
+document.querySelectorAll('[data-layout]').forEach(button => button.addEventListener('click', () => { layout = button.dataset.layout; document.querySelectorAll('[data-layout]').forEach(b => { b.classList.toggle('active', b === button); b.setAttribute('aria-pressed', String(b === button)); }); renderCollection(); }));
+$('.dialog-close').addEventListener('click', closeEntry);
+$('#entry-dialog').addEventListener('cancel', event => { event.preventDefault(); closeEntry(); });
+$('#entry-dialog').addEventListener('click', event => { if (event.target === $('#entry-dialog')) { const rect = $('#entry-dialog').getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeEntry(); } const copyButton = event.target.closest('[data-copy-entry]'); if (copyButton) { const url = new URL(safeURL(archive.profile.website) || location.href); url.hash = `film/${copyButton.dataset.copyEntry}`; copy(url.href); } });
+$('#share-site').addEventListener('click', () => copy(safeURL(archive.profile.website) || `${location.origin}${location.pathname}`));
+window.addEventListener('hashchange', route);
+
+async function init() {
+  $('#loading').hidden = false; $('#error-state').hidden = true;
+  try {
+    archive = await loadArchive();
+    if (new URLSearchParams(location.search).get('preview') === '1') {
+      try { const draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); if (draft && !validateArchive(draft).length) archive = draft; } catch { /* A broken local draft never prevents the public archive from opening. */ }
+      $('#preview-banner').hidden = false; document.body.classList.add('preview-mode');
+    }
+    renderHome(); $('#loading').hidden = true; $('#site-content').hidden = false; route();
+  } catch (error) {
+    console.error('Archive could not be loaded:', error);
+    $('#loading').hidden = true; $('#site-content').hidden = true; $('#error-state').hidden = false;
+  }
+}
+init();

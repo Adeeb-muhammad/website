@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "profile": {
+    "name": "Adeeb Muhammad",
+    "shortName": "Adeeb",
+    "location": "United Arab Emirates",
+    "bio": "A student, an aspiring developer, and someone who spends a little too much time thinking about films.",
+    "note": "Based in the UAE. Learning C# and Python, experimenting with game development, and following ideas wherever they lead. This is my personal space for the things I make and the stories I keep coming back to.",
+    "interests": ["C# / GODOT", "PYTHON", "FILMS & ANIME", "UAV CONCEPTS"],
+    "website": "https://adeebmuh.me/",
+    "github": "https://github.com/Adeeb-muhammad"
+  },
+  "projects": [
+    {"id":"super-mechs","name":"Super Mechs","category":"GAME DEVELOPMENT","status":"PROTOTYPE","description":"Rebuilding a game I love, one system at a time. A Super Mechs-inspired project in Godot and C#, with modular mech assembly and an early turn-based combat system.","note":"Current focus: connecting the pieces into one complete playable battle.","tags":["GODOT","C#","TURN-BASED COMBAT"],"url":"https://github.com/Adeeb-muhammad/Super-Mech-","linkLabel":"EXPLORE THE SOURCE","visual":"mech"},
+    {"id":"aura","name":"AURA","category":"ENVIRONMENTAL TECHNOLOGY","status":"CONCEPT / RESEARCH","description":"Autonomous UAV for Resource & Air-quality Assessment. An environmental-monitoring drone concept exploring how modular sensors could help collect air-quality and atmospheric data.","note":"An idea in development, with a focus on environmental monitoring and potential use in the UAE.","tags":["UAV","AIR QUALITY","SENSOR SYSTEMS"],"url":"","linkLabel":"CONCEPT IN DEVELOPMENT","visual":"aura"},
+    {"id":"vault","name":"VAULT.SYS","category":"PERSONAL WEB PROJECT","status":"ONGOING","description":"You’re looking at it. A personal portfolio and cinematic archive, built around a simple idea: keep a small corner of the internet that feels like my own.","note":"A lightweight static website, with its archive kept in the GitHub repository.","tags":["HTML / CSS","JAVASCRIPT","GITHUB PAGES"],"url":"https://github.com/Adeeb-muhammad/website","linkLabel":"VIEW THIS PROJECT","visual":"vault"}
+  ],
+  "entries": [
+    {"id":"blade-runner-2049","title":"Blade Runner 2049","year":2017,"type":"film","status":"watched","director":"Denis Villeneuve","genres":["Sci-fi","Neo-noir"],"runtime":163,"rating":4.5,"review":"A haunting vision of a decayed future where the question of humanity outpaces its technology.","watchedOn":"","favourite":false,"poster":"assets/images/blade-runner-poster.webp","image":"assets/images/blade-runner-scene.webp","isSample":true},
+    {"id":"perfect-blue","title":"Perfect Blue","year":1997,"type":"film","status":"watched","director":"Satoshi Kon","genres":["Animation","Thriller"],"runtime":81,"rating":5,"review":"A psychological masterwork detailing the erosion of identity in the digital age.","watchedOn":"","favourite":false,"poster":"assets/images/perfect-blue-poster.webp","image":"assets/images/perfect-blue-scene.webp","isSample":true},
+    {"id":"ghost-in-the-shell","title":"Ghost in the Shell","year":1995,"type":"film","status":"watched","director":"Mamoru Oshii","genres":["Animation","Sci-fi"],"runtime":83,"rating":4.5,"review":"The original cyberpunk soul—philosophy and gunfire in equal measure.","watchedOn":"","favourite":false,"poster":"assets/images/ghost-in-the-shell-poster.webp","image":"assets/images/ghost-in-the-shell-poster.webp","isSample":true},
+    {"id":"annihilation","title":"Annihilation","year":2018,"type":"film","status":"watched","director":"Alex Garland","genres":["Sci-fi","Horror"],"runtime":115,"rating":4,"review":"Where nature and collapse intertwine in pure visual dread.","watchedOn":"","favourite":false,"poster":"assets/images/annihilation-poster.webp","image":"assets/images/annihilation-poster.webp","isSample":true},
+    {"id":"ex-machina","title":"Ex Machina","year":2014,"type":"film","status":"watched","director":"Alex Garland","genres":["Sci-fi","Thriller"],"runtime":108,"rating":4,"review":"Cold minimalism as a vessel for the most human of questions.","watchedOn":"","favourite":false,"poster":"assets/images/ex-machina-poster.webp","image":"assets/images/ex-machina-poster.webp","isSample":true},
+    {"id":"dune-part-two","title":"Dune: Part Two","year":2024,"type":"film","status":"watchlist","director":"Denis Villeneuve","genres":["Sci-fi","Adventure"],"runtime":166,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
+    {"id":"the-substance","title":"The Substance","year":2024,"type":"film","status":"watchlist","director":"Coralie Fargeat","genres":["Horror","Satire"],"runtime":141,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
+    {"id":"civil-war","title":"Civil War","year":2024,"type":"film","status":"watchlist","director":"Alex Garland","genres":["Drama","Thriller"],"runtime":109,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
+    {"id":"i-saw-the-tv-glow","title":"I Saw the TV Glow","year":2024,"type":"film","status":"watchlist","director":"Jane Schoenbrun","genres":["Horror","Drama"],"runtime":100,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
+    {"id":"nosferatu","title":"Nosferatu","year":2024,"type":"film","status":"watchlist","director":"Robert Eggers","genres":["Horror","Gothic"],"runtime":132,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true}
+  ]
+}
