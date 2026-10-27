@@ -68,10 +68,34 @@
   ],
   "entries": [
     {
+      "id": "avatar-2009",
+      "title": "Avatar",
+      "year": 2009,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "James Cameron",
+      "genres": [
+        "Sci-fi",
+        "Adventure"
+      ],
+      "runtime": 162,
+      "rating": 3.9,
+      "review": "Good VFX, but it lost emotional depth.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "",
+      "image": "",
+      "isSample": false
+    },
+    {
       "id": "baththa",
       "title": "Baththa",
       "year": 2026,
-      "rating": 4.0,
+      "rating": 4,
       "director": "Balaji Tharaneetharan",
       "genres": [
         "Action",
@@ -130,7 +154,7 @@
         "Thriller"
       ],
       "runtime": 163,
-      "rating": 5.0,
+      "rating": 5,
       "review": "I like this movie a lot.",
       "watchedOn": "",
       "favourite": false,
@@ -275,7 +299,7 @@
         "Drama"
       ],
       "runtime": 152,
-      "rating": 3.0,
+      "rating": 3,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -299,7 +323,7 @@
         "Romance"
       ],
       "runtime": 161,
-      "rating": 2.0,
+      "rating": 2,
       "review": "I didn’t like it very much.",
       "watchedOn": "",
       "favourite": false,
@@ -347,7 +371,7 @@
         "Drama"
       ],
       "runtime": 169,
-      "rating": 5.0,
+      "rating": 5,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -372,7 +396,7 @@
         "Drama"
       ],
       "runtime": 0,
-      "rating": 5.0,
+      "rating": 5,
       "review": "It brought back the scientist inside me.",
       "watchedOn": "",
       "favourite": true,
@@ -396,7 +420,7 @@
         "Adventure"
       ],
       "runtime": 0,
-      "rating": 4.0,
+      "rating": 4,
       "review": "",
       "watchedOn": "",
       "favourite": false,
