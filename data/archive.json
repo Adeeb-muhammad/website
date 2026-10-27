@@ -4,27 +4,357 @@
     "name": "Adeeb Muhammad",
     "shortName": "Adeeb",
     "location": "United Arab Emirates",
-    "bio": "A student, an aspiring developer, and someone who spends a little too much time thinking about films.",
-    "note": "Based in the UAE. Learning C# and Python, experimenting with game development, and following ideas wherever they lead. This is my personal space for the things I make and the stories I keep coming back to.",
-    "interests": ["C# / GODOT", "PYTHON", "FILMS & ANIME", "UAV CONCEPTS"],
+    "bio": "A student, an aspiring developer, and someone who enjoys fiction in all its forms, across languages, films, series, and anime.",
+    "note": "Based in the UAE. Currently working with Project Phantom, a youth-led aerospace initiative building a modular, all-electric VTOL aircraft. Alongside that, I’m learning C# and Python and experimenting with game development. This vault is where I keep the stories I enjoy and the things I’m building.",
+    "interests": [
+      "C# / GODOT",
+      "PYTHON",
+      "CINEMA & FICTION",
+      "UAV / AEROSPACE"
+    ],
     "website": "https://adeebmuh.me/",
-    "github": "https://github.com/Adeeb-muhammad"
+    "github": "https://github.com/Adeeb-muhammad",
+    "instagram": "https://www.instagram.com/ax_guy/"
   },
   "projects": [
-    {"id":"super-mechs","name":"Super Mechs","category":"GAME DEVELOPMENT","status":"PROTOTYPE","description":"Rebuilding a game I love, one system at a time. A Super Mechs-inspired project in Godot and C#, with modular mech assembly and an early turn-based combat system.","note":"Current focus: connecting the pieces into one complete playable battle.","tags":["GODOT","C#","TURN-BASED COMBAT"],"url":"https://github.com/Adeeb-muhammad/Super-Mech-","linkLabel":"EXPLORE THE SOURCE","visual":"mech"},
-    {"id":"aura","name":"AURA","category":"ENVIRONMENTAL TECHNOLOGY","status":"CONCEPT / RESEARCH","description":"Autonomous UAV for Resource & Air-quality Assessment. An environmental-monitoring drone concept exploring how modular sensors could help collect air-quality and atmospheric data.","note":"An idea in development, with a focus on environmental monitoring and potential use in the UAE.","tags":["UAV","AIR QUALITY","SENSOR SYSTEMS"],"url":"","linkLabel":"CONCEPT IN DEVELOPMENT","visual":"aura"},
-    {"id":"vault","name":"VAULT.SYS","category":"PERSONAL WEB PROJECT","status":"ONGOING","description":"You’re looking at it. A personal portfolio and cinematic archive, built around a simple idea: keep a small corner of the internet that feels like my own.","note":"A lightweight static website, with its archive kept in the GitHub repository.","tags":["HTML / CSS","JAVASCRIPT","GITHUB PAGES"],"url":"https://github.com/Adeeb-muhammad/website","linkLabel":"VIEW THIS PROJECT","visual":"vault"}
+    {
+      "id": "project-phantom",
+      "name": "Project Phantom",
+      "category": "AEROSPACE / CURRENT WORK",
+      "status": "WORKING WITH THE TEAM",
+      "description": "I’m currently working with Project Phantom, a UAE-based youth-led aerospace initiative developing a modular, all-electric aircraft that combines vertical takeoff and landing with fixed-wing flight.",
+      "note": "The platform brings together electric propulsion, solar integration, and interchangeable mission configurations. Explore the official site for the team’s work and progress.",
+      "tags": [
+        "UAV",
+        "VTOL",
+        "ELECTRIC FLIGHT"
+      ],
+      "url": "https://projectphantom.space/",
+      "linkLabel": "VISIT PROJECT PHANTOM",
+      "visual": "phantom"
+    },
+    {
+      "id": "super-mechs",
+      "name": "Super Mechs",
+      "category": "GAME DEVELOPMENT",
+      "status": "PROTOTYPE",
+      "description": "Rebuilding a game I love, one system at a time. A Super Mechs-inspired project in Godot and C#, with modular mech assembly and an early turn-based combat system.",
+      "note": "Current focus: connecting the pieces into one complete playable battle.",
+      "tags": [
+        "GODOT",
+        "C#",
+        "TURN-BASED COMBAT"
+      ],
+      "url": "https://github.com/Adeeb-muhammad/Super-Mech-",
+      "linkLabel": "EXPLORE THE SOURCE",
+      "visual": "mech"
+    },
+    {
+      "id": "vault",
+      "name": "Adeeb’s Vault",
+      "category": "PERSONAL WEB PROJECT",
+      "status": "ONGOING",
+      "description": "You’re looking at it. A personal portfolio and cinematic archive, built around a simple idea: keep a small corner of the internet that feels like my own.",
+      "note": "A lightweight static website, with its archive kept in the GitHub repository.",
+      "tags": [
+        "HTML / CSS",
+        "JAVASCRIPT",
+        "GITHUB PAGES"
+      ],
+      "url": "https://github.com/Adeeb-muhammad/website",
+      "linkLabel": "VIEW THIS PROJECT",
+      "visual": "vault"
+    }
   ],
   "entries": [
-    {"id":"blade-runner-2049","title":"Blade Runner 2049","year":2017,"type":"film","status":"watched","director":"Denis Villeneuve","genres":["Sci-fi","Neo-noir"],"runtime":163,"rating":4.5,"review":"A haunting vision of a decayed future where the question of humanity outpaces its technology.","watchedOn":"","favourite":false,"poster":"assets/images/blade-runner-poster.webp","image":"assets/images/blade-runner-scene.webp","isSample":true},
-    {"id":"perfect-blue","title":"Perfect Blue","year":1997,"type":"film","status":"watched","director":"Satoshi Kon","genres":["Animation","Thriller"],"runtime":81,"rating":5,"review":"A psychological masterwork detailing the erosion of identity in the digital age.","watchedOn":"","favourite":false,"poster":"assets/images/perfect-blue-poster.webp","image":"assets/images/perfect-blue-scene.webp","isSample":true},
-    {"id":"ghost-in-the-shell","title":"Ghost in the Shell","year":1995,"type":"film","status":"watched","director":"Mamoru Oshii","genres":["Animation","Sci-fi"],"runtime":83,"rating":4.5,"review":"The original cyberpunk soul—philosophy and gunfire in equal measure.","watchedOn":"","favourite":false,"poster":"assets/images/ghost-in-the-shell-poster.webp","image":"assets/images/ghost-in-the-shell-poster.webp","isSample":true},
-    {"id":"annihilation","title":"Annihilation","year":2018,"type":"film","status":"watched","director":"Alex Garland","genres":["Sci-fi","Horror"],"runtime":115,"rating":4,"review":"Where nature and collapse intertwine in pure visual dread.","watchedOn":"","favourite":false,"poster":"assets/images/annihilation-poster.webp","image":"assets/images/annihilation-poster.webp","isSample":true},
-    {"id":"ex-machina","title":"Ex Machina","year":2014,"type":"film","status":"watched","director":"Alex Garland","genres":["Sci-fi","Thriller"],"runtime":108,"rating":4,"review":"Cold minimalism as a vessel for the most human of questions.","watchedOn":"","favourite":false,"poster":"assets/images/ex-machina-poster.webp","image":"assets/images/ex-machina-poster.webp","isSample":true},
-    {"id":"dune-part-two","title":"Dune: Part Two","year":2024,"type":"film","status":"watchlist","director":"Denis Villeneuve","genres":["Sci-fi","Adventure"],"runtime":166,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
-    {"id":"the-substance","title":"The Substance","year":2024,"type":"film","status":"watchlist","director":"Coralie Fargeat","genres":["Horror","Satire"],"runtime":141,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
-    {"id":"civil-war","title":"Civil War","year":2024,"type":"film","status":"watchlist","director":"Alex Garland","genres":["Drama","Thriller"],"runtime":109,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
-    {"id":"i-saw-the-tv-glow","title":"I Saw the TV Glow","year":2024,"type":"film","status":"watchlist","director":"Jane Schoenbrun","genres":["Horror","Drama"],"runtime":100,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true},
-    {"id":"nosferatu","title":"Nosferatu","year":2024,"type":"film","status":"watchlist","director":"Robert Eggers","genres":["Horror","Gothic"],"runtime":132,"rating":null,"review":"","watchedOn":"","favourite":false,"poster":"","image":"","isSample":true}
+    {
+      "id": "baththa",
+      "title": "Baththa",
+      "year": 2026,
+      "rating": 4.0,
+      "director": "Balaji Tharaneetharan",
+      "genres": [
+        "Action",
+        "Drama"
+      ],
+      "runtime": 159,
+      "languages": [
+        "Tamil"
+      ],
+      "type": "film",
+      "category": "general",
+      "status": "watched",
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/baththa-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "meiyazhagan",
+      "title": "Meiyazhagan",
+      "year": 2024,
+      "rating": 4.5,
+      "director": "C. Prem Kumar",
+      "genres": [
+        "Drama"
+      ],
+      "runtime": 177,
+      "languages": [
+        "Tamil"
+      ],
+      "type": "film",
+      "category": "general",
+      "status": "watched",
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/meiyazhagan-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "mersal",
+      "title": "Mersal",
+      "year": 2017,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Tamil"
+      ],
+      "status": "watched",
+      "director": "Atlee",
+      "genres": [
+        "Action",
+        "Thriller"
+      ],
+      "runtime": 163,
+      "rating": 4.8,
+      "review": "I like this movie a lot.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/mersal-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "perfect-days",
+      "title": "Perfect Days",
+      "year": 2023,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Wim Wenders",
+      "genres": [
+        "Drama",
+        "Slice of life"
+      ],
+      "runtime": 124,
+      "rating": 4.5,
+      "review": "I really liked this movie.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/perfect-days-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "24",
+      "title": "24",
+      "year": 2016,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Tamil"
+      ],
+      "status": "watched",
+      "director": "Vikram Kumar",
+      "genres": [
+        "Sci-fi",
+        "Thriller"
+      ],
+      "runtime": 160,
+      "rating": 4.4,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/24-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "ra-one",
+      "title": "Ra.One",
+      "year": 2011,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Hindi"
+      ],
+      "status": "watched",
+      "director": "Anubhav Sinha",
+      "genres": [
+        "Sci-fi",
+        "Action"
+      ],
+      "runtime": 156,
+      "rating": 4.4,
+      "review": "Amazing, especially for a film that came out in 2011.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/ra-one-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "oppenheimer",
+      "title": "Oppenheimer",
+      "year": 2023,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Christopher Nolan",
+      "genres": [
+        "Biography",
+        "Drama",
+        "History"
+      ],
+      "runtime": 180,
+      "rating": 4.5,
+      "review": "An amazing movie. I really liked it.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/oppenheimer-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "small-things-like-these",
+      "title": "Small Things Like These",
+      "year": 2024,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Tim Mielants",
+      "genres": [
+        "Drama"
+      ],
+      "runtime": 98,
+      "rating": 4.2,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/small-things-like-these-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "karuppu",
+      "title": "Karuppu",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Tamil"
+      ],
+      "status": "watched",
+      "director": "RJ Balaji",
+      "genres": [
+        "Fantasy",
+        "Action",
+        "Drama"
+      ],
+      "runtime": 152,
+      "rating": 3.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/karuppu-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "vishwanath-and-sons",
+      "title": "Vishwanath & Sons",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Tamil"
+      ],
+      "status": "watched",
+      "director": "Venky Atluri",
+      "genres": [
+        "Drama",
+        "Romance"
+      ],
+      "runtime": 161,
+      "rating": 2.0,
+      "review": "I didn’t like it very much.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/vishwanath-and-sons-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "orb",
+      "title": "Orb: On the Movements of the Earth",
+      "year": 2024,
+      "type": "series",
+      "category": "anime",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Kenichi Shimizu",
+      "genres": [
+        "Historical",
+        "Science",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 5.0,
+      "review": "It brought back the scientist inside me.",
+      "watchedOn": "",
+      "favourite": true,
+      "poster": "assets/images/orb-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "dr-stone",
+      "title": "Dr. Stone",
+      "year": 2019,
+      "type": "series",
+      "category": "anime",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Shinya Iino / Shuhei Matsushita",
+      "genres": [
+        "Sci-fi",
+        "Adventure"
+      ],
+      "runtime": 0,
+      "rating": 4.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/dr-stone-poster.webp",
+      "image": "",
+      "isSample": false
+    }
   ]
 }

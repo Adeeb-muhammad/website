@@ -1,4 +1,4 @@
-import { DRAFT_KEY, escapeHTML as e, loadArchive, makeSlug, ratingMarkup, safeURL, validateArchive } from './core.js';
+import { DRAFT_KEY, escapeHTML as e, loadArchive, makeSlug, ratingMarkup, safeURL, validateArchive } from './core.js?v=2';
 
 const $ = selector => document.querySelector(selector);
 const BASE_KEY = 'adeeb-vault-base-v1';
@@ -63,8 +63,9 @@ function editEntry(id = null) {
   const entry = archive.entries.find(x => x.id === id);
   selectedEntry = entry?.id || null;
   entryForm.reset();
-  for (const name of ['id', 'title', 'year', 'type', 'status', 'rating', 'director', 'runtime', 'watchedOn', 'review', 'poster', 'image']) entryForm.elements.namedItem(name).value = entry ? entry[name] ?? '' : ({ type: 'film', status: 'watched', runtime: 0 }[name] ?? '');
+  for (const name of ['id', 'title', 'year', 'type', 'category', 'status', 'rating', 'director', 'runtime', 'watchedOn', 'review', 'poster', 'image']) entryForm.elements.namedItem(name).value = entry ? entry[name] ?? (name === 'category' ? 'general' : '') : ({ type: 'film', category: 'general', status: 'watched', runtime: 0 }[name] ?? '');
   entryForm.elements.genres.value = entry ? entry.genres.join(', ') : '';
+  entryForm.elements.languages.value = entry ? (entry.languages || []).join(', ') : '';
   entryForm.elements.favourite.checked = entry?.favourite || false;
   entryForm.elements.isSample.checked = entry?.isSample || false;
   $('#entry-form-label').textContent = entry ? `EDITING / ${entry.title.toUpperCase()}` : 'NEW RECORD / MAKE IT YOURS';
@@ -81,7 +82,7 @@ entryForm.addEventListener('submit', event => {
   const existingId = value(entryForm, 'id');
   const title = value(entryForm, 'title');
   const watchlist = value(entryForm, 'status') === 'watchlist';
-  const entry = { id: existingId || makeSlug(title, archive.entries), title, year: Number(value(entryForm, 'year')), type: value(entryForm, 'type'), status: value(entryForm, 'status'), director: value(entryForm, 'director'), genres: split(value(entryForm, 'genres')), runtime: Number(value(entryForm, 'runtime') || 0), rating: watchlist || !value(entryForm, 'rating') ? null : Number(value(entryForm, 'rating')), review: value(entryForm, 'review'), watchedOn: watchlist ? '' : value(entryForm, 'watchedOn'), favourite: !watchlist && entryForm.elements.favourite.checked, poster: value(entryForm, 'poster'), image: value(entryForm, 'image'), isSample: entryForm.elements.isSample.checked };
+  const entry = { id: existingId || makeSlug(title, archive.entries), title, year: Number(value(entryForm, 'year')), type: value(entryForm, 'type'), category: value(entryForm, 'category'), languages: split(value(entryForm, 'languages')), status: value(entryForm, 'status'), director: value(entryForm, 'director'), genres: split(value(entryForm, 'genres')), runtime: Number(value(entryForm, 'runtime') || 0), rating: watchlist || !value(entryForm, 'rating') ? null : Number(value(entryForm, 'rating')), review: value(entryForm, 'review'), watchedOn: watchlist ? '' : value(entryForm, 'watchedOn'), favourite: !watchlist && entryForm.elements.favourite.checked, poster: value(entryForm, 'poster'), image: value(entryForm, 'image'), isSample: entryForm.elements.isSample.checked };
   const next = structuredClone(archive);
   const index = next.entries.findIndex(x => x.id === existingId);
   if (index >= 0) next.entries[index] = entry; else next.entries.unshift(entry);
@@ -115,14 +116,14 @@ $('#remove-samples').addEventListener('click', () => {
 });
 
 function fillProfile() {
-  for (const name of ['name', 'shortName', 'bio', 'note']) profileForm.elements.namedItem(name).value = archive.profile[name];
+  for (const name of ['name', 'shortName', 'bio', 'note', 'instagram']) profileForm.elements.namedItem(name).value = archive.profile[name] || '';
   profileForm.elements.interests.value = archive.profile.interests.join(', ');
 }
 profileForm.addEventListener('input', () => { formDirty = true; });
 profileForm.addEventListener('submit', event => {
   event.preventDefault(); if (!profileForm.reportValidity()) return;
   const next = structuredClone(archive);
-  for (const name of ['name', 'shortName', 'bio', 'note']) next.profile[name] = value(profileForm, name);
+  for (const name of ['name', 'shortName', 'bio', 'note', 'instagram']) next.profile[name] = value(profileForm, name);
   next.profile.interests = split(value(profileForm, 'interests'));
   if (!check(next)) return;
   archive = next; saveDraft('Profile saved to your draft.');
@@ -136,7 +137,7 @@ function editProject(id = null) {
   if (!allowDiscard()) return;
   const project = archive.projects.find(x => x.id === id);
   selectedProject = project?.id || null; projectForm.reset();
-  for (const name of ['id', 'name', 'category', 'status', 'description', 'note', 'url', 'linkLabel', 'visual']) projectForm.elements.namedItem(name).value = project ? project[name] || '' : name === 'visual' ? 'vault' : '';
+  for (const name of ['id', 'name', 'category', 'status', 'description', 'note', 'url', 'linkLabel', 'visual']) projectForm.elements.namedItem(name).value = project ? (name === 'visual' && project[name] === 'aura' ? 'phantom' : project[name]) || '' : name === 'visual' ? 'vault' : '';
   projectForm.elements.tags.value = project ? project.tags.join(', ') : '';
   $('#project-form-label').textContent = project ? `EDITING / ${project.name.toUpperCase()}` : 'NEW PROJECT / SHOW THE WORK';
   $('#delete-project').hidden = !project; $('#project-start').hidden = true; projectForm.hidden = false; formDirty = false; renderProjects();
@@ -237,10 +238,11 @@ async function init() {
     let recovered = false;
     try {
       const stored = localStorage.getItem(DRAFT_KEY), base = localStorage.getItem(BASE_KEY);
-      if (stored) {
+      if (stored && stored !== base) {
         try { const draft = JSON.parse(stored); if (!validateArchive(draft).length) { archive = draft; recovered = true; $('#stale-warning').hidden = !base || base === JSON.stringify(published) || stored === JSON.stringify(published); } else notice('An invalid stored draft was ignored. The published archive is open; import a backup to recover it.', true); }
         catch { notice('A damaged stored draft was ignored. Your published archive is safe.', true); }
       }
+      if (!recovered) localStorage.removeItem(DRAFT_KEY);
       if (!recovered || !base) localStorage.setItem(BASE_KEY, JSON.stringify(published));
     } catch { storageAvailable = false; $('#storage-warning').hidden = false; }
     $('#studio-status').textContent = recovered ? 'LOCAL DRAFT RESTORED' : 'UP TO DATE';

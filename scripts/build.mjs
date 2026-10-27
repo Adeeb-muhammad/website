@@ -12,7 +12,7 @@ for (const entry of data.entries) {
 }
 for (const file of ['index.html', 'studio.html']) {
   const html = await readFile(path.join(root, file), 'utf8');
-  for (const match of html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g)) await access(path.join(root, match[1]));
+  for (const match of html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g)) await access(path.join(root, match[1].split(/[?#]/)[0]));
 }
 const fonts = await readFile(path.join(root, 'assets/fonts/fonts.css'), 'utf8');
 if (!fonts.includes('@font-face')) throw new Error('Self-hosted fonts have not been installed.');

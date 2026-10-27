@@ -22,6 +22,7 @@ export function validateArchive(data) {
   if (!data.profile || typeof data.profile.name !== 'string' || !data.profile.name.trim()) errors.push('Profile name is required.');
   for (const key of ['shortName', 'bio', 'note']) if (typeof data.profile?.[key] !== 'string') errors.push(`Profile ${key} must be text.`);
   if (!Array.isArray(data.profile?.interests) || data.profile.interests.some(x => typeof x !== 'string')) errors.push('Profile interests must be a list of text values.');
+  if (data.profile?.instagram !== undefined && (typeof data.profile.instagram !== 'string' || (data.profile.instagram && !safeURL(data.profile.instagram)))) errors.push('Instagram must be a valid HTTPS link.');
   if (!Array.isArray(data.projects)) errors.push('Projects must be a list.');
   else {
     const projectIds = new Set();
@@ -46,7 +47,9 @@ export function validateArchive(data) {
     if (!['film', 'series'].includes(entry.type)) errors.push(`${label}: type must be film or series.`);
     if (!['watched', 'watching', 'watchlist'].includes(entry.status)) errors.push(`${label}: choose a valid watch status.`);
     if (entry.type === 'film' && entry.status === 'watching') errors.push(`${label}: films must be watched or on the watchlist.`);
-    if (entry.rating !== null && (!Number.isFinite(entry.rating) || entry.rating < 0.5 || entry.rating > 5 || entry.rating * 2 % 1 !== 0)) errors.push(`${label}: ratings must be half-star steps between 0.5 and 5, or null.`);
+    if (entry.rating !== null && (!Number.isFinite(entry.rating) || entry.rating < 0.1 || entry.rating > 5 || Math.abs(entry.rating * 10 - Math.round(entry.rating * 10)) > 1e-8)) errors.push(`${label}: ratings must be in 0.1-star steps between 0.1 and 5, or null.`);
+    if (entry.category !== undefined && !['general', 'anime'].includes(entry.category)) errors.push(`${label}: category must be general or anime.`);
+    if (entry.languages !== undefined && (!Array.isArray(entry.languages) || entry.languages.some(x => typeof x !== 'string' || !x.trim()))) errors.push(`${label}: languages must be a list of nonempty text values.`);
     if (entry.status === 'watchlist' && entry.rating !== null) errors.push(`${label}: watchlist entries cannot have a rating.`);
     if (!Array.isArray(entry.genres) || entry.genres.some(x => typeof x !== 'string')) errors.push(`${label}: genres must be text values.`);
     for (const key of ['director', 'review', 'watchedOn', 'poster', 'image']) if (typeof entry[key] !== 'string') errors.push(`${label}: ${key} must be text.`);
@@ -64,11 +67,11 @@ export function isDate(value) {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-export function selectEntries(entries, { collection = 'films', query = '', genre = 'all', sort = 'recent' } = {}) {
+export function selectEntries(entries, { collection = 'films', query = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
   const search = query.trim().toLocaleLowerCase();
   return entries.filter(entry => {
-    const inCollection = collection === 'watchlist' ? entry.status === 'watchlist' : entry.type === (collection === 'series' ? 'series' : 'film') && entry.status !== 'watchlist';
-    return inCollection && (genre === 'all' || entry.genres.includes(genre)) && (!search || [entry.title, entry.director, entry.review, ...entry.genres].join(' ').toLocaleLowerCase().includes(search));
+    const inCollection = collection === 'watchlist' ? entry.status === 'watchlist' : entry.status !== 'watchlist' && (collection === 'anime' ? entry.category === 'anime' : entry.category !== 'anime' && entry.type === (collection === 'series' ? 'series' : 'film'));
+    return inCollection && (genre === 'all' || entry.genres.includes(genre)) && (language === 'all' || (entry.languages || []).includes(language)) && (!search || [entry.title, entry.director, entry.review, ...entry.genres, ...(entry.languages || [])].join(' ').toLocaleLowerCase().includes(search));
   }).sort((a, b) => {
     if (sort === 'rating') return (b.rating ?? -1) - (a.rating ?? -1) || a.title.localeCompare(b.title);
     if (sort === 'year') return b.year - a.year || a.title.localeCompare(b.title);
@@ -85,7 +88,7 @@ export function archiveStats(entries) {
 
 export function ratingMarkup(rating, { sample = false, favourite = false } = {}) {
   if (!Number.isFinite(rating)) return '<span class="unrated">NOT RATED YET</span>';
-  const stars = Array.from({ length: 5 }, (_, i) => `<span class="star${rating >= i + 1 ? ' full' : rating >= i + .5 ? ' half' : ''}"></span>`).join('');
+  const stars = Array.from({ length: 5 }, (_, i) => `<span class="star" style="--star-fill:${Math.round(Math.max(0, Math.min(1, rating - i)) * 100)}%"></span>`).join('');
   return `<span class="rating" aria-label="${rating} out of 5 stars${sample ? ', sample rating' : ''}${favourite ? ', favourite' : ''}"><span class="stars" aria-hidden="true">${stars}</span><span class="rating-number" aria-hidden="true">${rating.toFixed(1)}<small>/5</small></span>${favourite ? '<span class="favourite" aria-hidden="true">♥</span>' : ''}</span>`;
 }
 
