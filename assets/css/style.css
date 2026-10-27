@@ -15,3 +15,39 @@
 @media(max-width:365px){.brand{font-size:18px}.collection-tabs{gap:10px}}
 @media(max-width:650px){.site-header{padding-inline:var(--pad);gap:12px}.hero h1{font-size:clamp(36px,11.4vw,74px)}.section-heading{flex-wrap:wrap;gap:10px}.section-heading>div{min-width:0;flex-basis:100%}.section-heading h2{font-size:clamp(20px,6.4vw,25px);overflow-wrap:anywhere}.section-heading>.text-link{max-width:none;text-align:left;align-self:flex-start;min-height:40px}}
 @media(max-width:365px){.brand{font-size:17px}.hero h1{font-size:11.4vw}}
+
+
+/* Full featured posters and phone layout */
+.feature-media{isolation:isolate}
+.feature-media img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;box-shadow:none}
+.film-card-link:hover .feature-media img{transform:none}
+
+@media(max-width:950px){
+  :root{--rail:0px}
+  .side-rail,.desktop-nav{display:none}
+  .menu-toggle{display:inline-flex}
+  .site-header{padding-inline:var(--pad)}
+  .mobile-nav{max-height:calc(100dvh - var(--header));overflow-y:auto}
+}
+@media(max-width:650px){
+  .featured-card,.featured-card:nth-child(1),.featured-card:nth-child(2),.featured-card:nth-child(n+3),.featured-card:nth-child(n+3):last-child:nth-child(odd){grid-column:1/-1;max-width:none}
+  .featured-card .feature-media,.featured-card:nth-child(2) .feature-media,.featured-card:nth-child(n+3) .feature-media,.featured-card:nth-child(n+3):last-child:nth-child(odd) .feature-media{aspect-ratio:4/5;max-height:520px}
+  .featured-card .film-card-content h3{font-size:clamp(21px,6vw,29px)}
+  .featured-card .film-meta,.featured-card:nth-child(n+3) .film-meta{font-size:10px}
+  .featured-card:nth-child(n+3) .film-meta span:nth-child(2){display:inline}
+  .featured-card .card-record,.featured-card .card-record span:last-child{font-size:9px}
+  .featured-card .film-card-content>p{font-size:13px}
+  .featured-card .rating-number,.featured-card .card-inspect{font-size:11px}
+  .collection-tabs{overflow-x:auto;justify-content:flex-start;white-space:nowrap;scrollbar-width:thin}
+  .collection-tabs a{flex:none;font-size:10px}
+  .search-field input,.select-field select{font-size:10px}
+  .toolbar-options{width:100%}
+  .results-meta,.results-meta .text-link{font-size:10px}
+  .film-card .card-record,.film-card .card-record span:last-child,.film-card .film-meta{font-size:9px}
+  .film-card .rating-number,.film-card .card-director{font-size:11px}
+  .film-card .rating-number small{font-size:9px}
+}
+@media(max-width:500px){
+  .collection-grid{grid-template-columns:minmax(0,1fr)}
+  .collection-grid:not(.list-layout) .film-card{width:100%;max-width:360px;justify-self:center}
+}
