@@ -14,5 +14,7 @@ The cover art below identifies the films and series reviewed in Adeeb’s Vault.
 - `dr-stone-poster.webp` — [source page](https://en.wikipedia.org/wiki/Dr._Stone)
 - `baththa-poster.webp` — [source page](https://en.wikipedia.org/wiki/Baththa)
 - `meiyazhagan-poster.webp` — [source page](https://en.wikipedia.org/wiki/Meiyazhagan)
+- `leo-poster.webp` — [source page](https://en.wikipedia.org/wiki/Leo_(2023_Indian_film))
+- `interstellar-poster.webp` — [source page](https://en.wikipedia.org/wiki/Interstellar_(film))
 
 `chrome-hero.webp` comes from the original supplied website design. `social-card.png` is an original typographic graphic.

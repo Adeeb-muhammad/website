@@ -130,7 +130,7 @@
         "Thriller"
       ],
       "runtime": 163,
-      "rating": 4.8,
+      "rating": 5.0,
       "review": "I like this movie a lot.",
       "watchedOn": "",
       "favourite": false,
@@ -304,6 +304,54 @@
       "watchedOn": "",
       "favourite": false,
       "poster": "assets/images/vishwanath-and-sons-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "leo",
+      "title": "Leo",
+      "year": 2023,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Tamil"
+      ],
+      "status": "watched",
+      "director": "Lokesh Kanagaraj",
+      "genres": [
+        "Action",
+        "Thriller"
+      ],
+      "runtime": 164,
+      "rating": 4.4,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/leo-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "interstellar",
+      "title": "Interstellar",
+      "year": 2014,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Christopher Nolan",
+      "genres": [
+        "Sci-fi",
+        "Drama"
+      ],
+      "runtime": 169,
+      "rating": 5.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/interstellar-poster.webp",
       "image": "",
       "isSample": false
     },
