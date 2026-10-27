@@ -95,7 +95,7 @@
       "id": "baththa",
       "title": "Baththa",
       "year": 2026,
-      "rating": 4,
+      "rating": 4.0,
       "director": "Balaji Tharaneetharan",
       "genres": [
         "Action",
@@ -154,7 +154,7 @@
         "Thriller"
       ],
       "runtime": 163,
-      "rating": 5,
+      "rating": 5.0,
       "review": "I like this movie a lot.",
       "watchedOn": "",
       "favourite": false,
@@ -299,7 +299,7 @@
         "Drama"
       ],
       "runtime": 152,
-      "rating": 3,
+      "rating": 3.0,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -323,7 +323,7 @@
         "Romance"
       ],
       "runtime": 161,
-      "rating": 2,
+      "rating": 2.0,
       "review": "I didn’t like it very much.",
       "watchedOn": "",
       "favourite": false,
@@ -371,7 +371,7 @@
         "Drama"
       ],
       "runtime": 169,
-      "rating": 5,
+      "rating": 5.0,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -396,7 +396,7 @@
         "Drama"
       ],
       "runtime": 0,
-      "rating": 5,
+      "rating": 5.0,
       "review": "It brought back the scientist inside me.",
       "watchedOn": "",
       "favourite": true,
@@ -420,7 +420,7 @@
         "Adventure"
       ],
       "runtime": 0,
-      "rating": 4,
+      "rating": 4.0,
       "review": "",
       "watchedOn": "",
       "favourite": false,
