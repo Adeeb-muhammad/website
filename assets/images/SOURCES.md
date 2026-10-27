@@ -2,6 +2,7 @@
 
 The cover art below identifies the films and series reviewed in Adeeb’s Vault. Artwork remains the property of its respective rightsholders.
 
+- `avatar-2009-poster.jpg` — [theatrical poster source](https://www.imdb.com/title/tt0499549/mediaviewer/rm2864126209/)
 - `mersal-poster.webp` — [source page](https://en.wikipedia.org/wiki/Mersal)
 - `perfect-days-poster.webp` — [source page](https://en.wikipedia.org/wiki/Perfect_Days)
 - `24-poster.webp` — [source page](https://en.wikipedia.org/wiki/24_(2016_film))

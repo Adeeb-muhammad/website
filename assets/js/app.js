@@ -1,4 +1,4 @@
-import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js?v=4';
+import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js?v=5';
 
 const $ = selector => document.querySelector(selector);
 let archive;
@@ -37,7 +37,7 @@ async function copy(text) {
 
 function poster(entry, { featured = false, index = 0 } = {}) {
   const image = safeURL(featured ? entry.image || entry.poster : entry.poster, { image: true });
-  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}"><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="512" height="512"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
+  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}${image ? ' has-image' : ''}"><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="512" height="512"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
 }
 
 function filmCard(entry, index, featured = false) {
@@ -142,9 +142,9 @@ function route() {
     collection = hash; showView('collection'); renderCollection(reset || $('#genre-filter').options.length === 1);
     document.title = `${hash === 'films' ? 'Film archive' : hash === 'series' ? 'Series archive' : hash === 'anime' ? 'Anime archive' : 'Watchlist'} // Adeeb’s Vault`;
   } else {
-    const view = ['projects', 'about'].includes(hash) ? hash : 'home';
+    const view = ['projects', 'about', 'misc'].includes(hash) ? hash : 'home';
     showView(view);
-    document.title = view === 'home' ? 'Adeeb’s Vault' : `${view === 'about' ? 'The operator' : 'Projects'} // Adeeb’s Vault`;
+    document.title = view === 'home' ? 'Adeeb’s Vault' : `${view === 'about' ? 'The operator' : view === 'misc' ? 'Miscellaneous' : 'Projects'} // Adeeb’s Vault`;
   }
   lastRoute = ['films', 'series', 'anime', 'watchlist'].includes(hash) ? hash : 'films';
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
