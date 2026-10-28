@@ -66,7 +66,7 @@
         <a href="#notes"><span>01</span> NOTES CANVAS</a>
         <a href="#utilities" aria-current="page"><span>02</span> UTILITY DESK</a>
       </nav>
-      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option></select></label><p class="tool-help">Three handy tools in one place. Pick the one you need.</p></div>
+      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="image-convert">Image format converter</option><option value="image-compress">Image compressor</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option></select></label><p class="tool-help">Choose from document and image utilities. Files stay on your device.</p></div>
 
       <section id="tool-images" class="tool-panel" aria-labelledby="images-heading">
         <div class="tool-intro"><div><p class="eyebrow">01 / PUT THE PAGES TOGETHER</p><h2 id="images-heading" tabindex="-1">Images to PDF</h2><p>Photos, scans, or screenshots. One image per page, in the order you choose.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
@@ -81,15 +81,27 @@
             <label class="tool-field">File name<input id="image-name" value="my-document" maxlength="80" autocomplete="off"></label>
             <label class="tool-field">Paper size<select id="image-paper"><option value="a4">A4</option><option value="letter">US Letter</option></select></label>
             <label class="tool-field">Orientation<select id="image-orientation"><option value="auto">Match each image</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
-            <label class="tool-check"><input id="image-margin" type="checkbox" checked> Add a small page margin</label>
+            <label class="tool-field">JPEG quality <span class="range-value" id="image-quality-value">88%</span><input id="image-quality" type="range" min="45" max="100" value="88"></label><label class="tool-field">Page margin <span class="range-value" id="image-margin-value">10 mm</span><input id="image-margin" type="range" min="0" max="60" value="28"></label>
             <button id="image-export" class="button button-accent" type="button" disabled>DOWNLOAD PDF <span>↓</span></button>
             <button id="image-clear" class="text-link" type="button" disabled>REMOVE ALL IMAGES ×</button>
-            <p class="tool-help">The whole image is fitted onto the page. Large images are resized for a lighter file; transparent areas become white.</p>
+            <p class="tool-help">Drag pages to reorder them, or use the arrows. Rotate individual pages and tune image quality and margins before exporting. Images are resized to a maximum 2,400 px edge; transparent areas become white.</p>
           </aside>
         </div>
         <p id="image-status" class="tool-status" role="status" aria-live="polite"></p>
       </section>
 
+      <section id="tool-image-convert" class="tool-panel" aria-labelledby="image-convert-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">03 / CHANGE THE FORMAT</p><h2 id="image-convert-heading" tabindex="-1">Image format converter</h2><p>Convert images between PNG, JPEG, and WebP in your browser.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
+        <label class="upload-zone converter-upload" id="convert-drop"><input id="convert-files" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="upload-symbol" aria-hidden="true">＋</span><strong>Choose images</strong><span>or drop them here · JPG, PNG, WebP</span><small>Up to 20 images · 15 MB each</small></label>
+        <div class="tool-settings converter-settings"><label class="tool-field">Output format<select id="convert-format"><option value="image/webp">WebP · smaller files</option><option value="image/jpeg">JPEG · widely compatible</option><option value="image/png">PNG · lossless, larger files</option></select></label><label class="tool-field">Quality <span class="range-value" id="convert-quality-value">85%</span><input id="convert-quality" type="range" min="40" max="100" value="85"></label><label class="tool-field">Maximum image edge<select id="convert-size"><option value="original">Keep original dimensions</option><option value="2400">2,400 px</option><option value="1600">1,600 px</option><option value="1200">1,200 px</option><option value="800">800 px</option></select></label><button id="convert-export" class="button button-accent" type="button" disabled>CONVERT &amp; DOWNLOAD <span>↓</span></button><button id="convert-clear" class="text-link" type="button" disabled>REMOVE ALL IMAGES ×</button></div>
+        <ol id="convert-list" class="image-queue" aria-label="Images to convert"></ol><p id="convert-status" class="tool-status" role="status" aria-live="polite"></p><p class="tool-help">PNG output preserves transparency. JPEG output uses a white background. WebP support depends on your browser; unsupported output is reported rather than silently mislabeled. Files stay on your device.</p>
+      </section>
+      <section id="tool-image-compress" class="tool-panel" aria-labelledby="image-compress-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">04 / MAKE FILES LIGHTER</p><h2 id="image-compress-heading" tabindex="-1">Image compressor</h2><p>Reduce image file sizes for websites, email, and uploads.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
+        <label class="upload-zone converter-upload" id="compress-drop"><input id="compress-files" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="upload-symbol" aria-hidden="true">＋</span><strong>Choose images</strong><span>or drop them here · JPG, PNG, WebP</span><small>Up to 20 images · 15 MB each</small></label>
+        <div class="tool-settings converter-settings"><label class="tool-field">Compression quality <span class="range-value" id="compress-quality-value">75%</span><input id="compress-quality" type="range" min="35" max="95" value="75"></label><label class="tool-field">Maximum image edge<select id="compress-size"><option value="original">Keep original dimensions</option><option value="2400">2,400 px</option><option value="1600">1,600 px</option><option value="1200">1,200 px</option><option value="800">800 px</option></select></label><label class="tool-field">Output format<select id="compress-format"><option value="image/webp">WebP · usually smallest</option><option value="image/jpeg">JPEG · widely compatible</option><option value="image/png">PNG · lossless, larger files</option></select></label><button id="compress-export" class="button button-accent" type="button" disabled>COMPRESS &amp; DOWNLOAD <span>↓</span></button><button id="compress-clear" class="text-link" type="button" disabled>REMOVE ALL IMAGES ×</button></div>
+        <ol id="compress-list" class="image-queue" aria-label="Images to compress"></ol><p id="compress-status" class="tool-status" role="status" aria-live="polite"></p><p class="tool-help">The estimated result is shown after processing. PNG can be larger than the original; try WebP or JPEG for photographs. Files never leave your device.</p>
+      </section>
       <section id="tool-markdown" class="tool-panel" aria-labelledby="markdown-heading" hidden>
         <div class="tool-intro"><div><p class="eyebrow">02 / FROM DRAFT TO DOCUMENT</p><h2 id="markdown-heading" tabindex="-1">Markdown to PDF</h2><p>Write on the left, see the finished page on the right. Then print or save it as a PDF.</p></div><span class="tool-local">NO UPLOADS</span></div>
         <div class="tool-bar">
@@ -168,6 +180,6 @@
   <dialog id="tool-confirm" class="tool-confirm" aria-labelledby="confirm-title"><h2 id="confirm-title">Replace current content?</h2><p id="confirm-copy"></p><div class="tool-bar"><button id="confirm-cancel" class="button button-outline" type="button">CANCEL</button><button id="confirm-accept" class="button button-accent" type="button">CONTINUE</button></div></dialog>
   <script src="assets/js/misc-nav.js" defer></script>
   <script src="assets/vendor/markdown-it-15.0.3.min.js" defer></script>
-  <script type="module" src="assets/js/tools.js?v=3"></script>
+  <script type="module" src="assets/js/tools.js?v=4"></script>
 </body>
 </html>
