@@ -95,7 +95,7 @@
       "id": "baththa",
       "title": "Baththa",
       "year": 2026,
-      "rating": 4.0,
+      "rating": 4,
       "director": "Balaji Tharaneetharan",
       "genres": [
         "Action",
@@ -154,7 +154,7 @@
         "Thriller"
       ],
       "runtime": 163,
-      "rating": 5.0,
+      "rating": 5,
       "review": "I like this movie a lot.",
       "watchedOn": "",
       "favourite": false,
@@ -299,7 +299,7 @@
         "Drama"
       ],
       "runtime": 152,
-      "rating": 3.0,
+      "rating": 3,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -323,7 +323,7 @@
         "Romance"
       ],
       "runtime": 161,
-      "rating": 2.0,
+      "rating": 2,
       "review": "I didn’t like it very much.",
       "watchedOn": "",
       "favourite": false,
@@ -371,11 +371,83 @@
         "Drama"
       ],
       "runtime": 169,
-      "rating": 5.0,
+      "rating": 5,
       "review": "",
       "watchedOn": "",
       "favourite": false,
       "poster": "assets/images/interstellar-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "breaking-bad",
+      "title": "Breaking Bad",
+      "year": 2008,
+      "type": "series",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "",
+      "genres": [
+        "Crime",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 4.9,
+      "review": "It's a masterpiece.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "the-boys",
+      "title": "The Boys",
+      "year": 2019,
+      "type": "series",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "",
+      "genres": [
+        "Action",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 4.3,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "the-penguin",
+      "title": "The Penguin",
+      "year": 2024,
+      "type": "series",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "",
+      "genres": [
+        "Crime",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 4.5,
+      "review": "A masterpiece series.",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "",
       "image": "",
       "isSample": false
     },
@@ -396,7 +468,7 @@
         "Drama"
       ],
       "runtime": 0,
-      "rating": 5.0,
+      "rating": 5,
       "review": "It brought back the scientist inside me.",
       "watchedOn": "",
       "favourite": true,
@@ -420,7 +492,7 @@
         "Adventure"
       ],
       "runtime": 0,
-      "rating": 4.0,
+      "rating": 4,
       "review": "",
       "watchedOn": "",
       "favourite": false,
