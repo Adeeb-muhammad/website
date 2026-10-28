@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="assets/css/style.css?v=14">
   <link rel="stylesheet" href="assets/css/misc-tools.css?v=1">
+  <link rel="stylesheet" href="assets/css/contact.css?v=1">
   <title>Adeeb’s Vault</title>
 </head>
 <body>
@@ -72,7 +73,7 @@
   <div class="contact-grid">
     <div class="contact-links">
       <div class="contact-email">
-        <a id="email-link" href="mailto:YOUR_EMAIL@example.com">YOUR_EMAIL@example.com</a>
+        <a id="email-link" href="mailto:adeeb.muhammad001@gmail.com">adeeb.muhammad001@gmail.com</a>
         <button type="button" id="copy-email">Copy email</button>
         <span id="copy-status" role="status" aria-live="polite"></span>
       </div>
@@ -88,73 +89,20 @@
       </ul>
     </div>
 
-    <!-- Form: works on a static site through Formspree (free). Create a form at formspree.io,
-         then put its URL below. Messages arrive in your email; no backend needed. -->
-    <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+    <!-- Form: static site, so it opens the visitor's email app with the message filled in (see assets/js/contact.js). -->
+    <form class="contact-form" id="contact-form">
       <label>Name <input type="text" name="name" required autocomplete="name"></label>
       <label>Email <input type="email" name="email" required autocomplete="email"></label>
       <label>Message <textarea name="message" rows="5" required></textarea></label>
       <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
       <button type="submit">Send message</button>
+      <span id="form-status" role="status" aria-live="polite"></span>
     </form>
   </div>
 </section>
 
-<style>
-  .contact {
-    --c-bg: #080808; --c-text: #f2f2f2; --c-muted: #9a9a9a;
-    --c-accent: #f5e60a; --c-line: #2a2a2a;
-    max-width: 960px; margin: 0 auto; padding: 4rem 1.25rem;
-    color: var(--c-text);
-  }
-  .contact h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 .5rem; }
-  .contact-intro { color: var(--c-muted); margin: 0 0 2rem; max-width: 52ch; }
-  .contact-grid { display: grid; gap: 2.5rem; grid-template-columns: 1fr; }
-  @media (min-width: 760px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
-  .contact-email { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
-  .contact-email a { color: var(--c-accent); font-size: 1.1rem; overflow-wrap: anywhere; }
-  .contact ul { list-style: none; margin: 0; padding: 0; }
-  .contact li a {
-    display: flex; justify-content: space-between; gap: 1rem; padding: .85rem 0;
-    border-bottom: 1px solid var(--c-line); color: var(--c-text); text-decoration: none;
-  }
-  .contact li a span { color: var(--c-muted); font-size: .9rem; }
-  .contact li a:hover, .contact li a:focus-visible { color: var(--c-accent); }
-  .contact button {
-    font: inherit; cursor: pointer; padding: .6rem 1rem; border-radius: 6px;
-    background: var(--c-accent); color: #000; border: 0; font-weight: 600;
-  }
-  #copy-email { background: transparent; color: var(--c-text); border: 1px solid var(--c-line); font-weight: 400; }
-  #copy-status { color: var(--c-muted); font-size: .85rem; }
-  .contact-form { display: grid; gap: 1rem; }
-  .contact-form label { display: grid; gap: .35rem; color: var(--c-muted); font-size: .9rem; }
-  .contact-form input, .contact-form textarea {
-    font: inherit; color: var(--c-text); background: #111; border: 1px solid var(--c-line);
-    border-radius: 6px; padding: .65rem .75rem;
-  }
-  .contact-form input:focus-visible, .contact-form textarea:focus-visible,
-  .contact button:focus-visible, .contact a:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
-  .hp { position: absolute; left: -9999px; }
-</style>
 
-<script>
-  (function () {
-    var btn = document.getElementById('copy-email');
-    var status = document.getElementById('copy-status');
-    var link = document.getElementById('email-link');
-    if (!btn || !link) return;
-    btn.addEventListener('click', function () {
-      var email = link.textContent.trim();
-      try {
-        navigator.clipboard.writeText(email).then(function () {
-          status.textContent = 'Copied';
-        }, function () { status.textContent = 'Copy failed. Select the email instead.'; });
-      } catch (e) {
-        status.textContent = 'Copy failed. Select the email instead.';
-      }
-    });
-  })();
-</script>
+<script src="assets/js/contact.js?v=1" defer></script>
 
       <footer class="site-footer section-pad"><div class="footer-top"><div><p class="eyebrow">THE INTERNET IS BETTER WITH A HUMAN IN IT.</p><a class="footer-title" href="#about">STAY_<span class="outline-text">CURIOUS.</span> ↗</a></div><button id="share-site" class="text-link">COPY MY LINK <span>↗</span></button></div><div class="footer-bottom"><a href="#home" class="brand">ADEEB’S<span class="brand-vault">VAULT</span></a><span class="micro">PERSONAL ARCHIVE BY ADEEB · <span id="copyright-year"></span></span><div><a href="https://github.com/Adeeb-muhammad" target="_blank" rel="noopener noreferrer">GITHUB ↗</a><a data-instagram href="https://www.instagram.com/ax_guy/" target="_blank" rel="noopener noreferrer">INSTAGRAM ↗</a><a href="#misc">MISC ↗</a><a href="studio.html">ARCHIVE STUDIO ↗</a><a href="#home">BACK TO TOP ↑</a></div></div></footer>
     </div>
