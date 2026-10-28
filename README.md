@@ -59,5 +59,10 @@ For a fork, update `CNAME`, the canonical/Open Graph URLs and sitemap, `profile.
 ## Assets
 
 The chrome hero artwork comes from the original supplied design. Film posters and anime cover art identify the works being reviewed; see [asset sources](assets/images/SOURCES.md). They remain the property of their respective rightsholders. Fonts are Syne, Geist, and JetBrains Mono, self-hosted with the accompanying Open Font License files. No film metadata API is called at runtime.
+Film posters and anime covers belong to their respective rightsholders and are not covered by this license.
+
+## License
+
+The code is licensed under the MIT License.
 
 When application code or CSS changes, bump the asset query versions in HTML and the `core.js` module imports together so returning visitors receive the matching renderer and validator. Content-only changes to `data/archive.json` do not require a version bump.
