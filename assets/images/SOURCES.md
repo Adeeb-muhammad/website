@@ -38,3 +38,9 @@ Posters are stored locally so the public diary does not depend on third-party im
 - `life-of-pi-poster.webp` — *Life of Pi* (2012), official digital cover from [20th Century Studios](https://www.20thcenturystudios.com/movies/life-of-pi).
 - `spider-man-brand-new-day-poster.webp` — *Spider-Man: Brand New Day* (2026), official key art from [Sony Pictures](https://www.sonypictures.com/movies/spidermanbrandnewday).
 
+
+## Anime added October 2026
+
+Posters are stored locally; the artwork remains the property of its respective rightsholders.
+
+- `to-your-eternity-poster.webp` — *To Your Eternity* / *Fumetsu no Anata e* (2021), promotional artwork sourced from the [public AnimeOtakuOnline catalog image](https://github.com/Animeotakuonline/animes-app/blob/main/src/paginas/img/2021/fumetsu-no-anata-e.jpg); artwork property of its original anime rightsholders.

@@ -669,6 +669,32 @@
       "poster": "assets/images/dr-stone-poster.webp",
       "image": "",
       "isSample": false
+    },
+    {
+      "id": "to-your-eternity",
+      "title": "To Your Eternity",
+      "year": 2021,
+      "type": "series",
+      "category": "anime",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Masahiko Murata",
+      "genres": [
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "runtime": 0,
+      "rating": null,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/to-your-eternity-poster.webp",
+      "image": "",
+      "isSample": false
     }
   ]
 }
