@@ -164,6 +164,7 @@ function route() {
   }
   lastRoute = ['films', 'series', 'anime', 'watchlist'].includes(hash) ? hash : 'films';
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
+  else if (hash === 'contact') requestAnimationFrame(() => $('#contact').scrollIntoView({ behavior: 'smooth' }));
   else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
   if (closingEntry && ['films', 'series', 'anime', 'watchlist'].includes(hash)) {
     $(`#collection-grid a[href="#film/${closingEntry}"]`)?.focus({ preventScroll: true });
