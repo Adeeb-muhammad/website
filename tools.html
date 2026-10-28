@@ -210,6 +210,12 @@
               <option value="zip-tar">ZIP → TAR</option>
               <option value="tar-zip">TAR → ZIP</option>
               <option value="epub-pdf">EPUB → PDF (text extraction)</option>
+              <option value="wav-mp3">WAV → MP3</option>
+              <option value="mp3-wav">MP3 → WAV</option>
+              <option value="video-audio">Extract audio from video → MP3</option>
+              <option value="mp4-webm">MP4 → WebM</option>
+              <option value="webm-mp4">WebM → MP4</option>
+              <option value="gif-mp4">GIF → MP4</option>
             </select></label>
             <label class="upload-zone converter-upload" id="file-convert-drop"><input id="file-convert-input" type="file" multiple><span class="upload-symbol" aria-hidden="true">＋</span><strong>Choose file(s)</strong><span>or drop them here</span><small id="file-convert-types">Select the source file for your conversion.</small></label>
             <ol id="file-convert-list" class="image-queue" aria-label="Selected files"></ol>
@@ -218,7 +224,7 @@
             <button id="file-convert-run" class="button button-accent" type="button" disabled>CONVERT FILE <span>↓</span></button>
             <button id="file-convert-clear" class="text-link" type="button" disabled>CLEAR SELECTION ×</button>
           </div>
-          <aside class="file-convert-info"><p class="eyebrow">WHAT WORKS HERE</p><h3>Local-first conversions</h3><p>Images, text, PDF pages, CSV/JSON/XML, and ZIP/TAR use your browser. DOCX and EPUB conversion extracts text and rebuilds a simple PDF, so complex formatting, images, and page layouts may not carry over.</p><p><strong>Not included yet:</strong> WAV/MP3, video formats, and audio extraction require a large media codec engine. I have not added buttons that pretend those conversions work.</p><p class="tool-help">Your selected files are processed on this device. Some converters load open-source libraries from a CDN on first use. Maximum input size: 100 MB per file; large PDFs and archives may use substantial memory.</p></aside>
+          <aside class="file-convert-info"><p class="eyebrow">WHAT WORKS HERE</p><h3>Local-first conversions</h3><p>Images, text, PDF pages, CSV/JSON/XML, ZIP/TAR, and supported audio/video formats are processed in your browser. DOCX and EPUB conversion extracts text and rebuilds a simple PDF, so complex formatting, images, and page layouts may not carry over.</p><p><strong>Audio/video:</strong> WAV ↔ MP3, audio extraction, MP4 ↔ WebM, and GIF → MP4 use FFmpeg WebAssembly. The first media conversion downloads a large codec engine; conversion speed depends on your device.</p><p class="tool-help">Your selected files are processed on this device. Some converters load open-source libraries from a CDN on first use. Maximum input size: 100 MB per file; large PDFs and archives may use substantial memory.</p></aside>
         </div>
         <p id="file-convert-status" class="tool-status" role="status" aria-live="polite">Choose a conversion and then select your file.</p>
       </section>
@@ -248,6 +254,6 @@
   <dialog id="tool-confirm" class="tool-confirm" aria-labelledby="confirm-title"><h2 id="confirm-title">Replace current content?</h2><p id="confirm-copy"></p><div class="tool-bar"><button id="confirm-cancel" class="button button-outline" type="button">CANCEL</button><button id="confirm-accept" class="button button-accent" type="button">CONTINUE</button></div></dialog>
   <script src="assets/js/misc-nav.js" defer></script>
   <script src="assets/vendor/markdown-it-15.0.3.min.js" defer></script>
-  <script type="module" src="assets/js/tools.js?v=5"></script>
+  <script type="module" src="assets/js/tools.js?v=6"></script>
 </body>
 </html>
