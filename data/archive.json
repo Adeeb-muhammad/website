@@ -569,7 +569,7 @@
       "review": "It's a masterpiece.",
       "watchedOn": "",
       "favourite": false,
-      "poster": "",
+      "poster": "assets/images/breaking-bad-poster.webp",
       "image": "",
       "isSample": false
     },
@@ -593,7 +593,7 @@
       "review": "",
       "watchedOn": "",
       "favourite": false,
-      "poster": "",
+      "poster": "assets/images/the-boys-poster.webp",
       "image": "",
       "isSample": false
     },
@@ -617,7 +617,7 @@
       "review": "A masterpiece series.",
       "watchedOn": "",
       "favourite": false,
-      "poster": "",
+      "poster": "assets/images/the-penguin-poster.webp",
       "image": "",
       "isSample": false
     },

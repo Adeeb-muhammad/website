@@ -13,6 +13,9 @@ The cover art below identifies the films and series reviewed in Adeeb’s Vault.
 - `vishwanath-and-sons-poster.webp` — [source page](https://en.wikipedia.org/wiki/Vishwanath_%26_Sons)
 - `orb-poster.webp` — [source page](https://en.wikipedia.org/wiki/Orb:_On_the_Movements_of_the_Earth)
 - `dr-stone-poster.webp` — [source page](https://en.wikipedia.org/wiki/Dr._Stone)
+- `breaking-bad-poster.webp` — *Breaking Bad* Season 1 promotional poster via [Flicks](https://www.flicks.co.nz/tv/breaking-bad-season-1/).
+- `the-boys-poster.webp` — *The Boys* promotional poster via [The Tufts Daily](https://www.tuftsdaily.com/article/2020/09/season-2-of-the-boys-starts-off-with-a-bang).
+- `the-penguin-poster.webp` — *The Penguin* promotional poster via [TV Insider](https://www.tvinsider.com/1140727/the-penguin-premiere-date-trailer-cast-plot-batman-spinoff/).
 - `baththa-poster.webp` — [source page](https://en.wikipedia.org/wiki/Baththa)
 - `meiyazhagan-poster.webp` — [source page](https://en.wikipedia.org/wiki/Meiyazhagan)
 - `leo-poster.webp` — [source page](https://en.wikipedia.org/wiki/Leo_(2023_Indian_film))
@@ -32,3 +35,4 @@ Posters are stored locally so the public diary does not depend on third-party im
 - `premam-2015-poster.webp` — *Premam* (2015), official poster by [designs thought station on Behance](https://www.behance.net/gallery/29323171/Premam-Malayalam-Movie-official-posters).
 - `life-of-pi-poster.webp` — *Life of Pi* (2012), official digital cover from [20th Century Studios](https://www.20thcenturystudios.com/movies/life-of-pi).
 - `spider-man-brand-new-day-poster.webp` — *Spider-Man: Brand New Day* (2026), official key art from [Sony Pictures](https://www.sonypictures.com/movies/spidermanbrandnewday).
+
