@@ -416,6 +416,23 @@ $('#color-run').addEventListener('click',runColorConversion);$('#color-input').a
 function runTimestampConversion(){const mode=$('#timestamp-mode').value,raw=$('#timestamp-input').value.trim();try{let date,result;if(!raw)throw new Error('Enter a timestamp or date.');if(mode==='to-date'){if(!/^-?\d+(\.\d+)?$/.test(raw))throw new Error('Enter a numeric Unix timestamp.');let n=Number(raw);if(Math.abs(n)>=1e12)n=n;else n*=1000;date=new Date(n);if(Number.isNaN(date.getTime()))throw new Error('Timestamp is outside the supported date range.');result=date.toISOString()+'\nLocal: '+date.toLocaleString();}else{date=new Date(raw);if(Number.isNaN(date.getTime()))throw new Error('Enter a valid date such as 2026-10-29T12:30:00Z.');result='Seconds: '+Math.floor(date.getTime()/1000)+'\nMilliseconds: '+date.getTime();}$('#timestamp-result').textContent=result;setStatus('#timestamp-status','Converted.');}catch(error){$('#timestamp-result').textContent='—';setStatus('#timestamp-status',error.message,true);}}
 $('#timestamp-run').addEventListener('click',runTimestampConversion);$('#timestamp-mode').addEventListener('change',()=>{$('#timestamp-input').value=$('#timestamp-mode').value==='to-date'?String(Math.floor(Date.now()/1000)):new Date().toISOString();runTimestampConversion();});$('#timestamp-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#timestamp-result').textContent);setStatus('#timestamp-status','Result copied.');}catch{setStatus('#timestamp-status','Clipboard permission was blocked.',true);}});runTimestampConversion();
 
+let ffmpegInstancePromise;
+async function getFFmpeg(){
+ if(ffmpegInstancePromise)return ffmpegInstancePromise;
+ ffmpegInstancePromise=(async()=>{
+  if(!window.FFmpeg?.createFFmpeg) await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js');
+  if(!window.FFmpeg?.createFFmpeg) throw new Error('FFmpeg could not initialize in this browser.');
+  const engine=window.FFmpeg.createFFmpeg({log:false,corePath:'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'});
+  setStatus(fileStatus,'Downloading the media conversion engine (large download; first use only)…');
+  await engine.load();
+  return {run:(...args)=>engine.run(...args),FS:(...args)=>engine.FS(...args),fetchFile:window.FFmpeg.fetchFile};
+ })().catch(err=>{ffmpegInstancePromise=null;throw err;});
+ return ffmpegInstancePromise;
+}
+function mediaExtension(name){
+ const ext=String(name).split('.').pop().toLowerCase();
+ return /^[a-z0-9]{1,8}$/.test(ext)?ext:'mp4';
+}
 /* File conversion suite. Conversion runs locally; external libraries are loaded only when needed. */
 const fileInput = $('#file-convert-input');
 const fileMode = $('#file-convert-mode');
