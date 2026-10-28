@@ -110,6 +110,7 @@ $('#image-list').addEventListener('click', event => {
   const button = event.target.closest('[data-image]');
   if (!button || imageBusy) return;
   const index = Number(button.dataset.index), action = button.dataset.image;
+  if (action === 'rotate') { const image = images[index]; imageBusy = true; renderImages(); try { const updated = await convertImage(image.sourceFile, image.rotation + 90, Number($('#image-quality').value) / 100); URL.revokeObjectURL(image.preview); Object.assign(image, updated, { originalSize: image.originalSize }); } catch (error) { setStatus('#image-status', error.message, true); } finally { imageBusy = false; renderImages(index); } return; }
   if (action === 'remove') { const [image] = images.splice(index, 1); originalBytes -= image.originalSize; URL.revokeObjectURL(image.preview); }
   else { const target = action === 'up' ? index - 1 : index + 1; if (target < 0 || target >= images.length) return; [images[index], images[target]] = [images[target], images[index]]; }
   renderImages(Math.min(action === 'up' ? index - 1 : action === 'down' ? index + 1 : index, images.length - 1));
@@ -125,7 +126,10 @@ $('#image-export').addEventListener('click', async () => {
   imageBusy = true; renderImages(); setStatus('#image-status', 'Putting your PDF together…');
   await new Promise(resolve => requestAnimationFrame(resolve));
   try {
-    const pdf = createImagePDF(images, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: Number($('#image-margin').value) * 72 / 25.4 });
+    const quality = Number($('#image-quality').value) / 100;
+    const exportImages = await Promise.all(images.map(image => convertImage(image.sourceFile || image.file, image.rotation || 0, quality)));
+    const pdf = createImagePDF(exportImages, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: Number($('#image-margin').value) * 72 / 25.4 });
+    exportImages.forEach(image => URL.revokeObjectURL(image.preview));
     download(pdf, `${safeFilename($('#image-name').value, 'my-document')}.pdf`, 'application/pdf');
     setStatus('#image-status', `Your ${images.length}-page PDF is ready. Your images stayed on this device.`);
   } catch (error) { setStatus('#image-status', `Could not create the PDF: ${error.message}`, true); }
