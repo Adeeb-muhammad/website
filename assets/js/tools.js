@@ -1,4 +1,4 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=3';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=4';
 import { initNotebook } from './notebook.js?v=2';
 import { escapeHTML as e } from './core.js?v=6';
 
@@ -34,7 +34,7 @@ async function confirmChange(message) {
 }
 
 function routeTool(focus = false) {
-  const key = ['images', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
+  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
   for (const panel of document.querySelectorAll('.tool-panel')) panel.hidden = panel.id !== `tool-${key}`;
   for (const link of document.querySelectorAll('.tool-switcher a')) {
     if (link.hash === (key === 'notes' ? '#notes' : '#utilities')) link.setAttribute('aria-current', 'page');
@@ -56,15 +56,25 @@ const images = [];
 let imageBusy = false;
 let originalBytes = 0;
 function renderImages(focusIndex = -1) {
-  $('#image-list').innerHTML = images.map((image, i) => `<li><img src="${image.preview}" alt="Page ${i + 1} preview"><div class="image-info"><strong>${e(image.name)}</strong><span>PAGE ${String(i + 1).padStart(2, '0')} · ${image.width} × ${image.height}</span></div><div class="image-actions"><button type="button" data-image="up" data-index="${i}" aria-label="Move page ${i + 1} up" ${i === 0 || imageBusy ? 'disabled' : ''}>↑</button><button type="button" data-image="down" data-index="${i}" aria-label="Move page ${i + 1} down" ${i === images.length - 1 || imageBusy ? 'disabled' : ''}>↓</button><button type="button" data-image="remove" data-index="${i}" aria-label="Remove page ${i + 1}" ${imageBusy ? 'disabled' : ''}>×</button></div></li>`).join('');
+  $('#image-list').innerHTML = images.map((image, i) => `<li draggable="true" data-image-row="${i}"><img src="${image.preview}" alt="Page ${i + 1} preview"><div class="image-info"><strong>${e(image.name)}</strong><span>PAGE ${String(i + 1).padStart(2, '0')} · ${image.width} × ${image.height}</span></div><div class="image-actions"><button type="button" data-image="up" data-index="${i}" aria-label="Move page ${i + 1} up" ${i === 0 || imageBusy ? 'disabled' : ''}>↑</button><button type="button" data-image="down" data-index="${i}" aria-label="Move page ${i + 1} down" ${i === images.length - 1 || imageBusy ? 'disabled' : ''}>↓</button><button type="button" data-image="rotate" data-index="${i}" aria-label="Rotate page ${i + 1} clockwise">↻</button><button type="button" data-image="remove" data-index="${i}" aria-label="Remove page ${i + 1}" ${imageBusy ? 'disabled' : ''}>×</button></div></li>`).join('');
   $('#images-empty').hidden = images.length > 0;
+  const preview = $('#image-preview');
+  if (images.length) {
+    const first = images[0], paper = $('#image-paper').value === 'letter' ? [612, 792] : [595.28, 841.89];
+    const landscape = $('#image-orientation').value === 'landscape' || ($('#image-orientation').value === 'auto' && first.width > first.height);
+    const pageWidth = landscape ? paper[1] : paper[0], pageHeight = landscape ? paper[0] : paper[1];
+    preview.style.aspectRatio = pageWidth + ' / ' + pageHeight;
+    preview.style.padding = (Number($('#image-margin').value) / pageWidth * 100) + '%';
+    preview.innerHTML = '<img src="' + first.preview + '" alt="Preview of PDF page 1">';
+    $('#image-preview-count').textContent = 'Page 1 of ' + images.length;
+  } else { preview.style.aspectRatio = '595.28 / 841.89'; preview.style.padding = '7%'; preview.innerHTML = '<p class="preview-placeholder">Add an image to preview your PDF page.</p>'; $('#image-preview-count').textContent = 'No pages yet'; }
   $('#image-export').disabled = imageBusy || !images.length;
   $('#image-clear').disabled = imageBusy || !images.length;
   $('#image-files').disabled = imageBusy;
   if (focusIndex >= 0) $(`[data-image="remove"][data-index="${focusIndex}"]`)?.focus();
 }
 
-async function convertImage(file) {
+async function convertImage(file, rotation = 0, quality = .88) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error(`${file.name}: use a JPG, PNG, or WebP image.`);
   if (file.size > 15 * 1024 * 1024) throw new Error(`${file.name}: the limit is 15 MB per image.`);
   const url = URL.createObjectURL(file);
@@ -73,15 +83,15 @@ async function convertImage(file) {
     await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error(`${file.name}: this image could not be read.`)); img.src = url; });
     if (!img.naturalWidth || img.naturalWidth * img.naturalHeight > 40000000) throw new Error(`${file.name}: please resize this very large image first (maximum 40 megapixels).`);
     const ratio = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Image conversion is not available in this browser.');
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .88));
+    const sourceWidth = Math.max(1, Math.round(img.naturalWidth * ratio)), sourceHeight = Math.max(1, Math.round(img.naturalHeight * ratio));
+    const turns = ((rotation % 360) + 360) % 360, sideways = turns === 90 || turns === 270;
+    const canvas = document.createElement('canvas'); canvas.width = sideways ? sourceHeight : sourceWidth; canvas.height = sideways ? sourceWidth : sourceHeight;
+    const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Image conversion is not available in this browser.');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(turns * Math.PI / 180);
+    ctx.drawImage(img, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight); ctx.restore();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
     if (!blob) throw new Error(`${file.name}: could not convert this image.`);
-    return { name: file.name, originalSize: file.size, width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()), preview: URL.createObjectURL(blob) };
+    return { name: file.name, sourceFile: file, originalSize: file.size, rotation: turns, width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()), preview: URL.createObjectURL(blob) };
   } finally { URL.revokeObjectURL(url); }
 }
 
@@ -104,15 +114,24 @@ const drop = $('#image-drop');
 for (const type of ['dragover', 'dragenter']) drop.addEventListener(type, event => { event.preventDefault(); drop.classList.add('is-dragging'); });
 for (const type of ['dragleave', 'drop']) drop.addEventListener(type, event => { event.preventDefault(); drop.classList.remove('is-dragging'); });
 drop.addEventListener('drop', event => addImages([...event.dataTransfer.files]));
-$('#image-list').addEventListener('click', event => {
+$('#image-quality').addEventListener('input', event => { $('#image-quality-value').textContent = event.target.value + '%'; });
+$('#image-margin').addEventListener('input', event => { $('#image-margin-value').textContent = Math.round(Number(event.target.value) * 25.4 / 72) + ' mm'; renderImages(); });
+$('#image-paper').addEventListener('change', () => renderImages());
+$('#image-orientation').addEventListener('change', () => renderImages());
+$('#image-list').addEventListener('click', async event => {
   const button = event.target.closest('[data-image]');
   if (!button || imageBusy) return;
   const index = Number(button.dataset.index), action = button.dataset.image;
+  if (action === 'rotate') { const image = images[index]; imageBusy = true; renderImages(); try { const updated = await convertImage(image.sourceFile, image.rotation + 90, Number($('#image-quality').value) / 100); URL.revokeObjectURL(image.preview); Object.assign(image, updated, { originalSize: image.originalSize }); } catch (error) { setStatus('#image-status', error.message, true); } finally { imageBusy = false; renderImages(index); } return; }
   if (action === 'remove') { const [image] = images.splice(index, 1); originalBytes -= image.originalSize; URL.revokeObjectURL(image.preview); }
   else { const target = action === 'up' ? index - 1 : index + 1; if (target < 0 || target >= images.length) return; [images[index], images[target]] = [images[target], images[index]]; }
   renderImages(Math.min(action === 'up' ? index - 1 : action === 'down' ? index + 1 : index, images.length - 1));
   if (!images.length) $('#image-files').focus();
 });
+let draggedImageIndex = -1;
+$('#image-list').addEventListener('dragstart', event => { const row = event.target.closest('[data-image-row]'); if (!row || imageBusy) return; draggedImageIndex = Number(row.dataset.imageRow); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(draggedImageIndex)); });
+$('#image-list').addEventListener('dragover', event => { if (event.target.closest('[data-image-row]')) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
+$('#image-list').addEventListener('drop', event => { const row = event.target.closest('[data-image-row]'); if (!row || imageBusy) return; event.preventDefault(); const from = draggedImageIndex, to = Number(row.dataset.imageRow); draggedImageIndex = -1; if (from < 0 || from >= images.length || to < 0 || to >= images.length || from === to) return; const moved = images.splice(from, 1)[0]; images.splice(to, 0, moved); renderImages(to); });
 $('#image-clear').addEventListener('click', () => {
   if (imageBusy) return;
   images.forEach(image => URL.revokeObjectURL(image.preview)); images.length = 0; originalBytes = 0;
@@ -123,12 +142,76 @@ $('#image-export').addEventListener('click', async () => {
   imageBusy = true; renderImages(); setStatus('#image-status', 'Putting your PDF together…');
   await new Promise(resolve => requestAnimationFrame(resolve));
   try {
-    const pdf = createImagePDF(images, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: $('#image-margin').checked ? 28 : 0 });
+    const quality = Number($('#image-quality').value) / 100;
+    const exportImages = await Promise.all(images.map(image => convertImage(image.sourceFile || image.file, image.rotation || 0, quality)));
+    const pdf = createImagePDF(exportImages, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: Number($('#image-margin').value) * 72 / 25.4 });
+    exportImages.forEach(image => URL.revokeObjectURL(image.preview));
     download(pdf, `${safeFilename($('#image-name').value, 'my-document')}.pdf`, 'application/pdf');
     setStatus('#image-status', `Your ${images.length}-page PDF is ready. Your images stayed on this device.`);
   } catch (error) { setStatus('#image-status', `Could not create the PDF: ${error.message}`, true); }
   finally { imageBusy = false; renderImages(); }
 });
+
+function initImageBatch(prefix, mode) {
+  const files = [];
+  const input = document.querySelector('#' + prefix + '-files');
+  const drop = document.querySelector('#' + prefix + '-drop');
+  const list = document.querySelector('#' + prefix + '-list');
+  const run = document.querySelector('#' + prefix + '-export');
+  const clear = document.querySelector('#' + prefix + '-clear');
+  const status = '#' + prefix + '-status';
+  const quality = document.querySelector('#' + prefix + '-quality');
+  const qualityValue = document.querySelector('#' + prefix + '-quality-value');
+  quality.addEventListener('input', () => qualityValue.textContent = quality.value + '%');
+  function render() {
+    list.innerHTML = files.map((f, i) => '<li><img src="' + f.preview + '" alt=""><div class="image-info"><strong>' + e(f.name) + '</strong><span>' + (f.size / 1024).toFixed(1) + ' KB · ' + f.width + ' × ' + f.height + '</span></div><div class="image-actions"><button type="button" data-remove="' + i + '" aria-label="Remove image">×</button></div></li>').join('');
+    run.disabled = clear.disabled = !files.length;
+  }
+  async function add(selected) {
+    for (const file of selected) {
+      if (files.length >= 20) { setStatus(status, 'Maximum 20 images per batch.', true); break; }
+      if (file.size > 15 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setStatus(status, file.name + ': use JPG, PNG, or WebP up to 15 MB.', true); continue; }
+      const url = URL.createObjectURL(file);
+      try { const img = new Image(); await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; }); if (img.naturalWidth * img.naturalHeight > 40000000) throw new Error('Maximum 40 megapixels.'); files.push({ file, name: file.name, size: file.size, width: img.naturalWidth, height: img.naturalHeight, preview: URL.createObjectURL(file) }); }
+      catch (err) { setStatus(status, file.name + ': could not read image. ' + (err.message || ''), true); }
+      finally { URL.revokeObjectURL(url); }
+    }
+    input.value = ''; render(); if (files.length) setStatus(status, files.length + ' image(s) ready. Choose settings, then process.');
+  }
+  input.addEventListener('change', ev => add([...ev.target.files]));
+  ['dragover', 'dragenter'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.add('is-dragging'); }));
+  ['dragleave', 'drop'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.remove('is-dragging'); }));
+  drop.addEventListener('drop', ev => add([...ev.dataTransfer.files]));
+  list.addEventListener('click', ev => { const btn = ev.target.closest('[data-remove]'); if (!btn) return; const gone = files.splice(Number(btn.dataset.remove), 1)[0]; if (gone) URL.revokeObjectURL(gone.preview); render(); });
+  clear.addEventListener('click', () => { files.forEach(f => URL.revokeObjectURL(f.preview)); files.length = 0; render(); setStatus(status, 'Image list cleared.'); });
+  run.addEventListener('click', async () => {
+    if (!files.length) return; run.disabled = clear.disabled = input.disabled = true;
+    let done = 0, outputTotal = 0; const inputTotal = files.reduce((sum, f) => sum + f.size, 0);
+    const format = document.querySelector('#' + prefix + '-format').value;
+    const max = document.querySelector('#' + prefix + '-size').value;
+    const q = Number(quality.value) / 100;
+    const ext = format === 'image/jpeg' ? 'jpg' : format === 'image/png' ? 'png' : 'webp';
+    try {
+      for (const item of files) {
+        setStatus(status, (mode === 'compress' ? 'Compressing ' : 'Converting ') + item.name + '…');
+        const url = URL.createObjectURL(item.file);
+        try {
+          const img = new Image(); await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; });
+          const edge = max === 'original' ? Infinity : Number(max); const ratio = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
+          const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Canvas is unavailable.');
+          if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); } ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, format, q)); if (!blob || blob.type !== format) throw new Error('This browser cannot export ' + ext.toUpperCase() + '.');
+          let base = item.name; const dot = base.lastIndexOf('.'); if (dot > 0) base = base.slice(0, dot);
+          download(blob, safeFilename(base, 'image') + '-' + (mode === 'compress' ? 'compressed' : 'converted') + '.' + ext, blob.type); done++; outputTotal += blob.size;
+        } catch (err) { setStatus(status, item.name + ': ' + (err.message || 'Conversion failed.'), true); } finally { URL.revokeObjectURL(url); }
+      }
+      if (done) { const delta = inputTotal - outputTotal; setStatus(status, done + ' file(s) processed. Total: ' + (inputTotal / 1024).toFixed(1) + ' KB → ' + (outputTotal / 1024).toFixed(1) + ' KB. ' + (delta >= 0 ? Math.round(delta / inputTotal * 100) + '% smaller overall.' : 'Output is larger; try WebP or lower quality.')); }
+    } finally { input.disabled = false; run.disabled = clear.disabled = !files.length; }
+  });
+}
+initImageBatch('convert', 'convert');
+initImageBatch('compress', 'compress');
 
 // Markdown uses a pinned, self-hosted parser with HTML and network images off.
 const parser = window.markdownit?.({ html: false, linkify: false, typographer: false });
