@@ -1,0 +1,4 @@
+.misc-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.misc-tools-grid .misc-link{min-height:190px;background:radial-gradient(ellipse at top right,#2b2419,#11100e 72%);gap:17px}
+.misc-tools-grid .misc-domain{padding-right:30px;line-height:1.8}
+@media(max-width:650px){.misc-tools-grid{grid-template-columns:1fr}.misc-tools-grid .misc-link{min-height:155px}}

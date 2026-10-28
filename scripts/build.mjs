@@ -10,7 +10,7 @@ if (errors.length) throw new Error(`Invalid archive:\n${errors.join('\n')}`);
 for (const entry of data.entries) {
   for (const key of ['image', 'poster']) if (entry[key].startsWith('assets/')) await access(path.join(root, entry[key]));
 }
-for (const file of ['index.html', 'studio.html', 'drum-machine.html', 'currently-watching.html', 'reading-log.html']) {
+for (const file of ['index.html', 'studio.html', 'drum-machine.html', 'currently-watching.html', 'reading-log.html', 'tools.html']) {
   const html = await readFile(path.join(root, file), 'utf8');
   for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
     const ref = match[1];
@@ -22,5 +22,5 @@ if (!fonts.includes('@font-face')) throw new Error('Self-hosted fonts have not b
 for (const match of fonts.matchAll(/url\(['"]?(\.\/[^)'"\s]+)['"]?\)/g)) await access(path.join(root, 'assets/fonts', match[1]));
 await rm(path.join(root, 'dist'), { recursive: true, force: true });
 await mkdir(path.join(root, 'dist'), { recursive: true });
-for (const file of ['index.html', 'studio.html', 'drum-machine.html', 'currently-watching.html', 'reading-log.html', '404.html', 'CNAME', '.nojekyll', 'robots.txt', 'sitemap.xml', 'assets', 'data']) await cp(path.join(root, file), path.join(root, 'dist', file), { recursive: true });
+for (const file of ['index.html', 'studio.html', 'drum-machine.html', 'currently-watching.html', 'reading-log.html', 'tools.html', '404.html', 'CNAME', '.nojekyll', 'robots.txt', 'sitemap.xml', 'assets', 'data']) await cp(path.join(root, file), path.join(root, 'dist', file), { recursive: true });
 console.log(`Static site built: ${data.entries.length} archive entries, ${data.projects.length} projects. No backend or runtime dependencies.`);
