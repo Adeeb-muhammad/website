@@ -66,7 +66,7 @@
         <a href="#notes"><span>01</span> NOTES CANVAS</a>
         <a href="#utilities" aria-current="page"><span>02</span> UTILITY DESK</a>
       </nav>
-      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="image-convert">Image format converter</option><option value="image-compress">Image compressor</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option><option value="text">Text &amp; code converter</option><option value="units">Unit converter</option><option value="color">Color converter</option><option value="timestamp">Timestamp converter</option></select></label><p class="tool-help">Choose from document and image utilities. Files stay on your device.</p></div>
+      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="image-convert">Image format converter</option><option value="image-compress">Image compressor</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option><option value="text">Text &amp; code converter</option><option value="units">Unit converter</option><option value="color">Color converter</option><option value="timestamp">Timestamp converter</option><option value="file-convert">FILE CONVERTER SUITE</option></select></label><p class="tool-help">Choose from document and image utilities. Files stay on your device.</p></div>
 
       <section id="tool-images" class="tool-panel" aria-labelledby="images-heading">
         <div class="tool-intro"><div><p class="eyebrow">01 / PUT THE PAGES TOGETHER</p><h2 id="images-heading" tabindex="-1">Images to PDF</h2><p>Photos, scans, or screenshots. One image per page, in the order you choose.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
@@ -192,6 +192,35 @@
         <div class="tool-bar"><button id="links-analyze" class="button button-accent" type="button">ANALYZE LINKS <span>↗</span></button><button id="links-check" class="button button-outline" type="button" disabled>TRY AVAILABILITY</button><button id="links-stop" class="small-tool-button" type="button" hidden>Stop checking</button><button id="links-export" class="small-tool-button" type="button" disabled>Save report .csv ↓</button></div>
         <p id="links-status" class="tool-status" role="status" aria-live="polite">Up to 50 links at a time. Duplicate detection ignores page fragments (#…).</p>
         <ol id="link-results" class="link-results" aria-label="Link check results"></ol>
+      </section>
+      <section id="tool-file-convert" class="tool-panel" aria-labelledby="file-convert-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">10 / REAL FILE CONVERSION</p><h2 id="file-convert-heading" tabindex="-1">File converter suite</h2><p>Convert documents, images, and common data/archive formats without uploading your files.</p></div><span class="tool-local">BROWSER-LOCAL PROCESSING</span></div>
+        <div class="file-convert-layout">
+          <div class="tool-settings file-convert-settings">
+            <label class="tool-field">Conversion<select id="file-convert-mode">
+              <option value="images-pdf">JPG / PNG → PDF</option>
+              <option value="pdf-images">PDF → JPG / PNG (all pages in ZIP)</option>
+              <option value="txt-pdf">TXT → PDF</option>
+              <option value="pdf-txt">PDF → TXT (text-based PDFs)</option>
+              <option value="docx-pdf">DOCX → PDF (text extraction; layout may change)</option>
+              <option value="json-csv">JSON → CSV</option>
+              <option value="csv-json">CSV → JSON</option>
+              <option value="xml-json">XML → JSON</option>
+              <option value="json-xml">JSON → XML</option>
+              <option value="zip-tar">ZIP → TAR</option>
+              <option value="tar-zip">TAR → ZIP</option>
+              <option value="epub-pdf">EPUB → PDF (text extraction)</option>
+            </select></label>
+            <label class="upload-zone converter-upload" id="file-convert-drop"><input id="file-convert-input" type="file" multiple><span class="upload-symbol" aria-hidden="true">＋</span><strong>Choose file(s)</strong><span>or drop them here</span><small id="file-convert-types">Select the source file for your conversion.</small></label>
+            <ol id="file-convert-list" class="image-queue" aria-label="Selected files"></ol>
+            <label class="tool-field">Output filename (without extension)<input id="file-convert-name" value="vault-converted" maxlength="80" autocomplete="off"></label>
+            <label class="tool-field" id="file-convert-image-format-wrap" hidden>Image output<select id="file-convert-image-format"><option value="image/png">PNG · lossless</option><option value="image/jpeg">JPG · smaller files</option></select></label>
+            <button id="file-convert-run" class="button button-accent" type="button" disabled>CONVERT FILE <span>↓</span></button>
+            <button id="file-convert-clear" class="text-link" type="button" disabled>CLEAR SELECTION ×</button>
+          </div>
+          <aside class="file-convert-info"><p class="eyebrow">WHAT WORKS HERE</p><h3>Local-first conversions</h3><p>Images, text, PDF pages, CSV/JSON/XML, and ZIP/TAR use your browser. DOCX and EPUB conversion extracts text and rebuilds a simple PDF, so complex formatting, images, and page layouts may not carry over.</p><p><strong>Not included yet:</strong> WAV/MP3, video formats, and audio extraction require a large media codec engine. I have not added buttons that pretend those conversions work.</p><p class="tool-help">Your selected files are processed on this device. Some converters load open-source libraries from a CDN on first use. Maximum input size: 100 MB per file; large PDFs and archives may use substantial memory.</p></aside>
+        </div>
+        <p id="file-convert-status" class="tool-status" role="status" aria-live="polite">Choose a conversion and then select your file.</p>
       </section>
       <noscript><p class="tool-status">These tools need JavaScript. Enable it, then reload this page.</p></noscript>
     </div>
