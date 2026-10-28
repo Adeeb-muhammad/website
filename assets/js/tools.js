@@ -433,7 +433,13 @@ const fileModeInfo = {
   'json-xml': {accept:'.json,application/json',multiple:false,types:'JSON object (.json)'},
   'zip-tar': {accept:'.zip,application/zip,application/x-zip-compressed',multiple:false,types:'ZIP archive (.zip)'},
   'tar-zip': {accept:'.tar,application/x-tar',multiple:false,types:'Uncompressed TAR archive (.tar)'},
-  'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction'}
+  'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction'},
+  'wav-mp3': {accept:'.wav,audio/wav,audio/x-wav',multiple:false,types:'WAV audio (.wav)'},
+  'mp3-wav': {accept:'.mp3,audio/mpeg',multiple:false,types:'MP3 audio (.mp3)'},
+  'video-audio': {accept:'video/*,.mp4,.webm,.mov,.mkv,.avi',multiple:false,types:'Video file · extracts its audio track to MP3'},
+  'mp4-webm': {accept:'.mp4,video/mp4',multiple:false,types:'MP4 video (.mp4)'},
+  'webm-mp4': {accept:'.webm,video/webm',multiple:false,types:'WebM video (.webm)'},
+  'gif-mp4': {accept:'.gif,image/gif',multiple:false,types:'Animated GIF (.gif)'}
 };
 function updateFileMode(){
  const m=fileModeInfo[fileMode.value]; fileInput.accept=m.accept;fileInput.multiple=m.multiple;
