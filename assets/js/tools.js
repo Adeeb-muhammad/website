@@ -545,6 +545,29 @@ async function convertFiles(){
    if(mode==='xml-json'){const parsed=new DOMParser().parseFromString(source,'application/xml');if(parsed.querySelector('parsererror'))throw new Error('The XML is not well-formed.');result=JSON.stringify({[parsed.documentElement.tagName]:xmlNode(parsed.documentElement)},null,2);ext='json';type='application/json';}
    if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n<root>'+jsonToXML(data)+'</root>';ext='xml';type='application/xml';}
    blob=new Blob([result],{type});filename=outputName(ext);
+  } else if(['wav-mp3','mp3-wav','video-audio','mp4-webm','webm-mp4','gif-mp4'].includes(mode)){
+   const media=await getFFmpeg();
+   const source=files[0];
+   const inputExt=({'wav-mp3':'wav','mp3-wav':'mp3','video-audio':mediaExtension(source.name),'mp4-webm':'mp4','webm-mp4':'webm','gif-mp4':'gif'})[mode];
+   const outputExt=({'wav-mp3':'mp3','mp3-wav':'wav','video-audio':'mp3','mp4-webm':'webm','webm-mp4':'mp4','gif-mp4':'mp4'})[mode];
+   const inName='vault-input.'+inputExt,outName='vault-output.'+outputExt;
+   try{media.FS('unlink',inName);}catch{}
+   try{media.FS('unlink',outName);}catch{}
+   media.FS('writeFile',inName,await media.fetchFile(source));
+   const commands={
+    'wav-mp3':['-i',inName,'-vn','-codec:a','libmp3lame','-q:a','2',outName],
+    'mp3-wav':['-i',inName,'-vn','-c:a','pcm_s16le',outName],
+    'video-audio':['-i',inName,'-vn','-codec:a','libmp3lame','-q:a','2',outName],
+    'mp4-webm':['-i',inName,'-c:v','libvpx','-crf','30','-b:v','0','-c:a','libvorbis',outName],
+    'webm-mp4':['-i',inName,'-c:v','libx264','-preset','ultrafast','-crf','25','-c:a','aac','-movflags','+faststart',outName],
+    'gif-mp4':['-i',inName,'-vf','fps=15,scale=trunc(iw/2)*2:trunc(ih/2)*2:flags=lanczos','-an','-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p','-movflags','+faststart',outName]
+   };
+   setStatus(fileStatus,'Converting locally with FFmpeg. Keep this tab open; large files can take a while…');
+   await media.run(...commands[mode]);
+   const converted=media.FS('readFile',outName);
+   const mime=outputExt==='mp3'?'audio/mpeg':outputExt==='wav'?'audio/wav':outputExt==='webm'?'video/webm':'video/mp4';
+   blob=new Blob([converted.buffer],{type:mime});filename=outputName(outputExt);
+   try{media.FS('unlink',inName);media.FS('unlink',outName);}catch{}
   } else if(mode==='zip-tar'||mode==='tar-zip'){
    const JSZip=await getJSZip();const input=await readAsArrayBuffer(files[0]);
    if(mode==='zip-tar'){
