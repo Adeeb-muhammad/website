@@ -34,7 +34,7 @@ async function confirmChange(message) {
 }
 
 function routeTool(focus = false) {
-  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links', 'text', 'units', 'color', 'timestamp'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
+  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links', 'text', 'units', 'color', 'timestamp', 'file-convert'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
   for (const panel of document.querySelectorAll('.tool-panel')) panel.hidden = panel.id !== `tool-${key}`;
   for (const link of document.querySelectorAll('.tool-switcher a')) {
     if (link.hash === (key === 'notes' ? '#notes' : '#utilities')) link.setAttribute('aria-current', 'page');
@@ -415,3 +415,131 @@ $('#color-run').addEventListener('click',runColorConversion);$('#color-input').a
 // Unix timestamps are accepted in seconds or milliseconds.
 function runTimestampConversion(){const mode=$('#timestamp-mode').value,raw=$('#timestamp-input').value.trim();try{let date,result;if(!raw)throw new Error('Enter a timestamp or date.');if(mode==='to-date'){if(!/^-?\d+(\.\d+)?$/.test(raw))throw new Error('Enter a numeric Unix timestamp.');let n=Number(raw);if(Math.abs(n)>=1e12)n=n;else n*=1000;date=new Date(n);if(Number.isNaN(date.getTime()))throw new Error('Timestamp is outside the supported date range.');result=date.toISOString()+'\nLocal: '+date.toLocaleString();}else{date=new Date(raw);if(Number.isNaN(date.getTime()))throw new Error('Enter a valid date such as 2026-10-29T12:30:00Z.');result='Seconds: '+Math.floor(date.getTime()/1000)+'\nMilliseconds: '+date.getTime();}$('#timestamp-result').textContent=result;setStatus('#timestamp-status','Converted.');}catch(error){$('#timestamp-result').textContent='—';setStatus('#timestamp-status',error.message,true);}}
 $('#timestamp-run').addEventListener('click',runTimestampConversion);$('#timestamp-mode').addEventListener('change',()=>{$('#timestamp-input').value=$('#timestamp-mode').value==='to-date'?String(Math.floor(Date.now()/1000)):new Date().toISOString();runTimestampConversion();});$('#timestamp-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#timestamp-result').textContent);setStatus('#timestamp-status','Result copied.');}catch{setStatus('#timestamp-status','Clipboard permission was blocked.',true);}});runTimestampConversion();
+
+/* File conversion suite. Conversion runs locally; external libraries are loaded only when needed. */
+const fileInput = $('#file-convert-input');
+const fileMode = $('#file-convert-mode');
+const fileStatus = '#file-convert-status';
+let fileSelection = [];
+const fileModeInfo = {
+  'images-pdf': {accept:'image/jpeg,image/png',multiple:true,types:'JPG and PNG images · select multiple pages'},
+  'pdf-images': {accept:'.pdf,application/pdf',multiple:false,types:'PDF · each page becomes an image inside a ZIP'},
+  'txt-pdf': {accept:'.txt,text/plain',multiple:false,types:'Plain text (.txt)'},
+  'pdf-txt': {accept:'.pdf,application/pdf',multiple:false,types:'Text-based PDF (.pdf)'},
+  'docx-pdf': {accept:'.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document',multiple:false,types:'Word DOCX (.docx) · text/layout may change'},
+  'json-csv': {accept:'.json,application/json',multiple:false,types:'JSON array of objects (.json)'},
+  'csv-json': {accept:'.csv,text/csv',multiple:false,types:'CSV (.csv) · first row is treated as headers'},
+  'xml-json': {accept:'.xml,text/xml,application/xml',multiple:false,types:'XML (.xml)'},
+  'json-xml': {accept:'.json,application/json',multiple:false,types:'JSON object (.json)'},
+  'zip-tar': {accept:'.zip,application/zip,application/x-zip-compressed',multiple:false,types:'ZIP archive (.zip)'},
+  'tar-zip': {accept:'.tar,application/x-tar',multiple:false,types:'Uncompressed TAR archive (.tar)'},
+  'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction'}
+};
+function updateFileMode(){
+ const m=fileModeInfo[fileMode.value]; fileInput.accept=m.accept;fileInput.multiple=m.multiple;
+ $('#file-convert-types').textContent=m.types;
+ $('#file-convert-image-format-wrap').hidden=fileMode.value!=='pdf-images';
+ fileSelection=[];fileInput.value='';renderFileSelection();
+}
+function renderFileSelection(){
+ $('#file-convert-list').innerHTML=fileSelection.map(f=>'<li><div class="image-info"><strong>'+e(f.name)+'</strong><span>'+ (f.size/1024/1024).toFixed(2)+' MB</span></div></li>').join('');
+ $('#file-convert-run').disabled=!fileSelection.length;
+ $('#file-convert-clear').disabled=!fileSelection.length;
+}
+fileMode.addEventListener('change',updateFileMode);
+fileInput.addEventListener('change',()=>{fileSelection=Array.from(fileInput.files||[]);if(fileSelection.some(f=>f.size>100*1024*1024)){fileSelection=[];fileInput.value='';setStatus(fileStatus,'Each file must be 100 MB or smaller.',true);}else setStatus(fileStatus,fileSelection.length+' file(s) ready.');renderFileSelection();});
+$('#file-convert-clear').addEventListener('click',()=>{fileSelection=[];fileInput.value='';renderFileSelection();setStatus(fileStatus,'Selection cleared.');});
+const loadScript = src => new Promise((resolve,reject)=>{
+ const existing=[...document.scripts].find(s=>s.src===src);if(existing){if(existing.dataset.loaded==='yes')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
+ const s=document.createElement('script');s.src=src;s.async=true;s.onload=()=>{s.dataset.loaded='yes';resolve();};s.onerror=()=>reject(new Error('Could not load a required conversion library. Check your connection and retry.'));document.head.append(s);
+});
+async function getJsPDF(){if(!window.jspdf?.jsPDF)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');return window.jspdf.jsPDF;}
+async function getJSZip(){if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');return window.JSZip;}
+async function getPDFJS(){if(!window.pdfjsLib)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');if(window.pdfjsLib.GlobalWorkerOptions)window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';return window.pdfjsLib;}
+async function readAsArrayBuffer(file){return file.arrayBuffer();}
+function outputName(ext){return (safeFilename($('#file-convert-name').value,'vault-converted')||'vault-converted')+'.'+ext;}
+function downloadBlob(blob,name){download(blob,name,blob.type||'application/octet-stream');}
+function csvParse(text){
+ const rows=[];let row=[],cell='',quoted=false;
+ for(let i=0;i<text.length;i++){const ch=text[i];if(quoted){if(ch==='"'&&text[i+1]==='"'){cell+='"';i++;}else if(ch==='"')quoted=false;else cell+=ch;}else if(ch==='"'&&cell==='')quoted=true;else if(ch===','){row.push(cell);cell='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))rows.push(row);row=[];cell='';}else cell+=ch;}
+ row.push(cell);if(row.some(v=>v!==''))rows.push(row);if(quoted)throw new Error('CSV has an unclosed quoted field.');return rows;
+}
+function csvCell(v){const s=v==null?'':typeof v==='object'?JSON.stringify(v):String(v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function jsonToCSV(data){
+ if(!Array.isArray(data)||!data.length||data.some(x=>!x||typeof x!=='object'||Array.isArray(x)))throw new Error('JSON → CSV needs a non-empty array of objects.');
+ const keys=[...new Set(data.flatMap(Object.keys))];return [keys,...data.map(o=>keys.map(k=>o[k]))].map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function csvToJSON(text){const rows=csvParse(text);if(rows.length<2)throw new Error('CSV needs a header row and at least one data row.');const heads=rows[0].map(x=>x.trim());if(heads.some(x=>!x)||new Set(heads).size!==heads.length)throw new Error('CSV headers must be non-empty and unique.');return rows.slice(1).map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])));}
+function xmlNode(node){
+ if(node.nodeType===3)return node.nodeValue.trim();const children=[...node.children];if(!children.length)return node.textContent.trim();
+ const out={};for(const child of children){const value=xmlNode(child);if(Object.prototype.hasOwnProperty.call(out,child.tagName))out[child.tagName]=[].concat(out[child.tagName],value);else out[child.tagName]=value;}
+ for(const a of [...node.attributes]){out['@'+a.name]=a.value;}return out;
+}
+function jsonToXML(value,tag='root'){
+ const valid=/^[A-Za-z_][\w.:-]*$/;if(!valid.test(tag))tag='item';
+ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+ if(Array.isArray(value))return value.map(v=>jsonToXML(v,'item')).join('');
+ if(value&&typeof value==='object')return Object.entries(value).map(([k,v])=>{const key=valid.test(k)&&!k.startsWith('@')?k:'item';return '<'+key+'>'+jsonToXML(v,key)+'</'+key+'>';}).join('');
+ return esc(value==null?'':value);
+}
+async function imageFileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read '+file.name));r.readAsDataURL(file);});}
+async function convertFiles(){
+ if(!fileSelection.length)return;const mode=fileMode.value;const files=[...fileSelection];$('#file-convert-run').disabled=true;setStatus(fileStatus,'Converting locally… this may take a moment.');
+ try{
+  let blob,filename;
+  if(mode==='images-pdf'){
+   if(files.some(f=>!['image/jpeg','image/png'].includes(f.type)))throw new Error('Choose only JPG or PNG images.');
+   const PDF=await getJsPDF();const doc=new PDF({unit:'pt',format:'a4'});
+   for(let i=0;i<files.length;i++){const url=await imageFileToDataURL(files[i]);const img=new Image();img.src=url;await img.decode();if(i)doc.addPage();const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),scale=Math.min((pw-48)/img.width,(ph-48)/img.height);doc.addImage(url,files[i].type==='image/png'?'PNG':'JPEG',(pw-img.width*scale)/2,(ph-img.height*scale)/2,img.width*scale,img.height*scale);}
+   blob=doc.output('blob');filename=outputName('pdf');
+  } else if(mode==='txt-pdf'||mode==='docx-pdf'||mode==='epub-pdf'){
+   let textContent='';
+   if(mode==='txt-pdf')textContent=await files[0].text();
+   if(mode==='docx-pdf'){
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
+    const result=await window.mammoth.extractRawText({arrayBuffer:await readAsArrayBuffer(files[0])});textContent=result.value;
+   }
+   if(mode==='epub-pdf'){
+    const JSZip=await getJSZip(),zip=await JSZip.loadAsync(await readAsArrayBuffer(files[0]));
+    const container=await zip.file('META-INF/container.xml')?.async('text');if(!container)throw new Error('This EPUB has no valid container.xml.');
+    const docXML=new DOMParser().parseFromString(container,'application/xml');const opfPath=docXML.querySelector('rootfile')?.getAttribute('full-path');if(!opfPath||!zip.file(opfPath))throw new Error('Could not locate the EPUB book package.');
+    const opf= new DOMParser().parseFromString(await zip.file(opfPath).async('text'),'application/xml');const base=opfPath.includes('/')?opfPath.slice(0,opfPath.lastIndexOf('/')+1):'';
+    const manifest=new Map([...opf.querySelectorAll('manifest item')].map(n=>[n.getAttribute('id'),n.getAttribute('href')]));const ids=[...opf.querySelectorAll('spine itemref')].map(n=>n.getAttribute('idref'));
+    for(const id of ids){const href=manifest.get(id);if(!href)continue;const path=base+decodeURIComponent(href.split('#')[0]);const entry=zip.file(path);if(!entry)continue;const docHTML=new DOMParser().parseFromString(await entry.async('text'),'text/html');textContent+=docHTML.body.innerText+'\n\n';}
+    if(!textContent.trim())throw new Error('No readable chapter text was found in this EPUB.');
+   }
+   const PDF=await getJsPDF();const doc=new PDF({unit:'pt',format:'a4'});const margin=44,width=doc.internal.pageSize.getWidth()-88;doc.setFont('helvetica','normal');doc.setFontSize(10);
+   const lines=doc.splitTextToSize(textContent.replace(/\r/g,''),width);let y=48;for(const line of lines){if(y>doc.internal.pageSize.getHeight()-44){doc.addPage();y=48;}doc.text(line,44,y);y+=13;}
+   blob=doc.output('blob');filename=outputName('pdf');
+  } else if(mode==='pdf-txt'||mode==='pdf-images'){
+   const pdfjs=await getPDFJS(),pdf=await pdfjs.getDocument({data:await readAsArrayBuffer(files[0])}).promise;
+   if(mode==='pdf-txt'){let all='';for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),content=await page.getTextContent();all+='--- Page '+p+' ---\n'+content.items.map(x=>x.str).join(' ')+'\n\n';}blob=new Blob([all],{type:'text/plain;charset=utf-8'});filename=outputName('txt');}
+   else{const JSZip=await getJSZip(),zip=new JSZip(),fmt=$('#file-convert-image-format').value,ext=fmt==='image/jpeg'?'jpg':'png';for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),viewport=page.getViewport({scale:1.5}),canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const data=await new Promise(resolve=>canvas.toBlob(resolve,fmt,.9));if(!data)throw new Error('Could not render PDF page '+p);zip.file('page-'+String(p).padStart(3,'0')+'.'+ext,data);}blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');}
+  } else if(mode==='json-csv'||mode==='csv-json'||mode==='xml-json'||mode==='json-xml'){
+   const source=await files[0].text();let result,ext,type;
+   if(mode==='json-csv'){result=jsonToCSV(JSON.parse(source));ext='csv';type='text/csv;charset=utf-8';}
+   if(mode==='csv-json'){result=JSON.stringify(csvToJSON(source),null,2);ext='json';type='application/json';}
+   if(mode==='xml-json'){const parsed=new DOMParser().parseFromString(source,'application/xml');if(parsed.querySelector('parsererror'))throw new Error('The XML is not well-formed.');result=JSON.stringify({[parsed.documentElement.tagName]:xmlNode(parsed.documentElement)},null,2);ext='json';type='application/json';}
+   if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n<root>'+jsonToXML(data)+'</root>';ext='xml';type='application/xml';}
+   blob=new Blob([result],{type});filename=outputName(ext);
+  } else if(mode==='zip-tar'||mode==='tar-zip'){
+   const JSZip=await getJSZip();const input=await readAsArrayBuffer(files[0]);
+   if(mode==='zip-tar'){
+    const zip=await JSZip.loadAsync(input),parts=[];const enc=new TextEncoder();const oct=(n)=>enc.encode(n);
+    const pad=(n,size)=>String(n).padStart(size,'0');const writeOct=(view,off,size,n)=>{const s=pad(n,size-1)+'\0';for(let i=0;i<size;i++)view[off+i]=s.charCodeAt(i)||0;};
+    for(const [name,entry] of Object.entries(zip.files)){if(entry.dir)continue;const data=await entry.async('uint8array');const head=new Uint8Array(512),v=new DataView(head.buffer);const put=(off,len,str)=>{head.set(oct(str).slice(0,len),off);};put(0,100,name.slice(0,100));writeOct(v,100,8,420);writeOct(v,108,8,0);writeOct(v,116,8,0);writeOct(v,124,12,data.length);writeOct(v,136,12,0);head.fill(32,148,156);head[156]=48;put(257,6,'ustar\0');put(263,2,'00');let sum=head.reduce((a,b)=>a+b,0);put(148,8,pad(sum,6)+'\0 ');parts.push(head,data);const padLen=(512-data.length%512)%512;if(padLen)parts.push(new Uint8Array(padLen));}
+    parts.push(new Uint8Array(1024));blob=new Blob(parts,{type:'application/x-tar'});filename=outputName('tar');
+   }else{
+    const bytes=new Uint8Array(input),zip=new JSZip();let off=0,count=0;
+    const str=(a,b)=>new TextDecoder().decode(bytes.slice(a,b));const octal=(a,b)=>parseInt(str(a,b).replace(/\0.*$/,''),8)||0;
+    while(off+512<=bytes.length){const h=bytes.slice(off,off+512);if(h.every(x=>x===0))break;const name=str(off,off+100).replace(/\0.*$/,'');const prefix=str(off+345,off+500).replace(/\0.*$/,'');const full=prefix?prefix+'/'+name:name;const size=octal(off+124,off+136);const type=String.fromCharCode(bytes[off+156]||48);if(!name||off+512+size>bytes.length)throw new Error('Invalid or unsupported TAR archive.');if(type==='0'||type==='\0')zip.file(full,bytes.slice(off+512,off+512+size));else if(type==='5')zip.folder(full);else throw new Error('This TAR contains a link or special file; those entries are not imported.');off+=512+Math.ceil(size/512)*512;if(++count>10000)throw new Error('Archive contains too many entries.');}
+    blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');
+   }
+  }
+  if(!blob||!filename)throw new Error('This conversion is not available.');downloadBlob(blob,filename);setStatus(fileStatus,'Done — downloaded '+filename+'. Your source file was not uploaded.');
+ }catch(err){setStatus(fileStatus,err?.message||'Conversion failed. Please check the file and try again.',true);}
+ finally{$('#file-convert-run').disabled=!fileSelection.length;}
+}
+$('#file-convert-run').addEventListener('click',convertFiles);
+const drop=$('#file-convert-drop');drop.addEventListener('dragover',ev=>{ev.preventDefault();drop.classList.add('is-dragging');});drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragging'));drop.addEventListener('drop',ev=>{ev.preventDefault();drop.classList.remove('is-dragging');const m=fileModeInfo[fileMode.value];fileSelection=Array.from(ev.dataTransfer.files||[]);if(!m.multiple&&fileSelection.length>1)fileSelection=fileSelection.slice(0,1);if(fileSelection.some(f=>f.size>100*1024*1024)){fileSelection=[];setStatus(fileStatus,'Each file must be 100 MB or smaller.',true);}else setStatus(fileStatus,fileSelection.length+' file(s) ready.');renderFileSelection();});
+updateFileMode();
