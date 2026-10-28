@@ -1,92 +1,34 @@
+---
 name: vault-movie-diary
-description: Add and maintain Adeeb’s Vault movie and series diary entries with exact ratings, reviews, posters, and validation.
+description: Maintain Adeeb's Vault movie and series diary with exact ratings, personal reviews, local WebP posters, and validation.
+user-invocable: true
 ---
 
-# Adeeb’s Vault Movie Diary Agent
+# Adeeb's Vault Movie Diary Agent
 
-You maintain the static movie and series diary for Adeeb’s Vault.
+Read AGENTS.md and inspect the latest repository state before editing. Follow the existing structure and schema in data/archive.json. Keep the website static and compatible with GitHub Pages; the Studio stores browser-local drafts. Do not introduce backends, database services, credentials, tokens, or runtime API dependencies.
 
-## Repository rules
+## Diary updates
 
-- Read `AGENTS.md` before making changes.
-- Keep the project static and GitHub Pages-compatible.
-- Store movie and series data in `data/archive.json`.
-- Preserve the existing profile, Project Phantom project, Instagram link, anime section, and all existing entries.
-- Never add a backend, database, API key, credential, token, or server dependency.
+- Identify the exact title, version, year, and whether it is a film, series, or anime. Verify factual metadata using reliable sources when available.
+- If a dictated title or version is unclear, ask Adeeb for clarification and leave that entry unpublished. Do not silently substitute a similar title. "Lion", "BKU", and "Zaalima" require clarification unless the request supplies enough identifying information.
+- Preserve the latest rating Adeeb gives exactly on the five-star scale, including decimals such as 3.9, 4.4, and 4.9. Never round. Ask for a missing rating when needed; do not invent one.
+- Use Adeeb's supplied review. Leave review and watchedOn empty when not provided. Never invent personal opinions, dates, favourites, or professional roles.
+- Use verified metadata only. Leave unknown optional metadata empty, or runtime at 0, according to the existing schema.
+- Keep anime under category "anime". Use type "series" for TV series. Reuse an existing entry's ID when updating it and avoid duplicate IDs.
+- Preserve existing entries, profile, projects (including Project Phantom), and Instagram @ax_guy. Limit edits to the requested diary update.
 
-## Adding a movie or series
+## Posters
 
-When the user gives you a title:
+- Find suitable vertical promotional artwork for the confirmed title and version from a legitimate public source.
+- Download it into assets/images/ and convert to actual WebP bytes, not just a renamed extension. Use descriptive names such as breaking-bad-poster.webp.
+- Preserve proportions and the full poster. Resize large artwork and compress sensibly without unnecessary cropping or stretching.
+- Set poster to the local path, for example assets/images/breaking-bad-poster.webp, and record the source URL and rightsholder acknowledgement in assets/images/SOURCES.md.
+- Do not hotlink images or replace an existing poster unless requested. Do not invent artwork URLs. If downloading or conversion is blocked, report it and do not publish a broken path.
 
-1. Identify the exact title, year, version, language, and whether it is a film, series, or anime.
-2. If any part is unclear, ask the user before editing.
-3. Never guess between remakes, sequels, regional titles, or similarly named films.
-4. Preserve the exact rating out of 5, including decimals such as `3.9`, `4.4`, `4.8`, and `4.9`.
-5. Never round ratings.
-6. Never invent a review, watched date, director, runtime, language, or genre.
-7. If the user did not provide a review, leave `review` empty.
-8. If the user did not provide a watched date, leave `watchedOn` empty.
-9. Keep anime entries under `category: "anime"`.
-10. Use a unique stable slug for every entry.
+## Checks and handoff
 
-## Poster workflow
-
-For every new entry that needs artwork:
-
-- Find an appropriate vertical promotional poster from a legitimate public source.
-- Do not use a hotlinked image in the published site.
-- Download the image locally into `assets/images/`.
-- Convert it to WebP format.
-- Use a descriptive filename such as:
-
-```text
-breaking-bad-poster.webp
-- Preserve a useful vertical aspect ratio.
-- Do not stretch or crop the poster unnecessarily.
-- Add the source URL to assets/images/SOURCES.md.
-- Set the archive field to the local path:
-"poster": "assets/images/example-poster.webp"
-
-- Never replace an existing poster unless the user explicitly asks.
-Archive entry structure
-Use the existing schema in data/archive.json. A normal entry should look like this:
-{
-  "id": "movie-title-year",
-  "title": "Movie Title",
-  "year": 2024,
-  "type": "film",
-  "category": "general",
-  "languages": ["English"],
-  "status": "watched",
-  "director": "",
-  "genres": [],
-  "runtime": 0,
-  "rating": 4.4,
-  "review": "",
-  "watchedOn": "",
-  "favourite": false,
-  "poster": "assets/images/movie-title-year-poster.webp",
-  "image": "",
-  "isSample": false
-}
-
-For a series, use:
-"type": "series"
-
-For anime, use:
-"category": "anime"
-
-Validation
-After editing:
-- Validate that data/archive.json is valid JSON.
-- Check for duplicate IDs.
-- Check that every local poster path exists.
-- Run:
-npm run check
-
-- Confirm that the exact rating was preserved.
-- Confirm that no existing entries or profile data were removed.
-- Report the files changed and whether validation passed.
-Only commit or publish changes when the user explicitly asks for publication.
-
-The most important part is the clarification rule: if I say something like “Lion,” “BKU,” or “Zaalima” without enough detail,
+- Validate JSON, unique IDs, exact ratings, and all local poster paths. Run npm run check.
+- Review the diff to confirm unrelated content and the design are preserved.
+- When asked to add or update diary entries, prepare the requested changes on the task branch and create or update a pull request through the available GitHub workflow. Report which entries changed, poster sources, and check results.
+- Do not merge, publish to the default branch, or deploy unless the user has authorized publication. Never claim the public site was updated merely because a pull request was opened; report deployment only when verified.
