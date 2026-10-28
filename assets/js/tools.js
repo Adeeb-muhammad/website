@@ -56,7 +56,7 @@ const images = [];
 let imageBusy = false;
 let originalBytes = 0;
 function renderImages(focusIndex = -1) {
-  $('#image-list').innerHTML = images.map((image, i) => `<li><img src="${image.preview}" alt="Page ${i + 1} preview"><div class="image-info"><strong>${e(image.name)}</strong><span>PAGE ${String(i + 1).padStart(2, '0')} · ${image.width} × ${image.height}</span></div><div class="image-actions"><button type="button" data-image="up" data-index="${i}" aria-label="Move page ${i + 1} up" ${i === 0 || imageBusy ? 'disabled' : ''}>↑</button><button type="button" data-image="down" data-index="${i}" aria-label="Move page ${i + 1} down" ${i === images.length - 1 || imageBusy ? 'disabled' : ''}>↓</button><button type="button" data-image="remove" data-index="${i}" aria-label="Remove page ${i + 1}" ${imageBusy ? 'disabled' : ''}>×</button></div></li>`).join('');
+  $('#image-list').innerHTML = images.map((image, i) => `<li draggable="true" data-image-row="${i}"><img src="${image.preview}" alt="Page ${i + 1} preview"><div class="image-info"><strong>${e(image.name)}</strong><span>PAGE ${String(i + 1).padStart(2, '0')} · ${image.width} × ${image.height}</span></div><div class="image-actions"><button type="button" data-image="up" data-index="${i}" aria-label="Move page ${i + 1} up" ${i === 0 || imageBusy ? 'disabled' : ''}>↑</button><button type="button" data-image="down" data-index="${i}" aria-label="Move page ${i + 1} down" ${i === images.length - 1 || imageBusy ? 'disabled' : ''}>↓</button><button type="button" data-image="rotate" data-index="${i}" aria-label="Rotate page ${i + 1} clockwise">↻</button><button type="button" data-image="remove" data-index="${i}" aria-label="Remove page ${i + 1}" ${imageBusy ? 'disabled' : ''}>×</button></div></li>`).join('');
   $('#images-empty').hidden = images.length > 0;
   $('#image-export').disabled = imageBusy || !images.length;
   $('#image-clear').disabled = imageBusy || !images.length;
@@ -116,6 +116,10 @@ $('#image-list').addEventListener('click', event => {
   renderImages(Math.min(action === 'up' ? index - 1 : action === 'down' ? index + 1 : index, images.length - 1));
   if (!images.length) $('#image-files').focus();
 });
+let draggedImageIndex = -1;
+$('#image-list').addEventListener('dragstart', event => { const row = event.target.closest('[data-image-row]'); if (!row || imageBusy) return; draggedImageIndex = Number(row.dataset.imageRow); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(draggedImageIndex)); });
+$('#image-list').addEventListener('dragover', event => { if (event.target.closest('[data-image-row]')) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
+$('#image-list').addEventListener('drop', event => { const row = event.target.closest('[data-image-row]'); if (!row || imageBusy) return; event.preventDefault(); const from = draggedImageIndex, to = Number(row.dataset.imageRow); draggedImageIndex = -1; if (from < 0 || from >= images.length || to < 0 || to >= images.length || from === to) return; const moved = images.splice(from, 1)[0]; images.splice(to, 0, moved); renderImages(to); });
 $('#image-clear').addEventListener('click', () => {
   if (imageBusy) return;
   images.forEach(image => URL.revokeObjectURL(image.preview)); images.length = 0; originalBytes = 0;
