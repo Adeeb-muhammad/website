@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="A simple browser-based drum machine built into Adeeb's archive.">
+  <meta property="og:title" content="Drum machine // Adeeb’s Vault">
+  <meta property="og:description" content="A quick browser drum machine with a 16-step loop and adjustable tempo.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://adeebmuh.me/drum-machine.html">
+  <link rel="canonical" href="https://adeebmuh.me/drum-machine.html">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="assets/css/style.css?v=6">
+  <link rel="stylesheet" href="assets/css/drum-machine.css?v=1">
+  <title>Drum machine // Adeeb’s Vault</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="index.html#home" aria-label="Adeeb’s Vault home">ADEEB’S<span class="brand-vault">VAULT</span><span class="brand-mark">01</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="index.html#home">OVERVIEW</a>
+      <a href="index.html#films">FILM ARCHIVE</a>
+      <a href="index.html#projects">PROJECTS</a>
+      <a href="index.html#misc" class="active">MISC</a>
+      <a href="index.html#about">THE OPERATOR</a>
+    </nav>
+    <div class="header-right">
+      <span class="availability"><i></i> PERSONAL ARCHIVE</span>
+      <button class="menu-toggle icon-button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav">
+        <svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></svg>
+      </button>
+    </div>
+  </header>
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" hidden>
+    <a href="index.html#home">Overview <span>01</span></a>
+    <a href="index.html#films">Film archive <span>02</span></a>
+    <a href="index.html#projects">Projects <span>06</span></a>
+    <a href="index.html#misc">Miscellaneous <span>07</span></a>
+    <a href="index.html#about">The operator <span>08</span></a>
+  </nav>
+  <aside class="side-rail" aria-label="Shortcuts">
+    <a href="index.html#home" class="rail-monogram" aria-label="Home">a<span>.</span></a>
+    <div class="rail-links">
+      <a href="index.html#films" aria-label="Films"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 3v18M16 3v18M4 8h4M4 16h4M16 8h4M16 16h4"/></svg><span>FILM ARCHIVE</span></a>
+      <a href="index.html#projects" aria-label="Projects"><svg viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span>PROJECTS</span></a>
+      <a href="index.html#misc" aria-label="Miscellaneous"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1 1M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1-1"/></svg><span>MISC</span></a>
+    </div>
+    <a class="rail-github" href="https://github.com/Adeeb-muhammad" target="_blank" rel="noopener noreferrer" aria-label="Adeeb on GitHub"><svg viewBox="0 0 24 24"><path d="M9 19c-4 1-4-2-6-2m12 4v-4c0-1 .2-2-.5-2.6 3-.3 5.5-1.4 5.5-6.4 0-1.3-.4-2.5-1.3-3.4.1-.4.6-1.6-.1-3.3 0 0-1.1-.3-3.6 1.3a12 12 0 0 0-6 0C6.5 1 5.4 1.3 5.4 1.3c-.7 1.7-.2 2.9-.1 3.3A5 5 0 0 0 4 8c0 5 2.5 6.1 5.5 6.4C8.8 15 9 16 9 17v4"/></svg></a>
+    <span class="rail-bottom">UAE / EARTH</span>
+  </aside>
+
+  <main id="main" class="site-main" tabindex="-1">
+    <section class="page-heading section-pad">
+      <p class="eyebrow">A LITTLE BIT OF RHYTHM</p>
+      <h1>DRUM_<span class="outline-text">MACHINE</span></h1>
+      <p>Tap in a pattern, nudge the tempo, and let the loop run. It’s a tiny browser sequencer for a quick pulse.</p>
+    </section>
+
+    <section class="drum-machine section-pad" aria-label="Drum machine">
+      <div class="drum-console">
+        <div class="console-header">
+          <div>
+            <p class="eyebrow">STUDIO / LOOP</p>
+            <h2>STEP_<span class="muted">ENGINE</span></h2>
+          </div>
+          <div class="transport">
+            <button id="play-toggle" class="button button-accent" type="button">START LOOP ↗</button>
+            <button id="randomize" class="button button-outline" type="button">RANDOMIZE ↗</button>
+          </div>
+        </div>
+
+        <div class="tempo-row">
+          <label class="tempo-control" for="tempo-slider">
+            <span>TEMPO</span>
+            <input id="tempo-slider" type="range" min="70" max="170" step="1" value="110">
+            <strong id="tempo-display">110 BPM</strong>
+          </label>
+        </div>
+
+        <div class="sequencer" id="sequencer" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <footer class="site-footer section-pad">
+      <div class="footer-top">
+        <div>
+          <p class="eyebrow">THE INTERNET IS BETTER WITH A HUMAN IN IT.</p>
+          <a class="footer-title" href="index.html#about">STAY_<span class="outline-text">CURIOUS.</span> ↗</a>
+        </div>
+        <a href="index.html#misc" class="text-link">BACK TO MISC <span>↗</span></a>
+      </div>
+      <div class="footer-bottom">
+        <a href="index.html#home" class="brand">ADEEB’S<span class="brand-vault">VAULT</span></a>
+        <span class="micro">PERSONAL ARCHIVE BY ADEEB · <span id="copyright-year"></span></span>
+        <div>
+          <a href="https://github.com/Adeeb-muhammad" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+          <a href="index.html#misc">MISC ↗</a>
+          <a href="index.html#home">BACK TO TOP ↑</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script type="module" src="assets/js/drum-machine.js"></script>
+</body>
+</html>
