@@ -1,4 +1,4 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=3';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=4';
 import { initNotebook } from './notebook.js?v=2';
 import { escapeHTML as e } from './core.js?v=6';
 
@@ -34,7 +34,7 @@ async function confirmChange(message) {
 }
 
 function routeTool(focus = false) {
-  const key = ['images', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
+  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
   for (const panel of document.querySelectorAll('.tool-panel')) panel.hidden = panel.id !== `tool-${key}`;
   for (const link of document.querySelectorAll('.tool-switcher a')) {
     if (link.hash === (key === 'notes' ? '#notes' : '#utilities')) link.setAttribute('aria-current', 'page');
@@ -104,6 +104,8 @@ const drop = $('#image-drop');
 for (const type of ['dragover', 'dragenter']) drop.addEventListener(type, event => { event.preventDefault(); drop.classList.add('is-dragging'); });
 for (const type of ['dragleave', 'drop']) drop.addEventListener(type, event => { event.preventDefault(); drop.classList.remove('is-dragging'); });
 drop.addEventListener('drop', event => addImages([...event.dataTransfer.files]));
+$('#image-quality').addEventListener('input', event => { $('#image-quality-value').textContent = event.target.value + '%'; });
+$('#image-margin').addEventListener('input', event => { $('#image-margin-value').textContent = Math.round(Number(event.target.value) * 25.4 / 72) + ' mm'; });
 $('#image-list').addEventListener('click', event => {
   const button = event.target.closest('[data-image]');
   if (!button || imageBusy) return;
@@ -123,7 +125,7 @@ $('#image-export').addEventListener('click', async () => {
   imageBusy = true; renderImages(); setStatus('#image-status', 'Putting your PDF together…');
   await new Promise(resolve => requestAnimationFrame(resolve));
   try {
-    const pdf = createImagePDF(images, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: $('#image-margin').checked ? 28 : 0 });
+    const pdf = createImagePDF(images, { size: $('#image-paper').value, orientation: $('#image-orientation').value, margin: Number($('#image-margin').value) * 72 / 25.4 });
     download(pdf, `${safeFilename($('#image-name').value, 'my-document')}.pdf`, 'application/pdf');
     setStatus('#image-status', `Your ${images.length}-page PDF is ready. Your images stayed on this device.`);
   } catch (error) { setStatus('#image-status', `Could not create the PDF: ${error.message}`, true); }
