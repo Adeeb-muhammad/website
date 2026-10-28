@@ -57,6 +57,8 @@
 .brand>span.brand-vault{background:linear-gradient(110deg,#5267a5 0%,#82649f 37%,#b27a81 72%,#ca915f 100%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-stroke:0}
 .button-accent{background:var(--accent);color:#080808;border-color:transparent}
 .button-accent:hover{background:#e0e500;box-shadow:none}
+.hero-actions .button-accent{background:#b36bff}
+.hero-actions .button-accent:hover{background:#c590ff}
 .desktop-nav{gap:20px}
 @media(max-width:1100px){:root{--rail:0px}.side-rail,.desktop-nav{display:none}.menu-toggle{display:inline-flex}.mobile-nav{max-height:calc(100dvh - var(--header));overflow-y:auto}}
 .hero-petals{position:absolute;right:0;top:0;bottom:0;width:min(10vw,110px);pointer-events:none;z-index:1;overflow:hidden}
