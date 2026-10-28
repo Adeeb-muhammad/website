@@ -64,7 +64,7 @@ function renderImages(focusIndex = -1) {
   if (focusIndex >= 0) $(`[data-image="remove"][data-index="${focusIndex}"]`)?.focus();
 }
 
-async function convertImage(file) {
+async function convertImage(file, rotation = 0, quality = .88) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error(`${file.name}: use a JPG, PNG, or WebP image.`);
   if (file.size > 15 * 1024 * 1024) throw new Error(`${file.name}: the limit is 15 MB per image.`);
   const url = URL.createObjectURL(file);
@@ -73,15 +73,15 @@ async function convertImage(file) {
     await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error(`${file.name}: this image could not be read.`)); img.src = url; });
     if (!img.naturalWidth || img.naturalWidth * img.naturalHeight > 40000000) throw new Error(`${file.name}: please resize this very large image first (maximum 40 megapixels).`);
     const ratio = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Image conversion is not available in this browser.');
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .88));
+    const sourceWidth = Math.max(1, Math.round(img.naturalWidth * ratio)), sourceHeight = Math.max(1, Math.round(img.naturalHeight * ratio));
+    const turns = ((rotation % 360) + 360) % 360, sideways = turns === 90 || turns === 270;
+    const canvas = document.createElement('canvas'); canvas.width = sideways ? sourceHeight : sourceWidth; canvas.height = sideways ? sourceWidth : sourceHeight;
+    const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Image conversion is not available in this browser.');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(turns * Math.PI / 180);
+    ctx.drawImage(img, -sourceWidth / 2, -sourceHeight / 2, sourceWidth, sourceHeight); ctx.restore();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
     if (!blob) throw new Error(`${file.name}: could not convert this image.`);
-    return { name: file.name, originalSize: file.size, width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()), preview: URL.createObjectURL(blob) };
+    return { name: file.name, sourceFile: file, originalSize: file.size, rotation: turns, width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()), preview: URL.createObjectURL(blob) };
   } finally { URL.revokeObjectURL(url); }
 }
 
@@ -106,7 +106,7 @@ for (const type of ['dragleave', 'drop']) drop.addEventListener(type, event => {
 drop.addEventListener('drop', event => addImages([...event.dataTransfer.files]));
 $('#image-quality').addEventListener('input', event => { $('#image-quality-value').textContent = event.target.value + '%'; });
 $('#image-margin').addEventListener('input', event => { $('#image-margin-value').textContent = Math.round(Number(event.target.value) * 25.4 / 72) + ' mm'; });
-$('#image-list').addEventListener('click', event => {
+$('#image-list').addEventListener('click', async event => {
   const button = event.target.closest('[data-image]');
   if (!button || imageBusy) return;
   const index = Number(button.dataset.index), action = button.dataset.image;
