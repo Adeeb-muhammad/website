@@ -1,5 +1,7 @@
 # Artwork sources
 
+`cosmos-texture.svg` is original decorative vector artwork for the Vault identity: a midnight sky, a faint dusty band, and small white stars. It is an illustration, not an astronomical photograph or star map.
+
 The cover art below identifies the films and series reviewed in Adeeb’s Vault. Artwork remains the property of its respective rightsholders.
 
 - `avatar-2009-poster.jpg` — [theatrical poster source](https://www.imdb.com/title/tt0499549/mediaviewer/rm2864126209/)
