@@ -34,7 +34,7 @@ async function confirmChange(message) {
 }
 
 function routeTool(focus = false) {
-  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
+  const key = ['images', 'image-convert', 'image-compress', 'markdown', 'notes', 'links', 'text', 'units', 'color', 'timestamp'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
   for (const panel of document.querySelectorAll('.tool-panel')) panel.hidden = panel.id !== `tool-${key}`;
   for (const link of document.querySelectorAll('.tool-switcher a')) {
     if (link.hash === (key === 'notes' ? '#notes' : '#utilities')) link.setAttribute('aria-current', 'page');
@@ -324,3 +324,94 @@ $('#links-check').addEventListener('click', async () => {
 });
 $('#links-stop').addEventListener('click', () => checkController?.abort());
 $('#links-export').addEventListener('click', () => download(linksCSV(linkRows), 'link-report.csv', 'text/csv;charset=utf-8'));
+
+
+// Text & code converter suite. Input is treated as data, never as executable markup.
+const textInput = $('#text-input');
+const textOutput = $('#text-output');
+function csvParse(source) {
+  const rows=[]; let row=[], cell='', quoted=false;
+  for(let i=0;i<source.length;i++){
+    const ch=source[i];
+    if(quoted){ if(ch==='"' && source[i+1]==='"'){cell+='"';i++;} else if(ch==='"') quoted=false; else cell+=ch; }
+    else if(ch==='"' && cell==='') quoted=true;
+    else if(ch===','){row.push(cell);cell='';}
+    else if(ch==='\n' || ch==='\r'){ if(ch==='\r' && source[i+1]==='\n')i++; row.push(cell); if(row.some(v=>v!==''))rows.push(row); row=[];cell=''; }
+    else cell+=ch;
+  }
+  if(quoted) throw new Error('CSV has an unclosed quoted field.');
+  row.push(cell); if(row.some(v=>v!=='')) rows.push(row);
+  return rows;
+}
+function csvEscape(value) { const s=value==null?'':String(value); return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+function runTextConversion() {
+  const source=textInput.value, mode=$('#text-mode').value;
+  try {
+    let result='';
+    switch(mode){
+      case 'json-format': result=JSON.stringify(JSON.parse(source),null,2); break;
+      case 'json-minify': result=JSON.stringify(JSON.parse(source)); break;
+      case 'base64-encode': result=btoa(Array.from(new TextEncoder().encode(source),b=>String.fromCharCode(b)).join('')); break;
+      case 'base64-decode': { const bin=atob(source.trim()); result=new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,ch=>ch.charCodeAt(0))); break; }
+      case 'url-encode': result=encodeURIComponent(source); break;
+      case 'url-decode': result=decodeURIComponent(source.replace(/\+/g,'%20')); break;
+      case 'html-encode': result=source.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); break;
+      case 'html-decode': { const box=document.createElement('textarea'); box.innerHTML=source; result=box.value; break; }
+      case 'upper': result=source.toLocaleUpperCase(); break;
+      case 'lower': result=source.toLocaleLowerCase(); break;
+      case 'title': result=source.toLocaleLowerCase().replace(/(^|[\s([{—–-])([\p{L}\p{N}])/gu,(m,p,c)=>p+c.toLocaleUpperCase()); break;
+      case 'sentence': result=source.toLocaleLowerCase().replace(/(^|[.!?]\s+)([\p{L}])/gu,(m,p,c)=>p+c.toLocaleUpperCase()); break;
+      case 'sort-lines': result=source.split(/\r?\n/).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).join('\n'); break;
+      case 'unique-lines': { const seen=new Set(); result=source.split(/\r?\n/).filter(line=>{const k=line.trim();if(seen.has(k))return false;seen.add(k);return true;}).join('\n'); break; }
+      case 'trim-lines': result=source.split(/\r?\n/).map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter((line,i,arr)=>line!=='' || (i>0 && arr[i-1]!=='')).join('\n').trim(); break;
+      case 'csv-json': { const rows=csvParse(source); if(!rows.length){result='[]';break;} const headers=rows[0].map((h,i)=>h.trim()||'column_'+(i+1)); result=JSON.stringify(rows.slice(1).map(row=>Object.fromEntries(headers.map((key,i)=>[key,row[i]??'']))),null,2); break; }
+      case 'json-csv': { const data=JSON.parse(source); if(!Array.isArray(data)||data.some(row=>!row||typeof row!=='object'||Array.isArray(row))) throw new Error('Input must be a JSON array of objects.'); const headers=[...new Set(data.flatMap(row=>Object.keys(row)))]; result=[headers.map(csvEscape).join(','),...data.map(row=>headers.map(key=>csvEscape(typeof row[key]==='object'&&row[key]!==null?JSON.stringify(row[key]):row[key])).join(','))].join('\r\n'); break; }
+      case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=source?source.split(/\r?\n/).length:0; result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
+    }
+    textOutput.value=result;
+    $('#text-input-count').textContent=source.length.toLocaleString()+' characters';
+    $('#text-output-count').textContent=result.length.toLocaleString()+' characters';
+    setStatus('#text-status','Done. '+result.length.toLocaleString()+' output characters.');
+  } catch(error) { setStatus('#text-status',error.message||'Could not convert this input.',true); }
+}
+$('#text-run').addEventListener('click',runTextConversion);
+textInput.addEventListener('input',()=>$('#text-input-count').textContent=textInput.value.length.toLocaleString()+' characters');
+$('#text-output').addEventListener('input',()=>$('#text-output-count').textContent=textOutput.value.length.toLocaleString()+' characters');
+$('#text-mode').addEventListener('change',()=>setStatus('#text-status','Selected: '+$('#text-mode').selectedOptions[0].text+'. Paste input, then convert.'));
+$('#text-clear').addEventListener('click',()=>{textInput.value='';textOutput.value='';$('#text-input-count').textContent='0 characters';$('#text-output-count').textContent='0 characters';setStatus('#text-status','Cleared.');textInput.focus();});
+$('#text-swap').addEventListener('click',()=>{const previous=textInput.value;textInput.value=textOutput.value;textOutput.value=previous;$('#text-input-count').textContent=textInput.value.length.toLocaleString()+' characters';$('#text-output-count').textContent=textOutput.value.length.toLocaleString()+' characters';});
+$('#text-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(textOutput.value);setStatus('#text-status','Output copied to clipboard.');}catch{ textOutput.focus();textOutput.select();setStatus('#text-status','Clipboard permission was blocked; output selected so you can copy it.');}});
+
+// Unit conversion uses explicit factors and temperature formulas.
+const unitSets={
+ length:{m:1,km:1000,cm:.01,mm:.001,µm:.000001,inch:.0254,ft:.3048,yd:.9144,mi:1609.344},
+ mass:{kg:1,g:.001,mg:.000001,µg:.000000001,lb:.45359237,oz:.028349523125,tonne:1000},
+ data:{B:1,KB:1000,MB:1e6,GB:1e9,TB:1e12,KiB:1024,MiB:1048576,GiB:1073741824,TiB:1099511627776},
+ time:{s:1,ms:.001,µs:.000001,min:60,h:3600,day:86400,week:604800},
+ speed:{'m/s':1,'km/h':1/3.6,mph:.44704,'ft/s':.3048}
+};
+const unitLabels={length:{m:'metres (m)',km:'kilometres (km)',cm:'centimetres (cm)',mm:'millimetres (mm)',µm:'micrometres (µm)',inch:'inches (in)',ft:'feet (ft)',yd:'yards (yd)',mi:'miles (mi)'},mass:{kg:'kilograms (kg)',g:'grams (g)',mg:'milligrams (mg)',µg:'micrograms (µg)',lb:'pounds (lb)',oz:'ounces (oz)',tonne:'metric tonnes'},data:{B:'bytes (B)',KB:'kilobytes (KB, decimal)',MB:'megabytes (MB, decimal)',GB:'gigabytes (GB, decimal)',TB:'terabytes (TB, decimal)',KiB:'kibibytes (KiB)',MiB:'mebibytes (MiB)',GiB:'gibibytes (GiB)',TiB:'tebibytes (TiB)'},time:{s:'seconds (s)',ms:'milliseconds (ms)',µs:'microseconds (µs)',min:'minutes (min)',h:'hours (h)',day:'days',week:'weeks'},speed:{'m/s':'metres per second', 'km/h':'kilometres per hour',mph:'miles per hour','ft/s':'feet per second'},temperature:{C:'Celsius (°C)',F:'Fahrenheit (°F)',K:'Kelvin (K)'}};
+function populateUnits(){const category=$('#units-category').value;const keys=category==='temperature'?['C','F','K']:Object.keys(unitSets[category]);for(const id of ['units-from','units-to']){const select=$('#'+id),old=select.value;select.innerHTML=keys.map(k=>'<option value="'+k+'">'+(unitLabels[category][k]||k)+'</option>').join('');if(keys.includes(old))select.value=old;}if($('#units-from').value===$('#units-to').value&&keys.length>1)$('#units-to').value=keys[1];}
+function runUnitConversion(){const category=$('#units-category').value,from=$('#units-from').value,to=$('#units-to').value,value=Number($('#units-value').value);if(!$('#units-value').value.trim()||!Number.isFinite(value)){setStatus('#units-status','Enter a valid finite number.',true);return;}let result;if(category==='temperature'){const c=from==='C'?value:from==='F'?(value-32)*5/9:value-273.15;result=to==='C'?c:to==='F'?c*9/5+32:c+273.15;}else result=value*unitSets[category][from]/unitSets[category][to];if(!Number.isFinite(result)){setStatus('#units-status','This conversion produced an invalid result.',true);return;}const format=n=>Number(n.toPrecision(12)).toLocaleString(undefined,{maximumFractionDigits:10});$('#units-result').textContent=format(value)+' '+from+' = '+format(result)+' '+to;setStatus('#units-status','Converted using standard unit factors.');}
+$('#units-category').addEventListener('change',()=>{populateUnits();runUnitConversion();});
+$('#units-from').addEventListener('change',runUnitConversion);$('#units-to').addEventListener('change',runUnitConversion);$('#units-value').addEventListener('input',runUnitConversion);$('#units-run').addEventListener('click',runUnitConversion);
+populateUnits();runUnitConversion();
+
+// HEX / RGB / HSL conversion for CSS colours.
+function colorFromInput(value){
+ let r,g,b;const hex=value.trim().match(/^#?([\da-f]{3}|[\da-f]{6})$/i);
+ const rgb=value.trim().match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)$/i);
+ if(hex){let h=hex[1];if(h.length===3)h=h.split('').map(x=>x+x).join('');r=parseInt(h.slice(0,2),16);g=parseInt(h.slice(2,4),16);b=parseInt(h.slice(4,6),16);}
+ else if(rgb){r=Number(rgb[1]);g=Number(rgb[2]);b=Number(rgb[3]);if([r,g,b].some(v=>v>255))throw new Error('RGB channels must be between 0 and 255.');}
+ else throw new Error('Enter HEX (#FAFF00 or #FF0) or RGB (rgb(250, 255, 0)).');
+ const hexOut='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+ const rn=r/255,gn=g/255,bn=b/255,max=Math.max(rn,gn,bn),min=Math.min(rn,gn,bn),delta=max-min,l=(max+min)/2;
+ let h=0,s=0;if(delta){s=delta/(1-Math.abs(2*l-1));if(max===rn)h=60*(((gn-bn)/delta)%6);else if(max===gn)h=60*((bn-rn)/delta+2);else h=60*((rn-gn)/delta+4);if(h<0)h+=360;}
+ return {r,g,b,hex:hexOut,hsl:'hsl('+Math.round(h)+' '+Math.round(s*100)+'% '+Math.round(l*100)+'%)'};
+}
+function runColorConversion(){try{const c=colorFromInput($('#color-input').value);$('#color-swatch').style.background=c.hex;$('#color-hex').textContent='HEX · '+c.hex;$('#color-rgb').textContent='RGB · rgb('+c.r+', '+c.g+', '+c.b+')';$('#color-hsl').textContent='HSL · '+c.hsl;setStatus('#color-status','Color converted.');}catch(error){setStatus('#color-status',error.message,true);}}
+$('#color-run').addEventListener('click',runColorConversion);$('#color-input').addEventListener('keydown',e=>{if(e.key==='Enter')runColorConversion();});$('#color-copy').addEventListener('click',async()=>{const values=$('#color-hex').textContent+'\n'+$('#color-rgb').textContent+'\n'+$('#color-hsl').textContent;try{await navigator.clipboard.writeText(values);setStatus('#color-status','CSS colour values copied.');}catch{setStatus('#color-status','Clipboard permission was blocked; select the values to copy.',true);}});runColorConversion();
+
+// Unix timestamps are accepted in seconds or milliseconds.
+function runTimestampConversion(){const mode=$('#timestamp-mode').value,raw=$('#timestamp-input').value.trim();try{let date,result;if(!raw)throw new Error('Enter a timestamp or date.');if(mode==='to-date'){if(!/^-?\d+(\.\d+)?$/.test(raw))throw new Error('Enter a numeric Unix timestamp.');let n=Number(raw);if(Math.abs(n)>=1e12)n=n;else n*=1000;date=new Date(n);if(Number.isNaN(date.getTime()))throw new Error('Timestamp is outside the supported date range.');result=date.toISOString()+'\nLocal: '+date.toLocaleString();}else{date=new Date(raw);if(Number.isNaN(date.getTime()))throw new Error('Enter a valid date such as 2026-10-29T12:30:00Z.');result='Seconds: '+Math.floor(date.getTime()/1000)+'\nMilliseconds: '+date.getTime();}$('#timestamp-result').textContent=result;setStatus('#timestamp-status','Converted.');}catch(error){$('#timestamp-result').textContent='—';setStatus('#timestamp-status',error.message,true);}}
+$('#timestamp-run').addEventListener('click',runTimestampConversion);$('#timestamp-mode').addEventListener('change',()=>{$('#timestamp-input').value=$('#timestamp-mode').value==='to-date'?String(Math.floor(Date.now()/1000)):new Date().toISOString();runTimestampConversion();});$('#timestamp-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#timestamp-result').textContent);setStatus('#timestamp-status','Result copied.');}catch{setStatus('#timestamp-status','Clipboard permission was blocked.',true);}});runTimestampConversion();

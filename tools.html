@@ -66,7 +66,7 @@
         <a href="#notes"><span>01</span> NOTES CANVAS</a>
         <a href="#utilities" aria-current="page"><span>02</span> UTILITY DESK</a>
       </nav>
-      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="image-convert">Image format converter</option><option value="image-compress">Image compressor</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option></select></label><p class="tool-help">Choose from document and image utilities. Files stay on your device.</p></div>
+      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="image-convert">Image format converter</option><option value="image-compress">Image compressor</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option><option value="text">Text &amp; code converter</option><option value="units">Unit converter</option><option value="color">Color converter</option><option value="timestamp">Timestamp converter</option></select></label><p class="tool-help">Choose from document and image utilities. Files stay on your device.</p></div>
 
       <section id="tool-images" class="tool-panel" aria-labelledby="images-heading">
         <div class="tool-intro"><div><p class="eyebrow">01 / PUT THE PAGES TOGETHER</p><h2 id="images-heading" tabindex="-1">Images to PDF</h2><p>Photos, scans, or screenshots. One image per page, in the order you choose.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
@@ -102,6 +102,44 @@
         <label class="upload-zone converter-upload" id="compress-drop"><input id="compress-files" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="upload-symbol" aria-hidden="true">＋</span><strong>Choose images</strong><span>or drop them here · JPG, PNG, WebP</span><small>Up to 20 images · 15 MB each</small></label>
         <div class="tool-settings converter-settings"><label class="tool-field">Compression quality <span class="range-value" id="compress-quality-value">75%</span><input id="compress-quality" type="range" min="35" max="95" value="75"></label><label class="tool-field">Maximum image edge<select id="compress-size"><option value="original">Keep original dimensions</option><option value="2400">2,400 px</option><option value="1600">1,600 px</option><option value="1200">1,200 px</option><option value="800">800 px</option></select></label><label class="tool-field">Output format<select id="compress-format"><option value="image/webp">WebP · usually smallest</option><option value="image/jpeg">JPEG · widely compatible</option><option value="image/png">PNG · lossless, larger files</option></select></label><button id="compress-export" class="button button-accent" type="button" disabled>COMPRESS &amp; DOWNLOAD <span>↓</span></button><button id="compress-clear" class="text-link" type="button" disabled>REMOVE ALL IMAGES ×</button></div>
         <ol id="compress-list" class="image-queue" aria-label="Images to compress"></ol><p id="compress-status" class="tool-status" role="status" aria-live="polite"></p><p class="tool-help">The estimated result is shown after processing. PNG can be larger than the original; try WebP or JPEG for photographs. Files never leave your device.</p>
+      </section>
+
+      <section id="tool-text" class="tool-panel" aria-labelledby="text-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">05 / SHAPE THE RAW DATA</p><h2 id="text-heading" tabindex="-1">Text &amp; code lab</h2><p>Quick conversions for text, URLs, HTML, JSON, and CSV. Everything runs locally in this tab.</p></div><span class="tool-local">NO UPLOADS</span></div>
+        <div class="tool-settings converter-settings">
+          <label class="tool-field">Operation<select id="text-mode">
+            <option value="json-format">Format JSON</option><option value="json-minify">Minify JSON</option><option value="base64-encode">Text → Base64</option><option value="base64-decode">Base64 → text</option><option value="url-encode">URL encode</option><option value="url-decode">URL decode</option><option value="html-encode">HTML entity encode</option><option value="html-decode">HTML entity decode</option><option value="upper">UPPERCASE</option><option value="lower">lowercase</option><option value="title">Title Case</option><option value="sentence">Sentence case</option><option value="sort-lines">Sort lines A–Z</option><option value="unique-lines">Remove duplicate lines</option><option value="trim-lines">Clean whitespace</option><option value="csv-json">CSV → JSON</option><option value="json-csv">JSON → CSV</option><option value="word-count">Word &amp; character count</option>
+          </select></label>
+          <div class="tool-bar"><button id="text-run" class="button button-accent" type="button">CONVERT <span>↗</span></button><button id="text-swap" class="small-tool-button" type="button">OUTPUT → INPUT</button><button id="text-clear" class="small-tool-button" type="button">CLEAR</button><button id="text-copy" class="small-tool-button" type="button">COPY OUTPUT</button></div>
+        </div>
+        <div class="markdown-workspace converter-text-workspace"><div class="markdown-source"><label for="text-input" class="pane-heading">INPUT <span id="text-input-count">0 characters</span></label><textarea id="text-input" maxlength="500000" spellcheck="false" placeholder="Paste or type your content here…"></textarea></div><div class="markdown-output"><label for="text-output" class="pane-heading">OUTPUT <span id="text-output-count">0 characters</span></label><textarea id="text-output" readonly spellcheck="false" placeholder="Your converted result appears here…"></textarea></div></div>
+        <p id="text-status" class="tool-status" role="status" aria-live="polite">Tip: JSON tools validate your input and explain parsing errors.</p>
+      </section>
+
+      <section id="tool-units" class="tool-panel" aria-labelledby="units-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">06 / SAME QUANTITY, DIFFERENT SCALE</p><h2 id="units-heading" tabindex="-1">Unit converter</h2><p>Convert length, mass, temperature, data, time, and speed without searching for a calculator.</p></div><span class="tool-local">INSTANT CONVERSION</span></div>
+        <div class="tool-settings converter-settings">
+          <label class="tool-field">Category<select id="units-category"><option value="length">Length</option><option value="mass">Mass / weight</option><option value="temperature">Temperature</option><option value="data">Digital storage</option><option value="time">Time</option><option value="speed">Speed</option></select></label>
+          <label class="tool-field">Value<input id="units-value" type="number" step="any" value="1" inputmode="decimal"></label>
+          <label class="tool-field">From<select id="units-from"></select></label><label class="tool-field">To<select id="units-to"></select></label>
+          <button id="units-run" class="button button-accent" type="button">CONVERT <span>↗</span></button>
+        </div>
+        <div class="unit-result" aria-live="polite"><p class="eyebrow">RESULT</p><output id="units-result">1 km = 1000 m</output></div>
+        <p id="units-status" class="tool-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="tool-color" class="tool-panel" aria-labelledby="color-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">07 / SPEAK THE LANGUAGE OF COLOUR</p><h2 id="color-heading" tabindex="-1">Color converter</h2><p>Convert HEX, RGB, and HSL values for CSS, design work, and UI themes.</p></div><span class="tool-local">CSS READY</span></div>
+        <div class="tool-settings converter-settings"><label class="tool-field">Color value<input id="color-input" value="#FAFF00" maxlength="60" spellcheck="false" placeholder="#FAFF00 or rgb(250, 255, 0)"></label><button id="color-run" class="button button-accent" type="button">CONVERT COLOR <span>↗</span></button></div>
+        <div class="color-result"><span id="color-swatch" aria-hidden="true"></span><div><p id="color-hex">HEX · #FAFF00</p><p id="color-rgb">RGB · 250, 255, 0</p><p id="color-hsl">HSL · 61°, 100%, 50%</p><button id="color-copy" class="small-tool-button" type="button">COPY CSS VALUES</button></div></div>
+        <p id="color-status" class="tool-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="tool-timestamp" class="tool-panel" aria-labelledby="timestamp-heading" hidden>
+        <div class="tool-intro"><div><p class="eyebrow">08 / TRANSLATE TIME</p><h2 id="timestamp-heading" tabindex="-1">Timestamp converter</h2><p>Convert Unix seconds or milliseconds to a readable date, or convert a date back to Unix time.</p></div><span class="tool-local">LOCAL PROCESSING</span></div>
+        <div class="tool-settings converter-settings"><label class="tool-field">Direction<select id="timestamp-mode"><option value="to-date">Unix timestamp → date</option><option value="to-unix">Date → Unix timestamp</option></select></label><label class="tool-field">Value<input id="timestamp-input" value="1760000000" spellcheck="false" placeholder="Timestamp or ISO date"></label><button id="timestamp-run" class="button button-accent" type="button">CONVERT <span>↗</span></button></div>
+        <div class="unit-result"><p class="eyebrow">RESULT</p><output id="timestamp-result">—</output><button id="timestamp-copy" class="small-tool-button" type="button">COPY RESULT</button></div>
+        <p id="timestamp-status" class="tool-status" role="status" aria-live="polite"></p>
       </section>
       <section id="tool-markdown" class="tool-panel" aria-labelledby="markdown-heading" hidden>
         <div class="tool-intro"><div><p class="eyebrow">02 / FROM DRAFT TO DOCUMENT</p><h2 id="markdown-heading" tabindex="-1">Markdown to PDF</h2><p>Write on the left, see the finished page on the right. Then print or save it as a PDF.</p></div><span class="tool-local">NO UPLOADS</span></div>

@@ -167,3 +167,16 @@
 .image-preview-paper{box-sizing:border-box;width:min(100%,340px);margin:22px auto 28px;background:#fbfaf7;color:#272727;border:1px solid #cfc9bf;box-shadow:0 8px 24px #0005;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .image-preview-paper img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
 .image-preview-paper .preview-placeholder{font-size:12px;padding:18px;text-align:center}
+
+
+/* Additional local-first utility suite */
+.converter-text-workspace{margin-top:1.25rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+.converter-text-workspace .markdown-source,.converter-text-workspace .markdown-output{min-width:0}
+.converter-text-workspace textarea{width:100%;min-height:22rem;resize:vertical;background:var(--surface, #0a0a0a);color:inherit;border:1px solid var(--line, #333);padding:1rem;font:inherit;line-height:1.6}
+.converter-text-workspace textarea:focus{outline:2px solid var(--accent, #faff00);outline-offset:2px}
+.unit-result,.color-result{display:flex;align-items:center;gap:1.25rem;margin-top:1.5rem;padding:1.25rem;border:1px solid var(--line, #333);background:var(--surface, #0a0a0a);overflow-wrap:anywhere}
+.unit-result{display:block}
+.unit-result output{display:block;font-size:clamp(1.15rem,2.5vw,1.8rem);font-weight:600;margin:.6rem 0}
+.color-result #color-swatch{display:block;flex:0 0 5rem;width:5rem;height:5rem;border:1px solid rgba(255,255,255,.25);background:#FAFF00}
+.color-result p{margin:.25rem 0}
+@media(max-width:720px){.converter-text-workspace{grid-template-columns:minmax(0,1fr)}.converter-text-workspace textarea{min-height:14rem}.color-result{align-items:flex-start}}
