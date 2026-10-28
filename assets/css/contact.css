@@ -1,0 +1,35 @@
+.contact {
+  --c-bg: #080808; --c-text: #f2f2f2; --c-muted: #9a9a9a;
+  --c-accent: #f5e60a; --c-line: #2a2a2a;
+  max-width: 960px; margin: 0 auto; padding: 4rem 1.25rem;
+  color: var(--c-text);
+}
+.contact h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 .5rem; }
+.contact-intro { color: var(--c-muted); margin: 0 0 2rem; max-width: 52ch; }
+.contact-grid { display: grid; gap: 2.5rem; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
+.contact-email { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+.contact-email a { color: var(--c-accent); font-size: 1.1rem; overflow-wrap: anywhere; }
+.contact ul { list-style: none; margin: 0; padding: 0; }
+.contact li a {
+  display: flex; justify-content: space-between; gap: 1rem; padding: .85rem 0;
+  border-bottom: 1px solid var(--c-line); color: var(--c-text); text-decoration: none;
+}
+.contact li a span { color: var(--c-muted); font-size: .9rem; }
+.contact li a:hover, .contact li a:focus-visible { color: var(--c-accent); }
+.contact button {
+  font: inherit; cursor: pointer; padding: .6rem 1rem; border-radius: 6px;
+  background: var(--c-accent); color: #000; border: 0; font-weight: 600;
+}
+#copy-email { background: transparent; color: var(--c-text); border: 1px solid var(--c-line); font-weight: 400; }
+#copy-status { color: var(--c-muted); font-size: .85rem; }
+.contact-form { display: grid; gap: 1rem; }
+.contact-form label { display: grid; gap: .35rem; color: var(--c-muted); font-size: .9rem; }
+.contact-form input, .contact-form textarea {
+  font: inherit; color: var(--c-text); background: #111; border: 1px solid var(--c-line);
+  border-radius: 6px; padding: .65rem .75rem;
+}
+.contact-form input:focus-visible, .contact-form textarea:focus-visible,
+.contact button:focus-visible, .contact a:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.hp { position: absolute; left: -9999px; }
+#form-status { color: var(--c-muted); font-size: .85rem; }
