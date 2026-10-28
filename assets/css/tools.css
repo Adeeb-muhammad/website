@@ -148,3 +148,16 @@
   #print-document a{color:#000}
   #print-document thead{display:table-header-group}
 }
+
+/* Image converter improvements */
+.range-value{display:inline-block;color:var(--accent);font:10px var(--mono);margin-left:8px}
+.tool-field input[type="range"]{width:100%;accent-color:var(--accent);padding:0;min-height:24px}
+.image-queue li[draggable="true"]{cursor:grab}
+.image-queue li[draggable="true"]:active{cursor:grabbing}
+.image-actions button[data-image="rotate"]{font-size:18px}
+.converter-upload{margin-bottom:22px}
+.converter-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 20px}
+.converter-settings .tool-field{min-width:0}
+.converter-settings .button,.converter-settings .text-link{align-self:end}
+#tool-image-convert .image-queue,#tool-image-compress .image-queue{margin-top:18px}
+@media(max-width:650px){.converter-settings{display:flex;flex-direction:column;padding:20px}.converter-settings .tool-field{width:100%}.converter-settings .button,.converter-settings .text-link{align-self:stretch}}
