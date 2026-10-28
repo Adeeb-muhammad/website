@@ -30,11 +30,11 @@ Instagram links are controlled by `profile.instagram` and can be updated under *
 
 ## Miscellaneous tools
 
-The four tool cards in Miscellaneous open `tools.html`, with a direct URL for each workspace (`#images`, `#markdown`, `#notes`, `#links`). No account, service, or API key is required.
+The two tool cards in Miscellaneous open `tools.html#notes` (Notes Canvas) and `tools.html#utilities` (Utility Desk). The desk groups Images to PDF, Markdown to PDF, and Link Checker under one tab with a dropdown. Existing direct URLs (`#images`, `#markdown`, `#links`) still work. No account, service, or API key is required.
 
 - Images to PDF: reorder up to 20 JPG/PNG/WebP images and generate a local PDF with A4/Letter paper and per-page orientation. Images are resized to at most 2400 pixels on the long edge and flattened onto white; nothing is uploaded.
 - Markdown to PDF: local Markdown file import, editable preview, `.md` download, and a print layout for the browser's Save as PDF option. Raw HTML and remote images are disabled. Markdown drafts are in memory only; download `.md` to keep them.
-- Notes canvas: freehand drawing, eraser, undo/redo, text notes, automatic local browser saving, PNG/TXT exports, and a validated JSON backup/restore. Stored notes do not sync across browsers. Browser storage can fail or be cleared; download a backup for durable storage.
+- Notes canvas: up to 20 named pages, each with its own drawing, text and undo/redo history; add, duplicate, delete and switch pages. Enlarge uses the Fullscreen API where supported, with an expanded view fallback and an exit button/Escape. Autosave and JSON backup/restore cover the whole notebook. PNG exports the current drawing; TXT exports all pages' text. Existing single-page browser notes and version-1 backups migrate to page one; the old browser key is retained. Version-2 backups validate page counts, page selection, point bounds and notebook size. Stored notes do not sync across browsers. Browser storage can fail or be cleared; download a backup for durable storage.
 - Link checker: validate URL syntax and duplicates locally, then optionally contact up to 50 URLs from the browser using four concurrent requests, seven-second timeouts, no credentials, and cancellation. Blocked, timed-out, or unreadable responses are **unverified**, not proof of a broken link. Readable 404/410 responses are unavailable; 401/403/429 are restricted. No CORS proxy or server is used. CSV reports can be downloaded.
 
 The Markdown parser is pinned and self-hosted with its MIT license under `assets/vendor/`. PDF generation uses a small local JPEG-to-PDF writer. Run `npm run check` to validate both the archive and the tool helpers.

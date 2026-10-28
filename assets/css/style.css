@@ -53,6 +53,10 @@
 }
 
 /* Resource directory and poster visibility */
+/* White identity and primary actions; archive accents retain their gold. */
+.brand>span.brand-vault{color:#f5f5f3}
+.button-accent{background:#f5f5f3;color:#080808}
+.button-accent:hover{background:#dcdcd9}
 .desktop-nav{gap:20px}
 @media(max-width:1100px){:root{--rail:0px}.side-rail,.desktop-nav{display:none}.menu-toggle{display:inline-flex}.mobile-nav{max-height:calc(100dvh - var(--header));overflow-y:auto}}
 .hero-petals{position:absolute;right:0;top:0;bottom:0;width:min(10vw,110px);pointer-events:none;z-index:1;overflow:hidden}

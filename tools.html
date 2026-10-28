@@ -8,8 +8,8 @@
   <link rel="canonical" href="https://adeebmuh.me/tools.html">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="assets/css/style.css?v=7">
-  <link rel="stylesheet" href="assets/css/tools.css?v=1">
+  <link rel="stylesheet" href="assets/css/style.css?v=8">
+  <link rel="stylesheet" href="assets/css/tools.css?v=2">
   <title>Small tools // Adeeb’s Vault</title>
 </head>
 <body>
@@ -63,11 +63,10 @@
         <div class="tools-heading-row"><div><p class="eyebrow">THE MISC FILE / MADE TO BE USEFUL</p><h1>SMALL_<span class="outline-text">TOOLS.</span></h1></div><p>For the little things.<br> Open, make, take it with you.</p></div>
       </header>
       <nav class="tool-switcher" aria-label="Choose a tool">
-        <a href="#images" aria-current="page"><span>01</span> IMAGES TO PDF</a>
-        <a href="#markdown"><span>02</span> MARKDOWN TO PDF</a>
-        <a href="#notes"><span>03</span> NOTES CANVAS</a>
-        <a href="#links"><span>04</span> LINK CHECKER</a>
+        <a href="#notes"><span>01</span> NOTES CANVAS</a>
+        <a href="#utilities" aria-current="page"><span>02</span> UTILITY DESK</a>
       </nav>
+      <div id="utility-picker" class="utility-picker"><label class="tool-field" for="utility-select">Choose a utility<select id="utility-select"><option value="images">Images to PDF</option><option value="markdown">Markdown to PDF</option><option value="links">Link checker</option></select></label><p class="tool-help">Three handy tools in one place. Pick the one you need.</p></div>
 
       <section id="tool-images" class="tool-panel" aria-labelledby="images-heading">
         <div class="tool-intro"><div><p class="eyebrow">01 / PUT THE PAGES TOGETHER</p><h2 id="images-heading" tabindex="-1">Images to PDF</h2><p>Photos, scans, or screenshots. One image per page, in the order you choose.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
@@ -109,14 +108,16 @@
       </section>
 
       <section id="tool-notes" class="tool-panel" aria-labelledby="notes-heading" hidden>
-        <div class="tool-intro"><div><p class="eyebrow">03 / ROOM FOR AN UNFINISHED THOUGHT</p><h2 id="notes-heading" tabindex="-1">Notes canvas</h2><p>A blank page for a diagram, a quick sketch, or the idea you don’t want to lose.</p></div><span class="tool-local">SAVED IN THIS BROWSER</span></div>
+        <div class="tool-intro"><div><p class="eyebrow">01 / ROOM FOR AN UNFINISHED THOUGHT</p><h2 id="notes-heading" tabindex="-1">Notes canvas</h2><p>A notebook for your ideas. Up to 20 pages, with a drawing and text on each.</p></div><button id="notes-enlarge" class="button button-outline" type="button" aria-pressed="false">ENLARGE / FULLSCREEN ↗</button></div>
+        <div class="notebook-page-controls"><button id="notes-previous" class="small-tool-button" type="button" aria-label="Previous page">←</button><span id="notes-page-count" class="micro" role="status">Page 1 of 1</span><button id="notes-next" class="small-tool-button" type="button" aria-label="Next page">→</button><button id="notes-add" class="small-tool-button" type="button">+ Add page</button><button id="notes-duplicate" class="small-tool-button" type="button">Duplicate page</button><button id="notes-delete" class="small-tool-button" type="button">Delete page</button></div>
+        <nav id="notes-pages" class="notebook-pages" aria-label="Notebook pages"></nav>
         <div class="tool-bar drawing-toolbar">
           <div class="segmented-controls" role="group" aria-label="Drawing tool"><button id="notes-pen" type="button" aria-pressed="true">Pen</button><button id="notes-eraser" type="button" aria-pressed="false">Eraser</button></div>
           <label class="inline-field">Ink<input id="notes-color" type="color" value="#252525"></label>
           <label class="inline-field">Width<select id="notes-width"><option value="3">Fine</option><option value="7" selected>Medium</option><option value="15">Bold</option></select></label>
           <button id="notes-undo" class="small-tool-button" type="button" disabled>Undo</button>
           <button id="notes-redo" class="small-tool-button" type="button" disabled>Redo</button>
-          <button id="notes-png" class="button button-outline" type="button">DRAWING .PNG ↓</button>
+          <button id="notes-png" class="button button-outline" type="button">THIS DRAWING .PNG ↓</button>
           <button id="notes-backup" class="small-tool-button" type="button">Backup .json ↓</button>
           <label class="small-tool-button file-button">Restore backup<input id="notes-restore" type="file" accept=".json,application/json"></label>
           <button id="notes-reset" class="small-tool-button" type="button">Reset notebook</button>
@@ -125,9 +126,10 @@
           <div class="drawing-paper"><p class="pane-heading">THE CANVAS <span>DRAW WITH A MOUSE, PEN, OR FINGER</span></p><canvas id="notes-canvas" width="1400" height="900" aria-label="Freehand drawing canvas. Use the text notes field for keyboard input.">Use the text notes field below if your browser does not support drawing.</canvas></div>
           <aside class="notes-writing">
             <label class="tool-field">Notebook title<input id="notes-title" maxlength="120" placeholder="A new idea"></label>
-            <label class="tool-field notes-text-field">Text notes<textarea id="notes-text" maxlength="100000" placeholder="Things to remember…"></textarea></label>
-            <button id="notes-txt" class="text-link" type="button">SAVE TEXT NOTES .TXT ↓</button>
-            <p class="tool-help">Saved only in this browser. Clearing site data removes the notebook. Download a backup to keep your drawing and text together or move them to another device.</p>
+            <label class="tool-field">Page title<input id="notes-page-title" maxlength="120" placeholder="Name this page"></label>
+            <label class="tool-field notes-text-field">This page’s notes<textarea id="notes-text" maxlength="100000" placeholder="Things to remember on this page…"></textarea></label>
+            <button id="notes-txt" class="text-link" type="button">ALL TEXT NOTES .TXT ↓</button>
+            <p class="tool-help">All pages save in this browser. Download a .json backup to keep every drawing and note together or move the notebook to another device. Clearing site data removes the saved notebook.</p>
           </aside>
         </div>
         <p id="notes-status" class="tool-status" role="status" aria-live="polite"></p>
@@ -169,6 +171,6 @@
   <dialog id="tool-confirm" class="tool-confirm" aria-labelledby="confirm-title"><h2 id="confirm-title">Replace current content?</h2><p id="confirm-copy"></p><div class="tool-bar"><button id="confirm-cancel" class="button button-outline" type="button">CANCEL</button><button id="confirm-accept" class="button button-accent" type="button">CONTINUE</button></div></dialog>
   <script src="assets/js/misc-nav.js" defer></script>
   <script src="assets/vendor/markdown-it-15.0.3.min.js" defer></script>
-  <script type="module" src="assets/js/tools.js?v=1"></script>
+  <script type="module" src="assets/js/tools.js?v=2"></script>
 </body>
 </html>

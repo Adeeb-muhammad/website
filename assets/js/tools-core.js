@@ -85,12 +85,28 @@ export function linksCSV(rows) {
 }
 
 export function validateNotebook(data) {
-  if (!data || data.kind !== 'adeeb-vault-notebook' || data.version !== 1 || typeof data.title !== 'string' || data.title.length > 120 || typeof data.text !== 'string' || data.text.length > 100000 || !Array.isArray(data.strokes) || data.strokes.length > 1000) throw new Error('This is not a supported Vault notebook backup.');
+  if (!data || data.kind !== 'adeeb-vault-notebook' || ![1, 2].includes(data.version) || typeof data.title !== 'string' || data.title.length > 120) throw new Error('This is not a supported Vault notebook backup.');
+  const pages = data.version === 1 ? [data] : data.pages;
+  if (!Array.isArray(pages) || !pages.length || pages.length > 20 || (data.version === 2 && (!Number.isInteger(data.activePage) || data.activePage < 0 || data.activePage >= pages.length))) throw new Error('A notebook must have 1 to 20 pages and a valid selected page.');
   let count = 0;
-  for (const stroke of data.strokes) {
-    if (!stroke || typeof stroke.erase !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(stroke.color) || !Number.isFinite(stroke.width) || stroke.width < 1 || stroke.width > 60 || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error('The backup contains an invalid drawing.');
-    count += stroke.points.length;
-    if (count > 60000 || !stroke.points.every(p => Array.isArray(p) && p.length === 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[0] >= 0 && p[0] <= 1400 && p[1] >= 0 && p[1] <= 900)) throw new Error('The drawing is too large or contains invalid points.');
+  let textLength = 0;
+  for (const page of pages) {
+    if (!page || (data.version === 2 && (typeof page.title !== 'string' || page.title.length > 120)) || typeof page.text !== 'string' || page.text.length > 100000 || !Array.isArray(page.strokes) || page.strokes.length > 1000) throw new Error('The backup contains an invalid page.');
+    textLength += page.text.length;
+    if (textLength > 200000) throw new Error('The notebook text is too large.');
+    let pageCount = 0;
+    for (const stroke of page.strokes) {
+      if (!stroke || typeof stroke.erase !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(stroke.color) || !Number.isFinite(stroke.width) || stroke.width < 1 || stroke.width > 60 || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error('The backup contains an invalid drawing.');
+      count += stroke.points.length;
+      pageCount += stroke.points.length;
+      if (pageCount > 60000 || count > 120000 || !stroke.points.every(p => Array.isArray(p) && p.length === 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[0] >= 0 && p[0] <= 1400 && p[1] >= 0 && p[1] <= 900)) throw new Error('The drawing is too large or contains invalid points.');
+    }
   }
   return data;
+}
+
+export function upgradeNotebook(data) {
+  validateNotebook(data);
+  if (data.version === 2) return data;
+  return { kind: data.kind, version: 2, title: data.title, activePage: 0, pages: [{ title: 'Page 1', text: data.text, strokes: data.strokes }] };
 }

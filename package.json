@@ -7,6 +7,6 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check assets/js/app.js && node --check assets/js/studio.js && node --check assets/js/tools.js && node --check assets/js/tools-core.js && npm test && npm run build"
+    "check": "node --check assets/js/app.js && node --check assets/js/studio.js && node --check assets/js/tools.js && node --check assets/js/notebook.js && node --check assets/js/tools-core.js && npm test && npm run build"
   }
 }

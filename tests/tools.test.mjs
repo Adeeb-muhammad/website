@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeLinks, classifyHTTP, createImagePDF, imagePlacement, linksCSV, safeFilename, validateNotebook } from '../assets/js/tools-core.js';
+import { analyzeLinks, classifyHTTP, createImagePDF, imagePlacement, linksCSV, safeFilename, validateNotebook, upgradeNotebook } from '../assets/js/tools-core.js';
 
 test('PDF pages contain images without cropping and can follow each image orientation', () => {
   const fit = imagePlacement(200, 100, 600, 800, 30);
@@ -62,4 +62,25 @@ test('notebook restore accepts its own data and rejects invalid or excessive dra
   assert.throws(() => validateNotebook({ ...notebook, strokes: [{ ...notebook.strokes[0], color: 'url(evil)' }] }));
   assert.throws(() => validateNotebook({ ...notebook, text: 'x'.repeat(100001) }));
   assert.throws(() => validateNotebook({ ...notebook, strokes: [{ ...notebook.strokes[0], points: Array.from({ length: 60001 }, () => [0, 0]) }] }));
+});
+
+test('legacy notebooks migrate without losing the original drawing or text', () => {
+  const original = { kind: 'adeeb-vault-notebook', version: 1, title: 'Existing notebook', text: 'Keep this exact text', strokes: [{ erase: false, color: '#112233', width: 3, points: [[10, 10]] }] };
+  const migrated = upgradeNotebook(original);
+  assert.equal(migrated.version, 2);
+  assert.equal(migrated.title, original.title);
+  assert.equal(migrated.activePage, 0);
+  assert.deepEqual(migrated.pages[0], { title: 'Page 1', text: original.text, strokes: original.strokes });
+  assert.equal(original.version, 1);
+});
+
+test('multi-page backups validate page count, selected page, text and stroke bounds', () => {
+  const data = { kind: 'adeeb-vault-notebook', version: 2, title: 'Twenty pages', activePage: 19, pages: Array.from({ length: 20 }, (_, i) => ({ title: `Page ${i + 1}`, text: `Notes ${i}`, strokes: [] })) };
+  assert.equal(upgradeNotebook(data), data);
+  assert.throws(() => validateNotebook({ ...data, pages: [] }));
+  assert.throws(() => validateNotebook({ ...data, pages: [...data.pages, data.pages[0]] }));
+  assert.throws(() => validateNotebook({ ...data, activePage: 20 }));
+  assert.throws(() => validateNotebook({ ...data, activePage: 1.5 }));
+  assert.throws(() => validateNotebook({ ...data, pages: [{ ...data.pages[0], title: 'x'.repeat(121) }] }));
+  assert.throws(() => validateNotebook({ ...data, activePage: 0, pages: Array.from({ length: 3 }, () => ({ title: '', text: 'x'.repeat(100000), strokes: [] })) }));
 });

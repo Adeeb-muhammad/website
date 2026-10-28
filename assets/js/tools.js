@@ -1,4 +1,5 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, validateNotebook } from './tools-core.js?v=1';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=2';
+import { initNotebook } from './notebook.js?v=1';
 import { escapeHTML as e } from './core.js?v=6';
 
 const $ = selector => document.querySelector(selector);
@@ -36,15 +37,18 @@ function routeTool(focus = false) {
   const key = ['images', 'markdown', 'notes', 'links'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'images';
   for (const panel of document.querySelectorAll('.tool-panel')) panel.hidden = panel.id !== `tool-${key}`;
   for (const link of document.querySelectorAll('.tool-switcher a')) {
-    if (link.hash === `#${key}`) link.setAttribute('aria-current', 'page');
+    if (link.hash === (key === 'notes' ? '#notes' : '#utilities')) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
   const heading = $(`#${key}-heading`);
+  $('#utility-picker').hidden = key === 'notes';
+  if (key !== 'notes') $('#utility-select').value = key;
   document.title = `${heading.textContent} // Adeeb’s Vault`;
   if (focus) heading.focus({ preventScroll: true });
 }
 window.addEventListener('hashchange', () => routeTool(true));
 routeTool();
+$('#utility-select').addEventListener('change', event => { location.hash = event.target.value; });
 
 // Images to PDF: decode locally, flatten transparency onto white, then embed
 // the resized JPEGs into a standards-based PDF without an external service.
@@ -174,101 +178,7 @@ $('#markdown-print').addEventListener('click', () => {
 window.addEventListener('afterprint', () => routeTool());
 renderMarkdown();
 
-// A fixed-size drawing surface keeps sketches stable across screen sizes.
-// The saved format contains plain text and validated vector strokes only.
-const NOTE_KEY = 'adeeb-vault-notebook-v1';
-const board = $('#notes-canvas'), context = board.getContext('2d');
-const ink = document.createElement('canvas'); ink.width = board.width; ink.height = board.height;
-const inkContext = ink.getContext('2d');
-let strokes = [], redo = [], activeStroke = null, activePointer = null, erase = false, drawFrame = null, saveTimer;
-function notebook() { return { kind: 'adeeb-vault-notebook', version: 1, title: $('#notes-title').value, text: $('#notes-text').value, strokes }; }
-function saveNotes() {
-  clearTimeout(saveTimer);
-  try {
-    localStorage.setItem(NOTE_KEY, JSON.stringify(notebook()));
-    setStatus('#notes-status', 'Notebook saved in this browser. Download a backup to keep a separate copy.');
-  } catch { setStatus('#notes-status', 'This browser could not save the notebook. Download a .json backup before leaving.', true); }
-}
-function queueSave() {
-  setStatus('#notes-status', 'Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNotes, 400);
-}
-function renderBoard() {
-  if (!context || !inkContext) return;
-  inkContext.clearRect(0, 0, board.width, board.height);
-  for (const stroke of strokes) {
-    inkContext.globalCompositeOperation = stroke.erase ? 'destination-out' : 'source-over';
-    inkContext.strokeStyle = stroke.color; inkContext.fillStyle = stroke.color;
-    inkContext.lineWidth = stroke.width; inkContext.lineCap = 'round'; inkContext.lineJoin = 'round';
-    const points = stroke.points;
-    if (points.length === 1) { inkContext.beginPath(); inkContext.arc(points[0][0], points[0][1], stroke.width / 2, 0, Math.PI * 2); inkContext.fill(); }
-    else { inkContext.beginPath(); inkContext.moveTo(...points[0]); for (const point of points.slice(1)) inkContext.lineTo(...point); inkContext.stroke(); }
-  }
-  context.fillStyle = '#fbfaf7'; context.fillRect(0, 0, board.width, board.height);
-  context.fillStyle = '#d8d2c7';
-  for (let x = 24; x < board.width; x += 28) for (let y = 24; y < board.height; y += 28) { context.beginPath(); context.arc(x, y, 1, 0, Math.PI * 2); context.fill(); }
-  context.drawImage(ink, 0, 0);
-  $('#notes-undo').disabled = strokes.length === 0 || !!activeStroke;
-  $('#notes-redo').disabled = redo.length === 0 || !!activeStroke;
-}
-function queueDraw() { if (drawFrame !== null) return; drawFrame = requestAnimationFrame(() => { drawFrame = null; renderBoard(); }); }
-function pointAt(event) {
-  const bounds = board.getBoundingClientRect();
-  return [Math.max(0, Math.min(1400, (event.clientX - bounds.left) / bounds.width * 1400)), Math.max(0, Math.min(900, (event.clientY - bounds.top) / bounds.height * 900))].map(n => Math.round(n * 10) / 10);
-}
-function finishStroke() {
-  if (!activeStroke) return;
-  activeStroke = null; activePointer = null; queueDraw(); queueSave();
-}
-if (context && inkContext) {
-  board.addEventListener('pointerdown', event => {
-    if (activePointer !== null || event.button !== 0) return;
-    if (strokes.length >= 1000 || strokes.reduce((n, s) => n + s.points.length, 0) >= 60000) { setStatus('#notes-status', 'This canvas is full. Download a backup, then reset the notebook for a new page.', true); return; }
-    event.preventDefault(); activePointer = event.pointerId; board.setPointerCapture(activePointer);
-    activeStroke = { erase, color: $('#notes-color').value, width: erase ? 45 : Number($('#notes-width').value), points: [pointAt(event)] };
-    strokes.push(activeStroke); redo = []; queueDraw();
-  });
-  board.addEventListener('pointermove', event => {
-    if (!activeStroke || event.pointerId !== activePointer) return;
-    const point = pointAt(event), last = activeStroke.points.at(-1);
-    if (Math.hypot(point[0] - last[0], point[1] - last[1]) < 1) return;
-    if (strokes.reduce((n, s) => n + s.points.length, 0) >= 60000) { finishStroke(); setStatus('#notes-status', 'This drawing has reached its limit. Download a backup and start another page.', true); return; }
-    activeStroke.points.push(point); queueDraw();
-  });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) board.addEventListener(type, event => { if (event.pointerId === activePointer) finishStroke(); });
-} else { setStatus('#notes-status', 'Drawing is not available in this browser. You can still use and save text notes.', true); $('#notes-png').disabled = true; }
-for (const id of ['#notes-title', '#notes-text']) $(id).addEventListener('input', queueSave);
-function choosePen(value) { erase = value; $('#notes-pen').setAttribute('aria-pressed', String(!erase)); $('#notes-eraser').setAttribute('aria-pressed', String(erase)); }
-$('#notes-pen').addEventListener('click', () => choosePen(false));
-$('#notes-eraser').addEventListener('click', () => choosePen(true));
-$('#notes-undo').addEventListener('click', () => { if (activeStroke || !strokes.length) return; redo.push(strokes.pop()); renderBoard(); queueSave(); });
-$('#notes-redo').addEventListener('click', () => { if (activeStroke || !redo.length) return; strokes.push(redo.pop()); renderBoard(); queueSave(); });
-$('#notes-png').addEventListener('click', () => {
-  renderBoard(); board.toBlob(blob => { if (blob) download(blob, `${safeFilename($('#notes-title').value, 'my-sketch')}.png`, 'image/png'); else setStatus('#notes-status', 'Could not export the drawing. Try downloading a notebook backup instead.', true); }, 'image/png');
-});
-$('#notes-txt').addEventListener('click', () => download(`${$('#notes-title').value}\n\n${$('#notes-text').value}`, `${safeFilename($('#notes-title').value, 'my-notes')}.txt`, 'text/plain;charset=utf-8'));
-$('#notes-backup').addEventListener('click', () => download(JSON.stringify(notebook()), `${safeFilename($('#notes-title').value, 'my-notebook')}.json`, 'application/json'));
-function loadNotebook(data) { $('#notes-title').value = data.title; $('#notes-text').value = data.text; strokes = data.strokes; redo = []; activeStroke = null; activePointer = null; renderBoard(); }
-$('#notes-restore').addEventListener('change', async event => {
-  const file = event.target.files[0]; if (!file) return;
-  try {
-    if (file.size > 3000000) throw new Error('This backup is too large. Choose a Vault notebook backup under 3 MB.');
-    const data = validateNotebook(JSON.parse(await file.text()));
-    if ((strokes.length || $('#notes-text').value || $('#notes-title').value) && !await confirmChange('Restoring replaces the drawing and text in this browser. Download a backup of the current notebook first if you want to keep it.')) return;
-    loadNotebook(data); saveNotes();
-  } catch (error) { setStatus('#notes-status', `Could not restore: ${error.message}`, true); }
-  finally { event.target.value = ''; }
-});
-$('#notes-reset').addEventListener('click', async () => {
-  if (!await confirmChange('Reset removes the saved drawing and text from this browser. Download a backup first if you want to keep them.')) return;
-  loadNotebook({ title: '', text: '', strokes: [] }); saveNotes();
-});
-try {
-  const saved = localStorage.getItem(NOTE_KEY);
-  if (saved) { loadNotebook(validateNotebook(JSON.parse(saved))); setStatus('#notes-status', 'Restored your notebook from this browser.'); }
-  else { renderBoard(); setStatus('#notes-status', 'Your drawing and text will save automatically in this browser.'); }
-} catch { renderBoard(); setStatus('#notes-status', 'Saved notes could not be loaded. Use a downloaded backup if you have one; new notes may not persist in this browser.', true); }
-window.addEventListener('pagehide', () => { if (saveTimer || activeStroke) saveNotes(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && (saveTimer || activeStroke)) saveNotes(); });
+initNotebook({ download, confirmChange });
 
 // A blocked cross-origin fetch cannot tell us whether a website is down.
 // Report it as unverified; never turn a browser restriction into a false 404.
