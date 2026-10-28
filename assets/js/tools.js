@@ -132,6 +132,67 @@ $('#image-export').addEventListener('click', async () => {
   finally { imageBusy = false; renderImages(); }
 });
 
+function initImageBatch(prefix, mode) {
+  const files = [];
+  const input = document.querySelector('#' + prefix + '-files');
+  const drop = document.querySelector('#' + prefix + '-drop');
+  const list = document.querySelector('#' + prefix + '-list');
+  const run = document.querySelector('#' + prefix + '-export');
+  const clear = document.querySelector('#' + prefix + '-clear');
+  const status = '#' + prefix + '-status';
+  const quality = document.querySelector('#' + prefix + '-quality');
+  const qualityValue = document.querySelector('#' + prefix + '-quality-value');
+  quality.addEventListener('input', () => qualityValue.textContent = quality.value + '%');
+  function render() {
+    list.innerHTML = files.map((f, i) => '<li><img src="' + f.preview + '" alt=""><div class="image-info"><strong>' + e(f.name) + '</strong><span>' + (f.size / 1024).toFixed(1) + ' KB · ' + f.width + ' × ' + f.height + '</span></div><div class="image-actions"><button type="button" data-remove="' + i + '" aria-label="Remove image">×</button></div></li>').join('');
+    run.disabled = clear.disabled = !files.length;
+  }
+  async function add(selected) {
+    for (const file of selected) {
+      if (files.length >= 20) { setStatus(status, 'Maximum 20 images per batch.', true); break; }
+      if (file.size > 15 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setStatus(status, file.name + ': use JPG, PNG, or WebP up to 15 MB.', true); continue; }
+      const url = URL.createObjectURL(file);
+      try { const img = new Image(); await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; }); if (img.naturalWidth * img.naturalHeight > 40000000) throw new Error('Maximum 40 megapixels.'); files.push({ file, name: file.name, size: file.size, width: img.naturalWidth, height: img.naturalHeight, preview: URL.createObjectURL(file) }); }
+      catch (err) { setStatus(status, file.name + ': could not read image. ' + (err.message || ''), true); }
+      finally { URL.revokeObjectURL(url); }
+    }
+    input.value = ''; render(); if (files.length) setStatus(status, files.length + ' image(s) ready. Choose settings, then process.');
+  }
+  input.addEventListener('change', ev => add([...ev.target.files]));
+  ['dragover', 'dragenter'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.add('is-dragging'); }));
+  ['dragleave', 'drop'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.remove('is-dragging'); }));
+  drop.addEventListener('drop', ev => add([...ev.dataTransfer.files]));
+  list.addEventListener('click', ev => { const btn = ev.target.closest('[data-remove]'); if (!btn) return; const gone = files.splice(Number(btn.dataset.remove), 1)[0]; if (gone) URL.revokeObjectURL(gone.preview); render(); });
+  clear.addEventListener('click', () => { files.forEach(f => URL.revokeObjectURL(f.preview)); files.length = 0; render(); setStatus(status, 'Image list cleared.'); });
+  run.addEventListener('click', async () => {
+    if (!files.length) return; run.disabled = clear.disabled = input.disabled = true;
+    let done = 0, outputTotal = 0; const inputTotal = files.reduce((sum, f) => sum + f.size, 0);
+    const format = document.querySelector('#' + prefix + '-format').value;
+    const max = document.querySelector('#' + prefix + '-size').value;
+    const q = Number(quality.value) / 100;
+    const ext = format === 'image/jpeg' ? 'jpg' : format === 'image/png' ? 'png' : 'webp';
+    try {
+      for (const item of files) {
+        setStatus(status, (mode === 'compress' ? 'Compressing ' : 'Converting ') + item.name + '…');
+        const url = URL.createObjectURL(item.file);
+        try {
+          const img = new Image(); await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; });
+          const edge = max === 'original' ? Infinity : Number(max); const ratio = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
+          const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('Canvas is unavailable.');
+          if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); } ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, format, q)); if (!blob || blob.type !== format) throw new Error('This browser cannot export ' + ext.toUpperCase() + '.');
+          let base = item.name; const dot = base.lastIndexOf('.'); if (dot > 0) base = base.slice(0, dot);
+          download(blob, safeFilename(base, 'image') + '-' + (mode === 'compress' ? 'compressed' : 'converted') + '.' + ext, blob.type); done++; outputTotal += blob.size;
+        } catch (err) { setStatus(status, item.name + ': ' + (err.message || 'Conversion failed.'), true); } finally { URL.revokeObjectURL(url); }
+      }
+      if (done) { const delta = inputTotal - outputTotal; setStatus(status, done + ' file(s) processed. Total: ' + (inputTotal / 1024).toFixed(1) + ' KB → ' + (outputTotal / 1024).toFixed(1) + ' KB. ' + (delta >= 0 ? Math.round(delta / inputTotal * 100) + '% smaller overall.' : 'Output is larger; try WebP or lower quality.')); }
+    } finally { input.disabled = false; run.disabled = clear.disabled = !files.length; }
+  });
+}
+initImageBatch('convert', 'convert');
+initImageBatch('compress', 'compress');
+
 // Markdown uses a pinned, self-hosted parser with HTML and network images off.
 const parser = window.markdownit?.({ html: false, linkify: false, typographer: false });
 if (parser) {
