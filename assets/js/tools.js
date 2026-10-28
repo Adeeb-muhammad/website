@@ -58,6 +58,16 @@ let originalBytes = 0;
 function renderImages(focusIndex = -1) {
   $('#image-list').innerHTML = images.map((image, i) => `<li draggable="true" data-image-row="${i}"><img src="${image.preview}" alt="Page ${i + 1} preview"><div class="image-info"><strong>${e(image.name)}</strong><span>PAGE ${String(i + 1).padStart(2, '0')} · ${image.width} × ${image.height}</span></div><div class="image-actions"><button type="button" data-image="up" data-index="${i}" aria-label="Move page ${i + 1} up" ${i === 0 || imageBusy ? 'disabled' : ''}>↑</button><button type="button" data-image="down" data-index="${i}" aria-label="Move page ${i + 1} down" ${i === images.length - 1 || imageBusy ? 'disabled' : ''}>↓</button><button type="button" data-image="rotate" data-index="${i}" aria-label="Rotate page ${i + 1} clockwise">↻</button><button type="button" data-image="remove" data-index="${i}" aria-label="Remove page ${i + 1}" ${imageBusy ? 'disabled' : ''}>×</button></div></li>`).join('');
   $('#images-empty').hidden = images.length > 0;
+  const preview = $('#image-preview');
+  if (images.length) {
+    const first = images[0], paper = $('#image-paper').value === 'letter' ? [612, 792] : [595.28, 841.89];
+    const landscape = $('#image-orientation').value === 'landscape' || ($('#image-orientation').value === 'auto' && first.width > first.height);
+    const pageWidth = landscape ? paper[1] : paper[0], pageHeight = landscape ? paper[0] : paper[1];
+    preview.style.aspectRatio = pageWidth + ' / ' + pageHeight;
+    preview.style.padding = (Number($('#image-margin').value) / pageWidth * 100) + '%';
+    preview.innerHTML = '<img src="' + first.preview + '" alt="Preview of PDF page 1">';
+    $('#image-preview-count').textContent = 'Page 1 of ' + images.length;
+  } else { preview.style.aspectRatio = '595.28 / 841.89'; preview.style.padding = '7%'; preview.innerHTML = '<p class="preview-placeholder">Add an image to preview your PDF page.</p>'; $('#image-preview-count').textContent = 'No pages yet'; }
   $('#image-export').disabled = imageBusy || !images.length;
   $('#image-clear').disabled = imageBusy || !images.length;
   $('#image-files').disabled = imageBusy;
@@ -105,7 +115,9 @@ for (const type of ['dragover', 'dragenter']) drop.addEventListener(type, event 
 for (const type of ['dragleave', 'drop']) drop.addEventListener(type, event => { event.preventDefault(); drop.classList.remove('is-dragging'); });
 drop.addEventListener('drop', event => addImages([...event.dataTransfer.files]));
 $('#image-quality').addEventListener('input', event => { $('#image-quality-value').textContent = event.target.value + '%'; });
-$('#image-margin').addEventListener('input', event => { $('#image-margin-value').textContent = Math.round(Number(event.target.value) * 25.4 / 72) + ' mm'; });
+$('#image-margin').addEventListener('input', event => { $('#image-margin-value').textContent = Math.round(Number(event.target.value) * 25.4 / 72) + ' mm'; renderImages(); });
+$('#image-paper').addEventListener('change', () => renderImages());
+$('#image-orientation').addEventListener('change', () => renderImages());
 $('#image-list').addEventListener('click', async event => {
   const button = event.target.closest('[data-image]');
   if (!button || imageBusy) return;
