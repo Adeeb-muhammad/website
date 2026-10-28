@@ -68,6 +68,176 @@
   ],
   "entries": [
     {
+      "id": "michael-2026",
+      "title": "Michael",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Antoine Fuqua",
+      "genres": [
+        "Biography",
+        "Drama",
+        "Music"
+      ],
+      "runtime": 127,
+      "rating": 4.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/michael-2026-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "project-hail-mary",
+      "title": "Project Hail Mary",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Phil Lord / Christopher Miller",
+      "genres": [
+        "Sci-fi",
+        "Adventure"
+      ],
+      "runtime": 156,
+      "rating": 4.5,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/project-hail-mary-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "real-steel",
+      "title": "Real Steel",
+      "year": 2011,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Shawn Levy",
+      "genres": [
+        "Sci-fi",
+        "Action",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 5.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/real-steel-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "dunki",
+      "title": "Dunki",
+      "year": 2023,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Hindi"
+      ],
+      "status": "watched",
+      "director": "Rajkumar Hirani",
+      "genres": [
+        "Comedy",
+        "Drama"
+      ],
+      "runtime": 0,
+      "rating": 4.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/dunki-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "premam-2015",
+      "title": "Premam",
+      "year": 2015,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Malayalam"
+      ],
+      "status": "watched",
+      "director": "Alphonse Puthren",
+      "genres": [
+        "Romance",
+        "Drama"
+      ],
+      "runtime": 156,
+      "rating": 4.9,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/premam-2015-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "life-of-pi",
+      "title": "Life of Pi",
+      "year": 2012,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "Ang Lee",
+      "genres": [
+        "Adventure",
+        "Drama"
+      ],
+      "runtime": 127,
+      "rating": 4.0,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/life-of-pi-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "spider-man-brand-new-day",
+      "title": "Spider-Man: Brand New Day",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "English"
+      ],
+      "status": "watched",
+      "director": "",
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
+      "runtime": 0,
+      "rating": 3.9,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "assets/images/spider-man-brand-new-day-poster.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
       "id": "avatar-2009",
       "title": "Avatar",
       "year": 2009,

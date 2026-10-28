@@ -53,6 +53,16 @@
 }
 
 /* Resource directory and poster visibility */
+.poster-frame img,.dialog-art img{object-fit:contain}
+.film-card-link:hover .poster-frame img{transform:none}
+.poster-type{overflow-wrap:anywhere}
+.dialog-art .poster-fallback{align-items:center;justify-content:center;font-size:clamp(24px,5vw,55px);text-align:center}
+.entry-feedback{font:10px var(--mono);color:var(--accent);line-height:1.7;margin-top:15px}
+.entry-feedback:empty{display:none}
+.rail-links a[aria-current="page"]{color:var(--accent)}
+.mobile-nav a[aria-current="page"]{color:var(--accent)}
+.nav-open{overflow:hidden}
+@media(max-width:650px){.search-field input,.select-field select{font-size:16px;font-family:var(--body);letter-spacing:0}.dialog-art{height:min(60svh,480px);min-height:230px}.dialog-art img{object-position:center}}
 .has-image .poster-fallback{display:none}
 .image-unavailable .poster-fallback{display:flex}
 .misc-view{padding-bottom:90px}

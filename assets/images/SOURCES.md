@@ -19,3 +19,16 @@ The cover art below identifies the films and series reviewed in Adeeb’s Vault.
 - `interstellar-poster.webp` — [source page](https://en.wikipedia.org/wiki/Interstellar_(film))
 
 `chrome-hero.webp` comes from the original supplied website design. `social-card.png` is an original typographic graphic.
+
+
+## Films added October 2026
+
+Posters are stored locally so the public diary does not depend on third-party image hosts. They identify the films reviewed; all artwork belongs to its respective rightsholders.
+
+- `michael-2026-poster.webp` — *Michael* (2026), Lionsgate theatrical poster via [IMDb](https://www.imdb.com/title/tt11378946/).
+- `project-hail-mary-poster.webp` — *Project Hail Mary* (2026), Amazon MGM Studios theatrical poster via [IMDb](https://www.imdb.com/interest/in0000162/).
+- `real-steel-poster.webp` — *Real Steel* (2011), official key art from [Amblin](https://amblin.com/movie/real-steel/).
+- `dunki-poster.webp` — *Dunki* (2023), Red Chillies / Jio Studios promotional poster via [IMDb](https://www.imdb.com/title/tt15428134/mediaviewer/rm2793752833/).
+- `premam-2015-poster.webp` — *Premam* (2015), official poster by [designs thought station on Behance](https://www.behance.net/gallery/29323171/Premam-Malayalam-Movie-official-posters).
+- `life-of-pi-poster.webp` — *Life of Pi* (2012), official digital cover from [20th Century Studios](https://www.20thcenturystudios.com/movies/life-of-pi).
+- `spider-man-brand-new-day-poster.webp` — *Spider-Man: Brand New Day* (2026), official key art from [Sony Pictures](https://www.sonypictures.com/movies/spidermanbrandnewday).

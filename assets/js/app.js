@@ -1,12 +1,14 @@
-import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js?v=5';
+import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js?v=6';
 
 const $ = selector => document.querySelector(selector);
 let archive;
 let collection = 'films';
+let renderedCollection = null;
 let lastRoute = 'films';
 let layout = 'grid';
 let toastTimer;
 let entryFocus;
+let entryScrollY = 0;
 const collectionInfo = {
   films: ['THE WATCHED FILES / A PERSONAL COLLECTION', 'FILM_', 'ARCHIVE', 'Films, ratings, and the thoughts that stay after the credits.'],
   series: ['THE LONGER STORIES / EPISODE BY EPISODE', 'SERIES_', 'ARCHIVE', 'Longer stories, across languages. Some finished, some still unfolding.'],
@@ -16,9 +18,11 @@ const collectionInfo = {
 
 function toast(message) {
   clearTimeout(toastTimer);
+  const feedback = $('#entry-feedback');
+  if ($('#entry-dialog').open && feedback) feedback.textContent = message;
   $('#toast').textContent = message;
   $('#toast').classList.add('visible');
-  toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 3200);
+  toastTimer = setTimeout(() => { $('#toast').classList.remove('visible'); if (feedback) feedback.textContent = ''; }, 3200);
 }
 
 async function copy(text) {
@@ -77,6 +81,8 @@ function renderHome() {
 }
 
 function renderCollection(reset = false) {
+  reset ||= renderedCollection !== collection;
+  renderedCollection = collection;
   const [eyebrow, title, outline, description] = collectionInfo[collection];
   $('#collection-eyebrow').textContent = eyebrow;
   $('#collection-title').innerHTML = `${title}<span class="outline-text">${outline}</span>`;
@@ -106,9 +112,18 @@ function showView(view) {
   document.querySelectorAll('.view').forEach(section => { section.hidden = section.dataset.view !== view; section.classList.toggle('active', !section.hidden); });
   const key = view === 'collection' ? 'films' : view;
   document.querySelectorAll('[data-nav]').forEach(link => { const active = link.dataset.nav === key; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+  document.querySelectorAll('#mobile-nav a, .rail-links a').forEach(link => { if (link.getAttribute('href') === `#${view === 'collection' ? collection : view}`) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+  closeNavigation();
+}
+
+function closeNavigation({ restoreFocus = false } = {}) {
+  const wasOpen = !$('#mobile-nav').hidden;
   $('#mobile-nav').hidden = true;
+  $('#main').inert = false;
+  document.body.classList.remove('nav-open');
   $('.menu-toggle').setAttribute('aria-expanded', 'false');
   $('.menu-toggle').setAttribute('aria-label', 'Open navigation');
+  if (wasOpen && restoreFocus) $('.menu-toggle').focus();
 }
 
 function openEntry(id) {
@@ -116,7 +131,7 @@ function openEntry(id) {
   if (!entry) { location.hash = '#films'; toast('That record is not in the archive.'); return; }
   const art = safeURL(entry.image || entry.poster, { image: true });
   const watchedDate = entry.watchedOn ? new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${entry.watchedOn}T12:00:00Z`)) : '';
-  $('#entry-details').innerHTML = `<div class="dialog-art poster-tone-2">${art ? `<img src="${e(art)}" alt="${e(entry.title)} artwork" width="512" height="512">` : `<span class="poster-type">${e(entry.title)}</span>`}<span class="micro">REC / ${e(entry.id.toUpperCase())}</span></div><div class="dialog-copy"><p class="eyebrow">${entry.isSample ? 'STARTER ENTRY / SAMPLE RATING' : entry.status === 'watchlist' ? 'ON THE WATCHLIST' : entry.status === 'watching' ? 'CURRENTLY WATCHING' : 'FROM MY ARCHIVE'}</p><h2 id="entry-title">${e(entry.title)}</h2><p class="dialog-subtitle">${entry.year}${entry.runtime ? ` · ${entry.runtime} MIN` : ''}${entry.director ? ` · ${e(entry.director)}` : ''}</p><div class="tag-list">${[...(entry.languages || []), ...entry.genres].map(genre => `<span>${e(genre)}</span>`).join('')}</div><div class="dialog-rating">${entry.status === 'watchlist' ? '<span class="unrated">YET TO BE WATCHED</span>' : ratingMarkup(entry.rating, { sample: entry.isSample, favourite: entry.favourite })}</div><p class="eyebrow">${entry.isSample ? 'A NOTE FROM THE ORIGINAL DESIGN' : 'MY AFTERTHOUGHTS'}</p><p class="review-text">${e(entry.review || (entry.status === 'watchlist' ? 'Waiting for the right evening.' : 'No notes yet. Sometimes a rating is enough.')).replace(/\n/g, '<br>')}</p>${watchedDate ? `<p class="micro watched-date">WATCHED / ${e(watchedDate)}</p>` : ''}${entry.isSample ? '<p class="sample-disclaimer">This entry is sample content from the original design, not a confirmed personal rating.</p>' : ''}<div class="dialog-actions"><button class="button button-outline" data-copy-entry="${e(entry.id)}">COPY ENTRY LINK ↗</button><a class="text-link" href="https://www.themoviedb.org/search?query=${encodeURIComponent(entry.title)}" target="_blank" rel="noopener noreferrer">TITLE DETAILS ↗</a></div></div>`;
+  $('#entry-details').innerHTML = `<div class="dialog-art poster-tone-2${art ? ' has-image' : ''}"><span class="poster-type poster-fallback" aria-hidden="true">${e(entry.title)}</span>${art ? `<img src="${e(art)}" alt="${e(entry.title)} artwork" width="512" height="512">` : ''}<span class="micro">REC / ${e(entry.id.toUpperCase())}</span></div><div class="dialog-copy"><p class="eyebrow">${entry.isSample ? 'STARTER ENTRY / SAMPLE RATING' : entry.status === 'watchlist' ? 'ON THE WATCHLIST' : entry.status === 'watching' ? 'CURRENTLY WATCHING' : 'FROM MY ARCHIVE'}</p><h2 id="entry-title">${e(entry.title)}</h2><p class="dialog-subtitle">${entry.year}${entry.runtime ? ` · ${entry.runtime} MIN` : ''}${entry.director ? ` · ${e(entry.director)}` : ''}</p><div class="tag-list">${[...(entry.languages || []), ...entry.genres].map(genre => `<span>${e(genre)}</span>`).join('')}</div><div class="dialog-rating">${entry.status === 'watchlist' ? '<span class="unrated">YET TO BE WATCHED</span>' : ratingMarkup(entry.rating, { sample: entry.isSample, favourite: entry.favourite })}</div><p class="eyebrow">${entry.isSample ? 'A NOTE FROM THE ORIGINAL DESIGN' : 'MY AFTERTHOUGHTS'}</p><p class="review-text">${e(entry.review || (entry.status === 'watchlist' ? 'Waiting for the right evening.' : 'No notes yet. Sometimes a rating is enough.')).replace(/\n/g, '<br>')}</p>${watchedDate ? `<p class="micro watched-date">WATCHED / ${e(watchedDate)}</p>` : ''}${entry.isSample ? '<p class="sample-disclaimer">This entry is sample content from the original design, not a confirmed personal rating.</p>' : ''}<div class="dialog-actions"><button class="button button-outline" data-copy-entry="${e(entry.id)}">COPY ENTRY LINK ↗</button><a class="text-link" href="https://www.themoviedb.org/search?query=${encodeURIComponent(entry.title)}" target="_blank" rel="noopener noreferrer">TITLE DETAILS ↗</a></div><p id="entry-feedback" class="entry-feedback" role="status" aria-live="polite"></p></div>`;
   entryFocus = entry.id;
   if (!$('#entry-dialog').open) $('#entry-dialog').showModal();
   document.body.classList.add('dialog-open');
@@ -128,10 +143,11 @@ function route() {
   let hash;
   try { hash = decodeURIComponent(location.hash.slice(1) || 'home'); } catch { hash = 'home'; }
   if (hash.startsWith('film/')) {
+    if (!$('#entry-dialog').open) entryScrollY = $('#view-archive').hidden ? 0 : window.scrollY;
     const entry = archive.entries.find(x => x.id === hash.slice(5));
     const target = entry?.status === 'watchlist' ? 'watchlist' : entry?.category === 'anime' ? 'anime' : entry?.type === 'series' ? 'series' : 'films';
     const reset = collection !== target;
-    collection = target; showView('collection'); renderCollection(reset || !$('#genre-filter').options.length || $('#genre-filter').options.length === 1);
+    collection = target; showView('collection'); renderCollection(reset);
     openEntry(hash.slice(5)); return;
   }
   const closingEntry = $('#entry-dialog').open ? entryFocus : null;
@@ -139,7 +155,7 @@ function route() {
   document.body.classList.remove('dialog-open');
   if (['films', 'series', 'anime', 'watchlist'].includes(hash)) {
     const reset = lastRoute !== hash;
-    collection = hash; showView('collection'); renderCollection(reset || $('#genre-filter').options.length === 1);
+    collection = hash; showView('collection'); renderCollection(reset);
     document.title = `${hash === 'films' ? 'Film archive' : hash === 'series' ? 'Series archive' : hash === 'anime' ? 'Anime archive' : 'Watchlist'} // Adeeb’s Vault`;
   } else {
     const view = ['projects', 'about', 'misc'].includes(hash) ? hash : 'home';
@@ -148,7 +164,7 @@ function route() {
   }
   lastRoute = ['films', 'series', 'anime', 'watchlist'].includes(hash) ? hash : 'films';
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
-  else window.scrollTo({ top: 0, behavior: 'instant' });
+  else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
   if (closingEntry && ['films', 'series', 'anime', 'watchlist'].includes(hash)) {
     $(`#collection-grid a[href="#film/${closingEntry}"]`)?.focus({ preventScroll: true });
   }
@@ -163,8 +179,19 @@ document.addEventListener('error', event => {
   if (event.target instanceof HTMLImageElement) { event.target.hidden = true; event.target.parentElement.classList.add('image-unavailable'); }
 }, true);
 $('#retry-load').addEventListener('click', init);
-$('.menu-toggle').addEventListener('click', () => { const open = $('#mobile-nav').hidden; $('#mobile-nav').hidden = !open; $('.menu-toggle').setAttribute('aria-expanded', String(open)); $('.menu-toggle').setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); });
-$('#mobile-nav').addEventListener('click', event => { if (event.target.closest('a')) { $('#mobile-nav').hidden = true; $('.menu-toggle').setAttribute('aria-expanded', 'false'); } });
+$('.menu-toggle').addEventListener('click', () => {
+  if (!$('#mobile-nav').hidden) { closeNavigation(); return; }
+  $('#mobile-nav').hidden = false;
+  $('#main').inert = true;
+  document.body.classList.add('nav-open');
+  $('.menu-toggle').setAttribute('aria-expanded', 'true');
+  $('.menu-toggle').setAttribute('aria-label', 'Close navigation');
+  $('#mobile-nav a').focus();
+});
+$('#mobile-nav').addEventListener('click', event => { if (event.target.closest('a')) closeNavigation(); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#mobile-nav').hidden) { event.preventDefault(); closeNavigation({ restoreFocus: true }); } });
+document.addEventListener('click', event => { if (!$('#mobile-nav').hidden && !event.target.closest('#mobile-nav, .menu-toggle')) closeNavigation(); });
+window.matchMedia('(max-width: 950px)').addEventListener('change', event => { if (!event.matches) closeNavigation(); });
 $('#archive-search').addEventListener('input', () => renderCollection());
 $('#genre-filter').addEventListener('change', () => renderCollection());
 $('#language-filter').addEventListener('change', () => renderCollection());

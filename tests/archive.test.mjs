@@ -10,7 +10,16 @@ const fixture = () => ({ version: 1, profile: { name: 'Test', shortName: 'Test',
 test('published collection validates and preserves the dictated ratings', () => {
   assert.deepEqual(validateArchive(published), []);
   const ratings = Object.fromEntries(published.entries.map(x => [x.id, x.rating]));
-  assert.deepEqual(ratings, { baththa: 4, meiyazhagan: 4.5, mersal: 4.8, 'perfect-days': 4.5, '24': 4.4, 'ra-one': 4.4, oppenheimer: 4.5, 'small-things-like-these': 4.2, karuppu: 3, 'vishwanath-and-sons': 2, orb: 5, 'dr-stone': 4 });
+  // Guard confirmed scores while allowing the diary to grow with new entries.
+  for (const [id, rating] of Object.entries({
+    'avatar-2009': 3.9, baththa: 4, meiyazhagan: 4.5, mersal: 5,
+    'perfect-days': 4.5, '24': 4.4, 'ra-one': 4.4, oppenheimer: 4.5,
+    'small-things-like-these': 4.2, karuppu: 3, 'vishwanath-and-sons': 2,
+    leo: 4.4, interstellar: 5, 'breaking-bad': 4.9, 'the-boys': 4.3,
+    'the-penguin': 4.5, orb: 5, 'dr-stone': 4,
+    'michael-2026': 4, 'project-hail-mary': 4.5, 'real-steel': 5,
+    dunki: 4, 'premam-2015': 4.9, 'life-of-pi': 4, 'spider-man-brand-new-day': 3.9
+  })) assert.equal(ratings[id], rating, `${id} must keep Adeeb's exact rating`);
   assert.equal(published.entries.some(x => x.isSample), false);
   assert.equal(published.entries.some(x => x.id === 'ex-machina'), false);
   assert.equal(published.entries.find(x => x.id === 'orb').review, 'It brought back the scientist inside me.');
