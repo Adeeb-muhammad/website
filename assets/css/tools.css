@@ -180,3 +180,14 @@
 .color-result #color-swatch{display:block;flex:0 0 5rem;width:5rem;height:5rem;border:1px solid rgba(255,255,255,.25);background:#FAFF00}
 .color-result p{margin:.25rem 0}
 @media(max-width:720px){.converter-text-workspace{grid-template-columns:minmax(0,1fr)}.converter-text-workspace textarea{min-height:14rem}.color-result{align-items:flex-start}}
+
+/* Local file conversion suite */
+.file-convert-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:22px;align-items:start;margin-top:26px}
+.file-convert-settings{display:grid;gap:18px;padding:24px;border:1px solid var(--line);background:var(--panel)}
+.file-convert-info{padding:26px;border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.file-convert-info h3{font-size:22px;margin:12px 0}
+.file-convert-info p{font-size:13px;line-height:1.8;color:var(--muted)}
+.file-convert-info strong{color:var(--text)}
+#file-convert-drop{min-height:145px}
+#file-convert-drop.is-dragging{border-color:var(--accent);background:rgba(238,255,0,.04)}
+@media(max-width:800px){.file-convert-layout{grid-template-columns:1fr}.file-convert-settings,.file-convert-info{padding:18px}}
