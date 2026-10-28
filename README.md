@@ -1,6 +1,6 @@
 # Adeeb’s Vault — Adeeb’s personal archive
 
-A personal portfolio, film diary, series archive, and watchlist. Same black / antique-gold visual direction as the original design, rebuilt as a responsive static site.
+A personal portfolio, film diary, series archive, and watchlist. A black/chrome foundation with galaxy-violet branding and primary buttons, and antique-gold archive accents, built as a responsive static site.
 
 **No backend, account system, API key, paid database, or production build step is required.** GitHub stores the public content in [`data/archive.json`](data/archive.json), alongside the frontend. GitHub Pages can serve the repository root directly. The existing `CNAME` remains `adeebmuh.me`.
 
