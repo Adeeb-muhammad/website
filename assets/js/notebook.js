@@ -1,11 +1,10 @@
-import { upgradeNotebook, validateNotebook, safeFilename } from './tools-core.js?v=2';
-import { escapeHTML as e } from './core.js?v=6';
+import { upgradeNotebook, validateNotebook, safeFilename } from './tools-core.js?v=3';
 
 export function initNotebook({ download, confirmChange }) {
   const $ = selector => document.querySelector(selector);
   const status = (text, error = false) => { $('#notes-status').textContent = text; $('#notes-status').dataset.error = String(error); };
   const KEY = 'adeeb-vault-notebook-v2', LEGACY_KEY = 'adeeb-vault-notebook-v1';
-  const blankPage = title => ({ title, text: '', strokes: [] });
+  const blankPage = title => ({ title, text: '', strokes: [], orientation: window.innerHeight > window.innerWidth ? 'portrait' : 'landscape' });
   const blankBook = () => ({ kind: 'adeeb-vault-notebook', version: 2, title: '', activePage: 0, pages: [blankPage('Page 1')] });
   let book = blankBook(), histories = new WeakMap();
   let activeStroke = null, activePointer = null, erase = false, drawFrame = null, saveTimer = null;
@@ -16,16 +15,15 @@ export function initNotebook({ download, confirmChange }) {
   const history = () => { if (!histories.has(page())) histories.set(page(), []); return histories.get(page()); };
   const pointCount = () => book.pages.reduce((n, p) => n + p.strokes.reduce((sum, s) => sum + s.points.length, 0), 0);
 
-  function syncInputs() { book.title = $('#notes-title').value; page().title = $('#notes-page-title').value; page().text = $('#notes-text').value; }
   function save() {
-    clearTimeout(saveTimer); saveTimer = null; syncInputs();
+    clearTimeout(saveTimer); saveTimer = null;
     try {
       validateNotebook(book);
       localStorage.setItem(KEY, JSON.stringify(book));
       status(`All ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} saved in this browser. Download a backup for a separate copy.`);
     } catch { status('This notebook could not be saved in the browser. Download a .json backup before leaving.', true); }
   }
-  function queueSave() { syncInputs(); status('Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
+  function queueSave() { status('Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
 
   function renderBoard() {
     if (!context || !inkContext) return;
@@ -48,8 +46,9 @@ export function initNotebook({ download, confirmChange }) {
   }
   function queueDraw() { if (drawFrame !== null) return; drawFrame = requestAnimationFrame(() => { drawFrame = null; renderBoard(); }); }
   function renderPages() {
-    $('#notes-pages').innerHTML = book.pages.map((p, i) => `<button type="button" data-page="${i}" ${i === book.activePage ? 'aria-current="page"' : ''} aria-label="Go to page ${i + 1}: ${e(p.title || 'Untitled')}"><span>${String(i + 1).padStart(2, '0')}</span><span>${e(p.title || 'Untitled')}</span></button>`).join('');
-    $('#notes-page-count').textContent = `Page ${book.activePage + 1} of ${book.pages.length}`;
+    $('#notes-pages').innerHTML = book.pages.map((p, i) => `<button type="button" data-page="${i}" ${i === book.activePage ? 'aria-current="page"' : ''} aria-label="Go to page ${i + 1}">${String(i + 1).padStart(2, '0')}</button>`).join('');
+    $('#notes-page-count').textContent = `${book.activePage + 1} / ${book.pages.length}`;
+    $('#notes-page-count').setAttribute('aria-label', `Page ${book.activePage + 1} of ${book.pages.length}`);
     $('#notes-previous').disabled = book.activePage === 0;
     $('#notes-next').disabled = book.activePage === book.pages.length - 1;
     $('#notes-add').disabled = book.pages.length >= 20;
@@ -63,9 +62,12 @@ export function initNotebook({ download, confirmChange }) {
     }
   }
   function showPage() {
-    $('#notes-title').value = book.title; $('#notes-page-title').value = page().title; $('#notes-text').value = page().text;
-    $('#notes-text').maxLength = Math.min(100000, 200000 - book.pages.reduce((n, p, i) => n + (i === book.activePage ? 0 : p.text.length), 0));
+    const [width, height] = page().orientation === 'portrait' ? [900, 1400] : [1400, 900];
+    if (board.width !== width || board.height !== height) { board.width = ink.width = width; board.height = ink.height = height; }
+    board.style.aspectRatio = `${width} / ${height}`;
+    $('#notes-txt').hidden = !book.pages.some(p => p.text);
     renderPages(); renderBoard();
+    fitPaper();
   }
   function finishStroke() {
     if (!activeStroke) return;
@@ -73,7 +75,7 @@ export function initNotebook({ download, confirmChange }) {
   }
   function switchPage(index) {
     if (index < 0 || index >= book.pages.length) return;
-    finishStroke(); syncInputs(); book.activePage = index; showPage(); save();
+    finishStroke(); book.activePage = index; showPage(); save();
   }
   $('#notes-pages').addEventListener('click', event => { const button = event.target.closest('[data-page]'); if (button) switchPage(Number(button.dataset.page)); });
   $('#notes-pages').addEventListener('keydown', event => {
@@ -85,7 +87,7 @@ export function initNotebook({ download, confirmChange }) {
   $('#notes-next').addEventListener('click', () => switchPage(book.activePage + 1));
   function addPage(duplicate) {
     if (book.pages.length >= 20) return;
-    finishStroke(); syncInputs();
+    finishStroke();
     const added = duplicate ? structuredClone(page()) : blankPage(`Page ${book.pages.length + 1}`);
     if (duplicate) added.title = `${added.title || 'Page'} (copy)`.slice(0, 120);
     const candidate = { ...book, pages: [...book.pages] };
@@ -102,7 +104,7 @@ export function initNotebook({ download, confirmChange }) {
 
   function pointAt(event) {
     const bounds = board.getBoundingClientRect();
-    return [Math.max(0, Math.min(1400, (event.clientX - bounds.left) / bounds.width * 1400)), Math.max(0, Math.min(900, (event.clientY - bounds.top) / bounds.height * 900))].map(n => Math.round(n * 10) / 10);
+    return [Math.max(0, Math.min(board.width, (event.clientX - bounds.left) / bounds.width * board.width)), Math.max(0, Math.min(board.height, (event.clientY - bounds.top) / bounds.height * board.height))].map(n => Math.round(n * 10) / 10);
   }
   if (context && inkContext) {
     board.addEventListener('pointerdown', event => {
@@ -120,8 +122,7 @@ export function initNotebook({ download, confirmChange }) {
       activeStroke.points.push(point); queueDraw();
     });
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) board.addEventListener(type, event => { if (event.pointerId === activePointer) finishStroke(); });
-  } else { status('Drawing is unavailable in this browser. You can still save text notes.', true); $('#notes-png').disabled = true; }
-  for (const id of ['#notes-title', '#notes-page-title', '#notes-text']) $(id).addEventListener('input', () => { queueSave(); if (id === '#notes-page-title') renderPages(); });
+  } else { status('Drawing is unavailable in this browser. You can still download backups of saved pages.', true); $('#notes-png').disabled = true; }
   function choosePen(value) { erase = value; $('#notes-pen').setAttribute('aria-pressed', String(!erase)); $('#notes-eraser').setAttribute('aria-pressed', String(erase)); }
   $('#notes-pen').addEventListener('click', () => choosePen(false));
   $('#notes-eraser').addEventListener('click', () => choosePen(true));
@@ -135,8 +136,8 @@ export function initNotebook({ download, confirmChange }) {
     renderBoard(); const name = `${safeFilename(book.title, 'my-notebook')}-page-${book.activePage + 1}.png`;
     board.toBlob(blob => { if (blob) download(blob, name, 'image/png'); else status('Could not export the drawing. Try a .json backup instead.', true); }, 'image/png');
   });
-  $('#notes-txt').addEventListener('click', () => { syncInputs(); download(`${book.title}\n\n${book.pages.map((p, i) => `--- Page ${i + 1}: ${p.title} ---\n${p.text}`).join('\n\n')}`, `${safeFilename(book.title, 'my-notebook')}.txt`, 'text/plain;charset=utf-8'); });
-  $('#notes-backup').addEventListener('click', () => { syncInputs(); download(JSON.stringify(book), `${safeFilename(book.title, 'my-notebook')}.json`, 'application/json'); });
+  $('#notes-txt').addEventListener('click', () => { download(`${book.title}\n\n${book.pages.map((p, i) => `--- Page ${i + 1}: ${p.title} ---\n${p.text}`).join('\n\n')}`, `${safeFilename(book.title, 'my-notebook')}.txt`, 'text/plain;charset=utf-8'); });
+  $('#notes-backup').addEventListener('click', () => { download(JSON.stringify(book), `${safeFilename(book.title, 'my-notebook')}.json`, 'application/json'); });
   function load(data) { book = upgradeNotebook(data); histories = new WeakMap(); activeStroke = null; activePointer = null; showPage(); }
   $('#notes-restore').addEventListener('change', async event => {
     const file = event.target.files[0]; if (!file) return;
@@ -154,11 +155,20 @@ export function initNotebook({ download, confirmChange }) {
   });
 
   const panel = $('#tool-notes'), enlarge = $('#notes-enlarge');
+  function fitPaper() {
+    const workspace = $('.notes-workspace'), paper = $('.drawing-paper');
+    if (panel.classList.contains('notes-expanded')) {
+      const width = Math.min(workspace.clientWidth, workspace.clientHeight * board.width / board.height);
+      paper.style.width = `${Math.max(1, Math.floor(width))}px`;
+    } else { paper.style.width = ''; }
+  }
+  new ResizeObserver(fitPaper).observe($('.notes-workspace'));
   function setExpanded(expanded) {
     panel.classList.toggle('notes-expanded', expanded); document.body.classList.toggle('notebook-open', expanded);
-    enlarge.textContent = expanded ? 'EXIT FULLSCREEN ↙' : 'ENLARGE / FULLSCREEN ↗';
+    enlarge.textContent = expanded ? 'EXIT ↙' : 'ENLARGE ↗';
     enlarge.setAttribute('aria-pressed', String(expanded));
     if (expanded) panel.scrollTop = 0;
+    requestAnimationFrame(fitPaper);
   }
   async function exitExpanded() {
     setExpanded(false);
@@ -177,7 +187,7 @@ export function initNotebook({ download, confirmChange }) {
   try {
     const current = localStorage.getItem(KEY), legacy = current ? null : localStorage.getItem(LEGACY_KEY);
     if (current || legacy) { load(JSON.parse(current || legacy)); if (legacy) save(); else status('Restored all your notebook pages from this browser.'); }
-    else { showPage(); status('Start on page one. Add up to 20 pages, each with its own drawing and notes.'); }
+    else { showPage(); status('Start on page one. Add up to 20 drawing pages.'); }
   } catch { showPage(); status('Saved notes could not be loaded. Restore a downloaded backup if available.', true); }
   window.addEventListener('pagehide', () => { if (saveTimer || activeStroke) save(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && (saveTimer || activeStroke)) save(); });

@@ -84,3 +84,15 @@ test('multi-page backups validate page count, selected page, text and stroke bou
   assert.throws(() => validateNotebook({ ...data, pages: [{ ...data.pages[0], title: 'x'.repeat(121) }] }));
   assert.throws(() => validateNotebook({ ...data, activePage: 0, pages: Array.from({ length: 3 }, () => ({ title: '', text: 'x'.repeat(100000), strokes: [] })) }));
 });
+
+test('portrait drawing pages validate their own bounds while legacy pages stay landscape', () => {
+  const stroke = { erase: false, color: '#123abc', width: 7, points: [[900, 1400]] };
+  const page = { title: '', text: 'Preserved legacy text', orientation: 'portrait', strokes: [stroke] };
+  const data = { kind: 'adeeb-vault-notebook', version: 2, title: 'Preserved title', activePage: 0, pages: [page] };
+  assert.equal(validateNotebook(data), data);
+  assert.throws(() => validateNotebook({ ...data, pages: [{ ...page, orientation: 'unknown' }] }));
+  assert.throws(() => validateNotebook({ ...data, pages: [{ ...page, orientation: 'landscape' }] }));
+  assert.throws(() => validateNotebook({ ...data, pages: [{ ...page, strokes: [{ ...stroke, points: [[901, 1400]] }] }] }));
+  const legacy = { kind: data.kind, version: 1, title: data.title, text: page.text, strokes: [{ ...stroke, points: [[1400, 900]] }] };
+  assert.deepEqual(upgradeNotebook(legacy).pages[0].strokes, legacy.strokes);
+});

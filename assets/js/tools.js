@@ -1,5 +1,5 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=2';
-import { initNotebook } from './notebook.js?v=1';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=3';
+import { initNotebook } from './notebook.js?v=2';
 import { escapeHTML as e } from './core.js?v=6';
 
 const $ = selector => document.querySelector(selector);

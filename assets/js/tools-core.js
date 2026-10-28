@@ -92,6 +92,8 @@ export function validateNotebook(data) {
   let textLength = 0;
   for (const page of pages) {
     if (!page || (data.version === 2 && (typeof page.title !== 'string' || page.title.length > 120)) || typeof page.text !== 'string' || page.text.length > 100000 || !Array.isArray(page.strokes) || page.strokes.length > 1000) throw new Error('The backup contains an invalid page.');
+    if (page.orientation !== undefined && !['portrait', 'landscape'].includes(page.orientation)) throw new Error('Invalid page orientation.');
+    const [pageWidth, pageHeight] = page.orientation === 'portrait' ? [900, 1400] : [1400, 900];
     textLength += page.text.length;
     if (textLength > 200000) throw new Error('The notebook text is too large.');
     let pageCount = 0;
@@ -99,7 +101,7 @@ export function validateNotebook(data) {
       if (!stroke || typeof stroke.erase !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(stroke.color) || !Number.isFinite(stroke.width) || stroke.width < 1 || stroke.width > 60 || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error('The backup contains an invalid drawing.');
       count += stroke.points.length;
       pageCount += stroke.points.length;
-      if (pageCount > 60000 || count > 120000 || !stroke.points.every(p => Array.isArray(p) && p.length === 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[0] >= 0 && p[0] <= 1400 && p[1] >= 0 && p[1] <= 900)) throw new Error('The drawing is too large or contains invalid points.');
+      if (pageCount > 60000 || count > 120000 || !stroke.points.every(p => Array.isArray(p) && p.length === 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[0] >= 0 && p[0] <= pageWidth && p[1] >= 0 && p[1] <= pageHeight)) throw new Error('The drawing is too large or contains invalid points.');
     }
   }
   return data;

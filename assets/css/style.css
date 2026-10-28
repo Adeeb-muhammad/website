@@ -53,11 +53,12 @@
 }
 
 /* Resource directory and poster visibility */
-/* Galaxy-violet identity; archive accents retain their gold. */
-:root{--identity:#b36bff;--identity-hover:#c590ff}
+/* Nebula identity inspired by Adeeb's reference; archive accents stay gold. */
+:root{--identity:#af94ce;--identity-hover:#e0b3c1;--identity-gradient:linear-gradient(110deg,#748bcc 0%,#a58ac5 37%,#dfa0a0 72%,#f2bd83 100%)}
 .brand>span.brand-vault,.rail-monogram span,.identity-monogram>span,.vault-project-mark span{color:var(--identity)}
-.button-accent{background:var(--identity);color:#080808}
-.button-accent:hover{background:var(--identity-hover)}
+.brand>span.brand-vault{background:var(--identity-gradient);background-clip:text;-webkit-background-clip:text;color:transparent}
+.button-accent{background:var(--identity-gradient);color:#080808}
+.button-accent:hover{background:linear-gradient(110deg,#8ba1e0,#bba1d8 37%,#edb6b1 72%,#ffd09c)}
 .button-accent:focus-visible{outline-color:var(--identity)}
 .hero{--accent:var(--identity)}
 .desktop-nav{gap:20px}
