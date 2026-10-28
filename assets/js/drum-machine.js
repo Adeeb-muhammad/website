@@ -31,7 +31,7 @@ function buildSequencer() {
   const rows = tracks.map((track) => {
     const steps = Array.from({ length: 16 }, (_, index) => {
       const active = track.pattern[index] ? 'active' : '';
-      return `<button type="button" class="step ${active}" data-track="${track.id}" data-step="${index}" aria-label="${track.name} step ${index + 1}"></button>`;
+      return `<button type="button" class="step ${active}" data-track="${track.id}" data-step="${index}" aria-label="${track.name} step ${index + 1}" aria-pressed="${Boolean(track.pattern[index])}"></button>`;
     }).join('');
     return `<div class="track-row"><span class="track-name">${track.name}</span>${steps}</div>`;
   }).join('');
@@ -55,6 +55,7 @@ function updateStepState() {
     const step = Number(button.dataset.step);
     const active = tracks.find((entry) => entry.id === track)?.pattern[step];
     button.classList.toggle('active', Boolean(active));
+    button.setAttribute('aria-pressed', String(Boolean(active)));
     button.classList.toggle('playing', Number(button.dataset.step) === state.currentStep && state.isPlaying);
   });
 }
@@ -206,7 +207,6 @@ function advanceStep() {
   });
 
   state.currentStep = (state.currentStep + 1) % 16;
-  updateStepState();
 }
 
 function startLoop() {

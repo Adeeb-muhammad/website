@@ -110,7 +110,7 @@ function renderCollection(reset = false) {
 
 function showView(view) {
   document.querySelectorAll('.view').forEach(section => { section.hidden = section.dataset.view !== view; section.classList.toggle('active', !section.hidden); });
-  const key = view === 'collection' ? 'films' : view;
+  const key = view === 'collection' ? collection : view;
   document.querySelectorAll('[data-nav]').forEach(link => { const active = link.dataset.nav === key; link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
   document.querySelectorAll('#mobile-nav a, .rail-links a').forEach(link => { if (link.getAttribute('href') === `#${view === 'collection' ? collection : view}`) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
   closeNavigation();
@@ -191,7 +191,7 @@ $('.menu-toggle').addEventListener('click', () => {
 $('#mobile-nav').addEventListener('click', event => { if (event.target.closest('a')) closeNavigation(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#mobile-nav').hidden) { event.preventDefault(); closeNavigation({ restoreFocus: true }); } });
 document.addEventListener('click', event => { if (!$('#mobile-nav').hidden && !event.target.closest('#mobile-nav, .menu-toggle')) closeNavigation(); });
-window.matchMedia('(max-width: 950px)').addEventListener('change', event => { if (!event.matches) closeNavigation(); });
+window.matchMedia('(max-width: 1100px)').addEventListener('change', event => { if (!event.matches) closeNavigation(); });
 $('#archive-search').addEventListener('input', () => renderCollection());
 $('#genre-filter').addEventListener('change', () => renderCollection());
 $('#language-filter').addEventListener('change', () => renderCollection());

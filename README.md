@@ -1,6 +1,6 @@
 # Adeeb’s Vault — Adeeb’s personal archive
 
-A personal portfolio, film diary, series archive, and watchlist. Same black / yellow visual direction as the original design, rebuilt as a responsive static site.
+A personal portfolio, film diary, series archive, and watchlist. Same black / antique-gold visual direction as the original design, rebuilt as a responsive static site.
 
 **No backend, account system, API key, paid database, or production build step is required.** GitHub stores the public content in [`data/archive.json`](data/archive.json), alongside the frontend. GitHub Pages can serve the repository root directly. The existing `CNAME` remains `adeebmuh.me`.
 
@@ -8,7 +8,7 @@ A personal portfolio, film diary, series archive, and watchlist. Same black / ye
 
 1. Open `https://adeebmuh.me/studio.html` after deployment.
 2. Add or edit a film/series, give it a rating out of 5 (including decimals such as 4.4 or 4.8), and save to your draft. Profile and projects can also be edited here.
-3. Open **Publish → Preview my draft** to check your changes. This preview is local to the same browser and shows a yellow preview banner.
+3. Open **Publish → Preview my draft** to check your changes. This preview is local to the same browser and shows a gold preview banner.
 4. Choose **Copy archive JSON**, then **Open my GitHub file**.
 5. Replace the contents of `data/archive.json` with the copied JSON and commit the change to `main`.
 6. Wait for GitHub Pages to finish deploying, then refresh your site.
