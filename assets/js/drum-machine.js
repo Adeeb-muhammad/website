@@ -5,6 +5,12 @@ const tracks = [
   { id: 'clap', name: 'Clap', pattern: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0] }
 ];
 
+// Keep a copy of the factory pattern so Reset can restore the original groove.
+const defaultPatterns = tracks.map((track) => ({
+  id: track.id,
+  pattern: [...track.pattern]
+}));
+
 const state = {
   bpm: 110,
   currentStep: 0,
@@ -19,6 +25,7 @@ const playToggle = document.getElementById('play-toggle');
 const tempoSlider = document.getElementById('tempo-slider');
 const tempoDisplay = document.getElementById('tempo-display');
 const randomizeButton = document.getElementById('randomize');
+const resetButton = document.getElementById('reset-pattern');
 const copyrightYear = document.getElementById('copyright-year');
 if (copyrightYear) copyrightYear.textContent = new Date().getFullYear();
 
@@ -226,6 +233,21 @@ function stopLoop() {
   updateStepState();
 }
 
+function resetPattern() {
+  // Stop playback first so the reset cannot leave an interval running.
+  stopLoop();
+
+  tracks.forEach((track) => {
+    const defaults = defaultPatterns.find((entry) => entry.id === track.id);
+    if (defaults) track.pattern = [...defaults.pattern];
+  });
+
+  state.bpm = 110;
+  state.currentStep = 0;
+  updateTempo();
+  buildSequencer();
+}
+
 playToggle.addEventListener('click', () => {
   if (state.isPlaying) stopLoop(); else startLoop();
 });
@@ -237,6 +259,8 @@ randomizeButton.addEventListener('click', () => {
     state.intervalId = setInterval(() => advanceStep(), (60 / state.bpm) * 1000 / 4);
   }
 });
+
+resetButton.addEventListener('click', resetPattern);
 
 tempoSlider.addEventListener('input', (event) => {
   state.bpm = Number(event.target.value);
