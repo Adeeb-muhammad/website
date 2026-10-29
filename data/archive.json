@@ -68,6 +68,107 @@
   ],
   "entries": [
     {
+      "id": "dhurandhar-2025",
+      "title": "Dhurandhar",
+      "year": 2025,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Hindi"
+      ],
+      "status": "watched",
+      "director": "Aditya Dhar",
+      "genres": [
+        "Action",
+        "Crime",
+        "Thriller"
+      ],
+      "runtime": 214,
+      "rating": 4.5,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "https://d2py10ayqu2jji.cloudfront.net/33295936-3234-419f-8553-307ffc5157e7/202511183578762-8ef358d2-55e6-4cc5-ba1b-53ce4c955595.jpg",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "dhurandhar-the-revenge-2026",
+      "title": "Dhurandhar: The Revenge",
+      "year": 2026,
+      "type": "film",
+      "category": "general",
+      "languages": [
+        "Hindi"
+      ],
+      "status": "watched",
+      "director": "Aditya Dhar",
+      "genres": [
+        "Action",
+        "Crime",
+        "Thriller"
+      ],
+      "runtime": 235,
+      "rating": 3.8,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "https://image.tmdb.org/t/p/w500/owQeDouUZ6wI6f1aTOYEFd511zn.jpg",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "black-clover-2017",
+      "title": "Black Clover",
+      "year": 2017,
+      "type": "series",
+      "category": "anime",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Tatsuya Yoshihara / Ayataka Tanemura",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Fantasy"
+      ],
+      "runtime": 0,
+      "rating": 4.5,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "https://images.justwatch.com/poster/289760864/s718/black-clover.jpg",
+      "image": "",
+      "isSample": false
+    },
+    {
+      "id": "attack-on-titan-2013",
+      "title": "Attack on Titan",
+      "year": 2013,
+      "type": "series",
+      "category": "anime",
+      "languages": [
+        "Japanese"
+      ],
+      "status": "watched",
+      "director": "Tetsurō Araki / Masashi Koizuka",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy"
+      ],
+      "runtime": 0,
+      "rating": 4.8,
+      "review": "",
+      "watchedOn": "",
+      "favourite": false,
+      "poster": "https://cdn.animeverse.in/posters/2d06d2a4-3bcb-4d9e-9dc9-44823e842ff9.webp",
+      "image": "",
+      "isSample": false
+    },
+    {
       "id": "michael-2026",
       "title": "Michael",
       "year": 2026,
@@ -84,7 +185,7 @@
         "Music"
       ],
       "runtime": 127,
-      "rating": 4.0,
+      "rating": 4,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -133,7 +234,7 @@
         "Drama"
       ],
       "runtime": 0,
-      "rating": 5.0,
+      "rating": 5,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -157,7 +258,7 @@
         "Drama"
       ],
       "runtime": 0,
-      "rating": 4.0,
+      "rating": 4,
       "review": "",
       "watchedOn": "",
       "favourite": false,
@@ -205,7 +306,7 @@
         "Drama"
       ],
       "runtime": 127,
-      "rating": 4.0,
+      "rating": 4,
       "review": "",
       "watchedOn": "",
       "favourite": false,
