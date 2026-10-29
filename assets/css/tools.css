@@ -191,3 +191,7 @@
 #file-convert-drop{min-height:145px}
 #file-convert-drop.is-dragging{border-color:var(--accent);background:rgba(238,255,0,.04)}
 @media(max-width:800px){.file-convert-layout{grid-template-columns:1fr}.file-convert-settings,.file-convert-info{padding:18px}}
+
+/* Three-tool switcher */
+.tool-switcher.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:650px){.tool-switcher.three{grid-template-columns:1fr}.tool-switcher.three a+a{border-left:0;border-top:1px solid var(--line)}}

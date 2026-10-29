@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Advanced canvas from Adeeb's Vault: seven brushes, symmetry drawing, layers, and colour grading that runs privately in your browser.">
+  <link rel="canonical" href="https://adeebmuh.me/canvas-pro.html">
+  <link rel="icon" href="assets/favicon.svg?v=6" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="assets/css/style.css?v=13">
+  <link rel="stylesheet" href="assets/css/tools.css?v=5">
+<link rel="stylesheet" href="assets/css/canvas-pro.css?v=1">
+  <title>Advanced canvas // Adeeb’s Vault</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="index.html#home" aria-label="Adeeb’s Vault home">ADEEB’S<span class="brand-vault">VAULT</span><span class="brand-mark">01</span></a>
+<nav class="desktop-nav" aria-label="Main navigation">
+      <a href="index.html#home">OVERVIEW</a>
+      <a href="index.html#films">FILMS</a>
+      <a href="index.html#series">SERIES</a>
+      <a href="index.html#anime">ANIME</a>
+      <a href="index.html#watchlist">WATCHLIST</a>
+      <a href="index.html#projects">PROJECTS</a>
+      <a href="index.html#misc" class="active">MISC</a>
+      <a href="index.html#about">THE OPERATOR</a>
+    </nav>
+    <div class="header-right">
+      <span class="availability"><i></i> PERSONAL ARCHIVE</span>
+      <button class="menu-toggle icon-button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav">
+        <svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></svg>
+      </button>
+    </div>
+  </header>
+<nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" hidden>
+    <a href="index.html#home">Overview <span>01</span></a>
+    <a href="index.html#films">Film archive <span>02</span></a>
+    <a href="index.html#series">Series <span>03</span></a>
+    <a href="index.html#anime">Anime <span>04</span></a>
+    <a href="index.html#watchlist">Watchlist <span>05</span></a>
+    <a href="index.html#projects">Projects <span>06</span></a>
+    <a href="index.html#misc">Miscellaneous <span>07</span></a>
+    <a href="index.html#about">The operator <span>08</span></a>
+  </nav>
+  <aside class="side-rail" aria-label="Shortcuts">
+    <a href="index.html#home" class="rail-monogram" aria-label="Home">a<span>.</span></a>
+    <div class="rail-links">
+      <a href="index.html#films" aria-label="Films"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 3v18M16 3v18M4 8h4M4 16h4M16 8h4M16 16h4"/></svg><span>FILM ARCHIVE</span></a>
+      <a href="index.html#projects" aria-label="Projects"><svg viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span>PROJECTS</span></a>
+      <a href="index.html#misc" aria-label="Miscellaneous"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1 1M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1-1"/></svg><span>MISC</span></a>
+    </div>
+    <a class="rail-github" href="https://github.com/Adeeb-muhammad" target="_blank" rel="noopener noreferrer" aria-label="Adeeb on GitHub"><svg viewBox="0 0 24 24"><path d="M9 19c-4 1-4-2-6-2m12 4v-4c0-1 .2-2-.5-2.6 3-.3 5.5-1.4 5.5-6.4 0-1.3-.4-2.5-1.3-3.4.1-.4.6-1.6-.1-3.3 0 0-1.1-.3-3.6 1.3a12 12 0 0 0-6 0C6.5 1 5.4 1.3 5.4 1.3c-.7 1.7-.2 2.9-.1 3.3A5 5 0 0 0 4 8c0 5 2.5 6.1 5.5 6.4C8.8 15 9 16 9 17v4"/></svg></a>
+    <span class="rail-bottom">UAE / EARTH</span>
+  </aside>
+
+
+  <main id="main" class="site-main" tabindex="-1">
+    <div class="tool-workspace section-pad">
+      <header class="tools-heading">
+        <a class="text-link" href="index.html#misc">← BACK TO MISC</a>
+        <div class="tools-heading-row"><div><p class="eyebrow">THE MISC FILE / MADE TO BE USEFUL</p><h1>SMALL_<span class="outline-text">TOOLS.</span></h1></div><p>For the little things.<br> Open, make, take it with you.</p></div>
+      </header>
+      <nav class="tool-switcher three" aria-label="Choose a tool">
+<a href="tools.html#notes"><span>01</span> NOTES CANVAS</a>
+<a href="tools.html#utilities"><span>02</span> UTILITY DESK</a>
+<a href="canvas-pro.html" aria-current="page"><span>03</span> ADVANCED CANVAS</a>
+</nav>
+<section class="tool-panel" aria-labelledby="cp-heading">
+<div class="tool-intro"><div><p class="eyebrow">03 / DRAW, THEN GRADE</p><h2 id="cp-heading" tabindex="-1">Advanced canvas</h2><p>Seven brushes, symmetry and kaleidoscope drawing, layers, shapes, and a full colour-grading suite. Import a photo to grade it.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
+<div class="cp">
+<div class="cp-stage">
+<div class="cp-bar">
+<div class="segmented-controls" role="group" aria-label="Tool"><button type="button" data-tool="brush" aria-pressed="true">Brush</button><button type="button" data-tool="eraser" aria-pressed="false">Eraser</button><button type="button" data-tool="line" aria-pressed="false">Line</button><button type="button" data-tool="rect" aria-pressed="false">Rect</button><button type="button" data-tool="ellipse" aria-pressed="false">Ellipse</button><button type="button" data-tool="pick" aria-pressed="false">Pick</button></div>
+<button id="cp-undo" class="small-tool-button" type="button" aria-label="Undo" disabled>↶</button><button id="cp-redo" class="small-tool-button" type="button" aria-label="Redo" disabled>↷</button><button id="cp-clear" class="small-tool-button" type="button">Clear layer</button>
+</div>
+<canvas id="cp-view" aria-label="Advanced drawing canvas. Draw with a mouse, pen, or finger."></canvas>
+<p id="cp-status" class="tool-status" role="status" aria-live="polite">Pick a brush and draw. Colour grading never changes your drawing, only how it is shown and exported.</p>
+</div>
+<aside class="cp-side" aria-label="Canvas options">
+<details open><summary>BRUSH</summary>
+<label class="tool-field">Brush type<select id="cp-brush"><option value="pen">Pen</option><option value="marker">Marker</option><option value="pencil">Pencil</option><option value="air">Airbrush</option><option value="spray">Spray</option><option value="callig">Calligraphy</option><option value="hl">Highlighter</option></select></label>
+<div class="cp-two"><label class="tool-field">Colour<input id="cp-color" type="color" value="#1a1a1a"></label><label class="tool-field">Paper<input id="cp-paper" type="color" value="#f5f2ec"></label></div>
+<div id="cp-swatches" class="cp-swatches" aria-label="Quick colours"></div>
+<label class="tool-field">Size <span id="cp-size-v" class="range-value">12</span><input id="cp-size" type="range" min="1" max="80" value="12"></label>
+<label class="tool-field">Opacity <span id="cp-opacity-v" class="range-value">100</span><input id="cp-opacity" type="range" min="5" max="100" value="100"></label>
+<label class="tool-field">Stabiliser <span id="cp-smooth-v" class="range-value">40</span><input id="cp-smooth" type="range" min="0" max="100" value="40"></label>
+<label class="cp-check"><input id="cp-fill" type="checkbox"> Fill shapes</label>
+<p class="cp-tip">Pen pressure is supported. Ctrl/Cmd+Z undoes. Symmetry applies to freehand brushes.</p></details>
+<details><summary>SYMMETRY</summary>
+<label class="tool-field">Mode<select id="cp-sym"><option value="off">Off</option><option value="mx">Mirror left / right</option><option value="my">Mirror top / bottom</option><option value="quad">Four-way mirror</option><option value="rad">Radial</option><option value="kal">Kaleidoscope</option></select></label>
+<label class="tool-field">Rays <span id="cp-n-v" class="range-value">6</span><input id="cp-n" type="range" min="2" max="16" value="6"></label></details>
+<details><summary>LAYERS</summary>
+<div id="cp-layers" class="cp-side"></div>
+<div class="cp-two"><button id="cp-add" class="small-tool-button" type="button">Add layer</button><button id="cp-del" class="small-tool-button" type="button">Delete layer</button></div>
+<label class="small-tool-button file-button">Import image to layer<input id="cp-import" type="file" accept="image/jpeg,image/png,image/webp"></label></details>
+<details open><summary>COLOUR GRADING</summary>
+<label class="tool-field">Preset<select id="cp-preset"></select></label>
+<div id="cp-grade" class="cp-side"></div>
+<div class="cp-two"><label class="tool-field">Shadow tint<input id="cp-sc" type="color" value="#1f6f8b"></label><label class="tool-field">Highlight tint<input id="cp-hc" type="color" value="#ff9a4d"></label></div>
+<div class="cp-two"><button id="cp-compare" class="small-tool-button" type="button">Hold to compare</button><button id="cp-reset-grade" class="small-tool-button" type="button">Reset grade</button></div></details>
+<details open><summary>EXPORT</summary>
+<button id="cp-png-g" class="button button-accent" type="button">GRADED .PNG <span>↓</span></button>
+<button id="cp-png" class="button button-outline" type="button">ORIGINAL .PNG <span>↓</span></button>
+<p class="cp-tip">Drawings are not saved in the browser. Export a PNG to keep your work.</p></details>
+</aside>
+</div>
+</section>
+</div>
+
+<footer class="site-footer section-pad">
+      <div class="footer-top">
+        <div>
+          <p class="eyebrow">THE INTERNET IS BETTER WITH A HUMAN IN IT.</p>
+          <a class="footer-title" href="index.html#about">STAY_<span class="outline-text">CURIOUS.</span> ↗</a>
+        </div>
+        <a href="index.html#misc" class="text-link">BACK TO MISC <span>↗</span></a>
+      </div>
+      <div class="footer-bottom">
+        <a href="index.html#home" class="brand">ADEEB’S<span class="brand-vault">VAULT</span></a>
+        <span class="micro">PERSONAL ARCHIVE BY ADEEB · <span id="copyright-year"></span></span>
+        <div>
+          <a href="https://github.com/Adeeb-muhammad" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+          <a href="index.html#misc">MISC ↗</a>
+          <a href="index.html#home">BACK TO TOP ↑</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+<script src="assets/js/misc-nav.js" defer></script>
+<script type="module" src="assets/js/canvas-pro.js?v=1"></script>
+</body>
+</html>
