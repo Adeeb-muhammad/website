@@ -459,7 +459,7 @@ async function getPDFJS(){if(!window.pdfjsLib)await loadScript('https://cdnjs.cl
 async function readAsArrayBuffer(file){return file.arrayBuffer();}
 function outputName(ext){return (safeFilename($('#file-convert-name').value,'vault-converted')||'vault-converted')+'.'+ext;}
 function downloadBlob(blob,name){download(blob,name,blob.type||'application/octet-stream');}
-function csvParse(text){
+function csvParseFile(text){
  const rows=[];let row=[],cell='',quoted=false;
  for(let i=0;i<text.length;i++){const ch=text[i];if(quoted){if(ch==='"'&&text[i+1]==='"'){cell+='"';i++;}else if(ch==='"')quoted=false;else cell+=ch;}else if(ch==='"'&&cell==='')quoted=true;else if(ch===','){row.push(cell);cell='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))rows.push(row);row=[];cell='';}else cell+=ch;}
  row.push(cell);if(row.some(v=>v!==''))rows.push(row);if(quoted)throw new Error('CSV has an unclosed quoted field.');return rows;
@@ -469,7 +469,7 @@ function jsonToCSV(data){
  if(!Array.isArray(data)||!data.length||data.some(x=>!x||typeof x!=='object'||Array.isArray(x)))throw new Error('JSON → CSV needs a non-empty array of objects.');
  const keys=[...new Set(data.flatMap(Object.keys))];return [keys,...data.map(o=>keys.map(k=>o[k]))].map(r=>r.map(csvCell).join(',')).join('\r\n');
 }
-function csvToJSON(text){const rows=csvParse(text);if(rows.length<2)throw new Error('CSV needs a header row and at least one data row.');const heads=rows[0].map(x=>x.trim());if(heads.some(x=>!x)||new Set(heads).size!==heads.length)throw new Error('CSV headers must be non-empty and unique.');return rows.slice(1).map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])));}
+function csvToJSON(text){const rows=csvParseFile(text);if(rows.length<2)throw new Error('CSV needs a header row and at least one data row.');const heads=rows[0].map(x=>x.trim());if(heads.some(x=>!x)||new Set(heads).size!==heads.length)throw new Error('CSV headers must be non-empty and unique.');return rows.slice(1).map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])));}
 function xmlNode(node){
  if(node.nodeType===3)return node.nodeValue.trim();const children=[...node.children];if(!children.length)return node.textContent.trim();
  const out={};for(const child of children){const value=xmlNode(child);if(Object.prototype.hasOwnProperty.call(out,child.tagName))out[child.tagName]=[].concat(out[child.tagName],value);else out[child.tagName]=value;}
