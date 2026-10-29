@@ -5,12 +5,6 @@ const tracks = [
   { id: 'clap', name: 'Clap', pattern: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0] }
 ];
 
-// Keep a copy of the factory pattern so Reset can restore the original groove.
-const defaultPatterns = tracks.map((track) => ({
-  id: track.id,
-  pattern: [...track.pattern]
-}));
-
 const state = {
   bpm: 110,
   currentStep: 0,
@@ -234,17 +228,14 @@ function stopLoop() {
 }
 
 function resetPattern() {
-  // Stop playback first so the reset cannot leave an interval running.
+  // Reset means clear the pattern: leave every step unselected.
   stopLoop();
 
   tracks.forEach((track) => {
-    const defaults = defaultPatterns.find((entry) => entry.id === track.id);
-    if (defaults) track.pattern = [...defaults.pattern];
+    track.pattern = Array(16).fill(0);
   });
 
-  state.bpm = 110;
   state.currentStep = 0;
-  updateTempo();
   buildSequencer();
 }
 
