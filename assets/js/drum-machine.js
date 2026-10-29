@@ -9,9 +9,13 @@ const state = {
   bpm: 110,
   currentStep: 0,
   isPlaying: false,
-  intervalId: null,
+  schedulerId: null,
   audioContext: null,
-  noiseBuffer: null
+  noiseBuffer: null,
+  nextNoteTime: 0,
+  displayedStep: -1,
+  visualTimers: new Set(),
+  scheduledSources: new Map()
 };
 
 const sequencer = document.getElementById('sequencer');
@@ -26,6 +30,11 @@ if (copyrightYear) copyrightYear.textContent = new Date().getFullYear();
 function getAudioContext() {
   if (!state.audioContext) state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   return state.audioContext;
+}
+
+function trackScheduledSource(source, startAt) {
+  state.scheduledSources.set(source, startAt);
+  source.onended = () => state.scheduledSources.delete(source);
 }
 
 function buildSequencer() {
@@ -44,10 +53,6 @@ function buildSequencer() {
 function updateTempo() {
   tempoDisplay.textContent = `${state.bpm} BPM`;
   tempoSlider.value = String(state.bpm);
-  if (state.isPlaying) {
-    clearInterval(state.intervalId);
-    state.intervalId = setInterval(() => advanceStep(), (60 / state.bpm) * 1000 / 4);
-  }
 }
 
 function updateStepState() {
@@ -57,7 +62,7 @@ function updateStepState() {
     const active = tracks.find((entry) => entry.id === track)?.pattern[step];
     button.classList.toggle('active', Boolean(active));
     button.setAttribute('aria-pressed', String(Boolean(active)));
-    button.classList.toggle('playing', Number(button.dataset.step) === state.currentStep && state.isPlaying);
+    button.classList.toggle('playing', Number(button.dataset.step) === state.displayedStep && state.isPlaying);
   });
 }
 
@@ -88,11 +93,11 @@ function createNoiseBuffer() {
   return buffer;
 }
 
-function triggerKick() {
+function triggerKick(when) {
   const audioContext = getAudioContext();
   const oscillator = audioContext.createOscillator();
   const gain = audioContext.createGain();
-  const now = audioContext.currentTime;
+  const now = Number.isFinite(when) ? when : audioContext.currentTime;
 
   oscillator.type = 'sine';
   oscillator.frequency.setValueAtTime(58, now);
@@ -104,17 +109,18 @@ function triggerKick() {
 
   oscillator.connect(gain);
   gain.connect(audioContext.destination);
+  trackScheduledSource(oscillator, now);
   oscillator.start(now);
   oscillator.stop(now + 0.2);
 }
 
-function triggerSnare() {
+function triggerSnare(when) {
   const audioContext = getAudioContext();
   const noiseBuffer = state.noiseBuffer || (state.noiseBuffer = createNoiseBuffer());
   const source = audioContext.createBufferSource();
   const filter = audioContext.createBiquadFilter();
   const gain = audioContext.createGain();
-  const now = audioContext.currentTime;
+  const now = Number.isFinite(when) ? when : audioContext.currentTime;
 
   source.buffer = noiseBuffer;
   filter.type = 'highpass';
@@ -127,17 +133,18 @@ function triggerSnare() {
   source.connect(filter);
   filter.connect(gain);
   gain.connect(audioContext.destination);
+  trackScheduledSource(source, now);
   source.start(now);
   source.stop(now + 0.12);
 }
 
-function triggerHiHat() {
+function triggerHiHat(when) {
   const audioContext = getAudioContext();
   const noiseBuffer = state.noiseBuffer || (state.noiseBuffer = createNoiseBuffer());
   const source = audioContext.createBufferSource();
   const filter = audioContext.createBiquadFilter();
   const gain = audioContext.createGain();
-  const now = audioContext.currentTime;
+  const now = Number.isFinite(when) ? when : audioContext.currentTime;
 
   source.buffer = noiseBuffer;
   filter.type = 'highpass';
@@ -150,18 +157,19 @@ function triggerHiHat() {
   source.connect(filter);
   filter.connect(gain);
   gain.connect(audioContext.destination);
+  trackScheduledSource(source, now);
   source.start(now);
   source.stop(now + 0.08);
 }
 
-function triggerClap() {
+function triggerClap(when) {
   const audioContext = getAudioContext();
   const noiseBuffer = state.noiseBuffer || (state.noiseBuffer = createNoiseBuffer());
   [0, 0.02, 0.04].forEach((offset) => {
     const source = audioContext.createBufferSource();
     const filter = audioContext.createBiquadFilter();
     const gain = audioContext.createGain();
-    const now = audioContext.currentTime + offset;
+    const now = (Number.isFinite(when) ? when : audioContext.currentTime) + offset;
 
     source.buffer = noiseBuffer;
     filter.type = 'bandpass';
@@ -174,56 +182,124 @@ function triggerClap() {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(audioContext.destination);
+    trackScheduledSource(source, now);
     source.start(now);
     source.stop(now + 0.09);
   });
 }
 
-function triggerTrack(trackId) {
+function triggerTrack(trackId, when) {
   switch (trackId) {
     case 'kick':
-      triggerKick();
+      triggerKick(when);
       break;
     case 'snare':
-      triggerSnare();
+      triggerSnare(when);
       break;
     case 'hihat':
-      triggerHiHat();
+      triggerHiHat(when);
       break;
     case 'clap':
-      triggerClap();
+      triggerClap(when);
       break;
     default:
       break;
   }
 }
 
-function advanceStep() {
-  const activeTrackIds = tracks.filter((track) => track.pattern[state.currentStep]).map((track) => track.id);
-  activeTrackIds.forEach((trackId) => triggerTrack(trackId));
+function scheduleVisualStep(step, when) {
+  const audioContext = getAudioContext();
+  const delay = Math.max(0, (when - audioContext.currentTime) * 1000);
+  let timerId;
 
-  document.querySelectorAll('.step').forEach((button) => {
-    const matchesStep = Number(button.dataset.step) === state.currentStep;
-    button.classList.toggle('playing', state.isPlaying && matchesStep);
-  });
+  timerId = window.setTimeout(() => {
+    state.visualTimers.delete(timerId);
+    if (!state.isPlaying) return;
+    state.displayedStep = step;
+    updateStepState();
+  }, delay);
 
-  state.currentStep = (state.currentStep + 1) % 16;
+  state.visualTimers.add(timerId);
 }
 
-function startLoop() {
+function scheduleNextStep() {
   const audioContext = getAudioContext();
-  if (audioContext.state === 'suspended') audioContext.resume();
+  const step = state.currentStep;
+  const when = Math.max(state.nextNoteTime, audioContext.currentTime + 0.005);
+
+  tracks
+    .filter((track) => track.pattern[step])
+    .forEach((track) => triggerTrack(track.id, when));
+
+  scheduleVisualStep(step, when);
+  state.nextNoteTime = when + (60 / state.bpm) / 4;
+  state.currentStep = (step + 1) % 16;
+}
+
+function scheduleAhead() {
+  if (!state.isPlaying) return;
+  const audioContext = getAudioContext();
+
+  // Recover gracefully if the browser throttles timers for a while.
+  if (state.nextNoteTime < audioContext.currentTime - 0.2) {
+    state.nextNoteTime = audioContext.currentTime + 0.02;
+  }
+
+  const scheduleAheadTime = 0.1;
+  while (state.nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+    scheduleNextStep();
+  }
+}
+
+async function startLoop() {
+  if (state.isPlaying) return;
+
+  const audioContext = getAudioContext();
   state.isPlaying = true;
   playToggle.textContent = 'STOP LOOP ×';
-  state.intervalId = setInterval(() => advanceStep(), (60 / state.bpm) * 1000 / 4);
-  advanceStep();
+
+  try {
+    if (audioContext.state === 'suspended') await audioContext.resume();
+  } catch (error) {
+    stopLoop();
+    console.error('Unable to start the drum machine audio context.', error);
+    return;
+  }
+
+  // The loop may have been stopped while the audio context was resuming.
+  if (!state.isPlaying) return;
+
+  state.currentStep = 0;
+  state.displayedStep = -1;
+  state.nextNoteTime = audioContext.currentTime + 0.05;
+  state.schedulerId = window.setInterval(scheduleAhead, 25);
+  scheduleAhead();
 }
 
 function stopLoop() {
   state.isPlaying = false;
   playToggle.textContent = 'START LOOP ↗';
-  clearInterval(state.intervalId);
-  state.intervalId = null;
+
+  if (state.schedulerId !== null) window.clearInterval(state.schedulerId);
+  state.schedulerId = null;
+
+  // Cancel notes that were scheduled in the future, but let any hit already
+  // playing finish naturally.
+  if (state.audioContext) {
+    for (const [source, startAt] of state.scheduledSources) {
+      if (startAt > state.audioContext.currentTime + 0.002) {
+        try {
+          source.stop();
+        } catch {
+          // A source may have ended between the check and stop call.
+        }
+      }
+    }
+  }
+
+  state.visualTimers.forEach((timerId) => window.clearTimeout(timerId));
+  state.visualTimers.clear();
+  state.displayedStep = -1;
   updateStepState();
 }
 
@@ -243,13 +319,7 @@ playToggle.addEventListener('click', () => {
   if (state.isPlaying) stopLoop(); else startLoop();
 });
 
-randomizeButton.addEventListener('click', () => {
-  randomizePattern();
-  if (state.isPlaying) {
-    clearInterval(state.intervalId);
-    state.intervalId = setInterval(() => advanceStep(), (60 / state.bpm) * 1000 / 4);
-  }
-});
+randomizeButton.addEventListener('click', randomizePattern);
 
 resetButton.addEventListener('click', resetPattern);
 
