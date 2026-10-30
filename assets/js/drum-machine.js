@@ -12,6 +12,7 @@ const state = {
   schedulerId: null,
   audioContext: null,
   noiseBuffer: null,
+  masterGain: null,
   nextNoteTime: 0,
   displayedStep: -1,
   visualTimers: new Set(),
@@ -30,6 +31,31 @@ if (copyrightYear) copyrightYear.textContent = new Date().getFullYear();
 function getAudioContext() {
   if (!state.audioContext) state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
   return state.audioContext;
+}
+
+// Shared master bus. Unity gain, so the existing drum sound is unchanged. New
+// modules (chords, voice, looper) connect here to share one output.
+function getMasterGain() {
+  const audioContext = getAudioContext();
+  if (!state.masterGain) {
+    state.masterGain = audioContext.createGain();
+    state.masterGain.gain.value = 1;
+    state.masterGain.connect(audioContext.destination);
+  }
+  return state.masterGain;
+}
+
+const listeners = { step: new Set(), stop: new Set() };
+
+function emit(type, detail) {
+  listeners[type].forEach((listener) => {
+    try {
+      listener(detail);
+    } catch (error) {
+      // A faulty listener must never break the scheduler.
+      console.error('StepEngine listener failed.', error);
+    }
+  });
 }
 
 function trackScheduledSource(source, startAt) {
@@ -108,7 +134,7 @@ function triggerKick(when) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
 
   oscillator.connect(gain);
-  gain.connect(audioContext.destination);
+  gain.connect(getMasterGain());
   trackScheduledSource(oscillator, now);
   oscillator.start(now);
   oscillator.stop(now + 0.2);
@@ -132,7 +158,7 @@ function triggerSnare(when) {
 
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(audioContext.destination);
+  gain.connect(getMasterGain());
   trackScheduledSource(source, now);
   source.start(now);
   source.stop(now + 0.12);
@@ -156,7 +182,7 @@ function triggerHiHat(when) {
 
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(audioContext.destination);
+  gain.connect(getMasterGain());
   trackScheduledSource(source, now);
   source.start(now);
   source.stop(now + 0.08);
@@ -181,7 +207,7 @@ function triggerClap(when) {
 
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(getMasterGain());
     trackScheduledSource(source, now);
     source.start(now);
     source.stop(now + 0.09);
@@ -232,6 +258,7 @@ function scheduleNextStep() {
     .forEach((track) => triggerTrack(track.id, when));
 
   scheduleVisualStep(step, when);
+  emit('step', { step, when, bpm: state.bpm, stepDuration: 60 / state.bpm / 4 });
   state.nextNoteTime = when + (60 / state.bpm) / 4;
   state.currentStep = (step + 1) % 16;
 }
@@ -301,6 +328,7 @@ function stopLoop() {
   state.visualTimers.clear();
   state.displayedStep = -1;
   updateStepState();
+  emit('stop');
 }
 
 function resetPattern() {
@@ -333,6 +361,22 @@ sequencer.addEventListener('click', (event) => {
   if (!button) return;
   toggleStep(button.dataset.track, Number(button.dataset.step));
 });
+
+// Public timing interface for other modules. 'step' fires for every scheduled
+// step with { step, when (audio-clock seconds), bpm, stepDuration }; 'stop'
+// fires when playback stops so modules can cancel anything they scheduled.
+window.StepEngine = Object.freeze({
+  getAudioContext,
+  getMasterGain,
+  getBpm: () => state.bpm,
+  isPlaying: () => state.isPlaying,
+  on(type, listener) {
+    if (!listeners[type] || typeof listener !== 'function') throw new TypeError('StepEngine.on(type, listener): type must be "step" or "stop".');
+    listeners[type].add(listener);
+    return () => listeners[type].delete(listener);
+  }
+});
+document.dispatchEvent(new CustomEvent('stepengine:ready'));
 
 buildSequencer();
 updateTempo();
