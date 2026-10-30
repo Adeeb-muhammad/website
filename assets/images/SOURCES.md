@@ -46,3 +46,5 @@ Posters are stored locally; the artwork remains the property of its respective r
 - `to-your-eternity-poster.webp` — *To Your Eternity* / *Fumetsu no Anata e* (2021), promotional artwork sourced from the [public AnimeOtakuOnline catalog image](https://github.com/Animeotakuonline/animes-app/blob/main/src/paginas/img/2021/fumetsu-no-anata-e.jpg); artwork property of its original anime rightsholders.
 
 - `dhurandhar-2025-poster.webp` — *Dhurandhar* (2025), official promotional poster credited to @officialjiostudios via [Filmibeat](https://www.filmibeat.com/bollywood/movies/dhurandhar/photos.html).
+
+- `dhurandhar-the-revenge-2026-poster.webp` — *Dhurandhar: The Revenge* (2026), first-look promotional poster shared by Ranveer Singh and credited to @officialjiostudios, via [Aaj Tak](https://www.aajtak.in/visualstories/entertainment/ranveer-singh-intense-look-new-poster-out-ahead-of-dhurandhar-the-revenge-teaser-tmovh-273693-03-02-2026).
