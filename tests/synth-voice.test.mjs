@@ -257,7 +257,7 @@ test('stop() ramps the envelope down and is idempotent', () => {
     { events: envelope.gain.events.slice(-3) },
     [
       { type: 'cancel', time: 1.5 },
-      { type: 'set', value: 0.22, time: 1.5 },
+      { type: 'ramp', value: 0.22, time: 1.5 },
       { type: 'ramp', value: 0, time: 1.85 },
     ],
   );
@@ -266,7 +266,7 @@ test('stop() ramps the envelope down and is idempotent', () => {
 
   const events = envelope.gain.events.length;
   const stops = ctx.oscillators.map(oscillator => oscillator.stopCalls.length);
-  chord.stop(2);
+  chord.stop(1.2); // earlier than the first stop, so only the repeat guard can block it
   assertNear(chord.endTime, 1.85);
   assert.equal(envelope.gain.events.length, events, 'second stop adds no automation');
   assert.deepEqual(ctx.oscillators.map(oscillator => oscillator.stopCalls.length), stops);
@@ -278,7 +278,7 @@ test('stop() before the peak ramps from the current attack value', () => {
   chord.stop(0.25);
   const events = envelopeOf(ctx).gain.events;
   const anchor = events.at(-2);
-  assert.equal(anchor.type, 'set');
+  assert.equal(anchor.type, 'ramp');
   assertNear(anchor.value, 0.25, 'a quarter of the way up a one second attack');
 });
 
@@ -299,6 +299,86 @@ test('stop() does nothing once the chord has ended', () => {
   lateChord.stop(50);
   assert.equal(envelopeOf(late).gain.events.length, lateEvents);
   assertNear(lateChord.endTime, 1.35);
+});
+
+test('plays into the destination it is given, never ctx.destination', () => {
+  const ctx = fakeContext();
+  const output = fakeNode('master-gain');
+  playChord(ctx, output, [60, 64, 67], 0, 1);
+  assert.deepEqual(ctx.filters[0].connections, [output]);
+  const everyNode = [...ctx.gains, ...ctx.filters, ...ctx.oscillators];
+  assert.ok(everyNode.every(node => !node.connections.includes(ctx.destination)), 'nothing bypasses the given destination');
+});
+
+test('stop() during the natural release changes nothing and keeps the natural end', () => {
+  const ctx = fakeContext();
+  const chord = playChord(ctx, ctx.destination, [60, 64], 0, 1); // holds to 1, releases to 1.35
+  const envelope = envelopeOf(ctx);
+  const events = envelope.gain.events.length;
+  const stops = ctx.oscillators.map(oscillator => oscillator.stopCalls.length);
+  chord.stop(1.2);
+  assert.equal(envelope.gain.events.length, events, 'no new automation');
+  assert.deepEqual(ctx.oscillators.map(oscillator => oscillator.stopCalls.length), stops);
+  assertNear(chord.endTime, 1.35, 'the tail is not stretched past its natural end');
+});
+
+// Evaluates recorded gain automation the way Web Audio does: cancelScheduledValues(T) drops
+// events at or after T, and a linear ramp interpolates from the previous event to its own time.
+function gainCurve(events, initial = 1) {
+  let timeline = [];
+  for (const event of events) {
+    if (event.type === 'cancel') timeline = timeline.filter(item => item.time < event.time);
+    else {
+      timeline.push(event);
+      timeline.sort((a, b) => a.time - b.time);
+    }
+  }
+  return time => {
+    let previous = null;
+    let next = null;
+    for (const item of timeline) {
+      if (item.time <= time) previous = item;
+      else {
+        next = item;
+        break;
+      }
+    }
+    if (!previous) return initial;
+    if (next && next.type === 'ramp') return previous.value + (next.value - previous.value) * ((time - previous.time) / (next.time - previous.time));
+    return previous.value;
+  };
+}
+
+test('stop() never makes the volume jump, whenever it is called or scheduled', () => {
+  // Chord starts at 1.5, peaks at 1.54, holds to 2.5, releases to 2.85. A step above
+  // 0.02 in one millisecond (about 10% of the 0.22 peak) would be an audible click.
+  const MAX_STEP = 0.02;
+  const scenarios = [
+    { name: 'scheduled inside the attack', now: 1, at: 1.52 },
+    { name: 'scheduled inside the hold', now: 1, at: 2 },
+    { name: 'scheduled inside the release', now: 1, at: 2.6 },
+    { name: 'called now, during the attack', now: 1.52, at: 1.52 },
+    { name: 'called now, during the hold', now: 1.9, at: 1.9 },
+    { name: 'called now, during the release', now: 2.6, at: 2.6 },
+  ];
+  for (const scenario of scenarios) {
+    const ctx = fakeContext(1);
+    const chord = playChord(ctx, ctx.destination, [60, 64, 67], 1.5, 1);
+    ctx.currentTime = scenario.now; // audio before `now` has already been played
+    chord.stop(scenario.at);
+
+    const level = gainCurve(envelopeOf(ctx).gain.events);
+    assert.ok(chord.endTime <= 2.85 + EPSILON, `${scenario.name}: ends no later than the natural end`);
+    assertNear(level(chord.endTime), 0, `${scenario.name}: silent at the end`);
+    let previous = level(Math.max(scenario.now, 1.5));
+    let worst = 0;
+    for (let time = Math.max(scenario.now, 1.5) + 0.001; time <= chord.endTime; time += 0.001) {
+      const value = level(time);
+      worst = Math.max(worst, Math.abs(value - previous));
+      previous = value;
+    }
+    assert.ok(worst <= MAX_STEP, `${scenario.name}: largest one-millisecond step was ${worst.toFixed(4)}`);
+  }
 });
 
 test('disconnects every node only when the last oscillator ends', () => {

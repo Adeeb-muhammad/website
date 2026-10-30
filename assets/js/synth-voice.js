@@ -113,12 +113,16 @@ export function playChord(ctx, destination, midiNotes, when, duration, options =
     stop(at = ctx.currentTime) {
       if (stopIssued || finished) return;
       const requested = finiteNumber(at, 'stop time');
-      if (ctx.currentTime >= chord.endTime || requested >= chord.endTime) return;
+      // Already in (or past) the natural release: it is fading out on its own,
+      // and stopping now would only stretch the tail past its natural end.
+      if (ctx.currentTime >= chord.endTime || requested >= holdEnd) return;
 
       stopIssued = true;
       const from = Math.max(requested, start);
       envelope.gain.cancelScheduledValues(from);
-      envelope.gain.setValueAtTime(valueAt(from), from);
+      // Ramp (not jump) to the envelope value at `from`, so a stop scheduled for
+      // later keeps following the original attack or release curve until then.
+      envelope.gain.linearRampToValueAtTime(valueAt(from), from);
       envelope.gain.linearRampToValueAtTime(0, from + release);
       chord.endTime = from + release;
       for (const oscillator of oscillators) oscillator.stop(chord.endTime + STOP_TAIL);
