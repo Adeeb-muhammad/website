@@ -1,16 +1,9 @@
-/* REC_002 — frame the sequel artwork so its large title treatment sits lower and has room around it. */
-.film-card[data-record="dhurandhar-the-revenge-2026"] .poster-frame {
-  background: radial-gradient(ellipse at 50% 42%, #281112 0%, #151011 72%);
-}
-
+/* Keep both Dhurandhar posters filling the same portrait frame as the rest of the film archive. */
+.film-card[data-record="dhurandhar-2025"] .poster-frame img,
 .film-card[data-record="dhurandhar-the-revenge-2026"] .poster-frame img {
-  inset: 4% 5%;
-  width: 90%;
-  height: 92%;
-  object-fit: contain;
-  object-position: 50% 82%;
-}
-
-.film-card[data-record="dhurandhar-the-revenge-2026"] .film-card-content {
-  padding-top: 24px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
