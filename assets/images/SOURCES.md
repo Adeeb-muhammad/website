@@ -44,3 +44,5 @@ Posters are stored locally so the public diary does not depend on third-party im
 Posters are stored locally; the artwork remains the property of its respective rightsholders.
 
 - `to-your-eternity-poster.webp` — *To Your Eternity* / *Fumetsu no Anata e* (2021), promotional artwork sourced from the [public AnimeOtakuOnline catalog image](https://github.com/Animeotakuonline/animes-app/blob/main/src/paginas/img/2021/fumetsu-no-anata-e.jpg); artwork property of its original anime rightsholders.
+
+- `dhurandhar-2025-poster.webp` — *Dhurandhar* (2025), official promotional poster credited to @officialjiostudios via [Filmibeat](https://www.filmibeat.com/bollywood/movies/dhurandhar/photos.html).
