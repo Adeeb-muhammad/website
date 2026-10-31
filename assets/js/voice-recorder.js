@@ -65,6 +65,9 @@ function browserClearTimeout(...args) {
   return globalThis.clearTimeout(...args);
 }
 
+const CANCELLED = Object.freeze({ code: 'cancelled', message: 'Recording was cancelled.' });
+const MAX_SECONDS_LIMIT = 3600;
+
 export function createRecorder({
   getUserMedia = browserGetUserMedia(),
   MediaRecorder = globalThis.MediaRecorder,
@@ -72,12 +75,17 @@ export function createRecorder({
   setTimeout = browserSetTimeout,
   clearTimeout = browserClearTimeout
 } = {}) {
+  if (typeof maxSeconds !== 'number' || !Number.isFinite(maxSeconds) || maxSeconds <= 0 || maxSeconds > MAX_SECONDS_LIMIT) {
+    throw new RangeError(`maxSeconds must be a number above 0 and at most ${MAX_SECONDS_LIMIT}.`);
+  }
   let currentState = 'idle';
   let stream = null;
   let recorder = null;
   let chunks = [];
   let timerId = null;
   let lastResult = null;
+  let session = 0; // changes on start() and discard() so late events from an old recording can be ignored
+  let stopping = null;
   const subscribers = new Set();
 
   const setState = (nextState) => {
@@ -98,7 +106,8 @@ export function createRecorder({
     timerId = null;
   };
 
-  const makeResult = () => {
+  const makeResult = (ticket) => {
+    if (ticket !== session) return Promise.reject(CANCELLED);
     const mimeType = recorder?.mimeType || recorder?.options?.mimeType || '';
     const blob = new Blob(chunks, { type: mimeType });
     if (blob.size === 0) {
@@ -109,38 +118,46 @@ export function createRecorder({
     return Promise.resolve({ blob, mimeType, extension: extensionFor(mimeType) });
   };
 
-  const finish = (resultPromise, nextState = 'stopped') => {
+  const finish = (resultPromise, ticket) => {
     clearMaxTimer();
     stopTracks();
     return resultPromise.then((result) => {
+      stopping = null;
+      if (ticket !== session) throw CANCELLED; // discarded while stopping: do not bring the recording back
       lastResult = result;
-      setState(nextState);
+      setState('stopped');
       return result;
     }, (error) => {
+      stopping = null;
+      if (ticket !== session) throw CANCELLED;
       setState('error');
       throw error;
     });
   };
 
   const stopInternal = () => {
+    if (stopping) return stopping; // a second Stop (or the max-length timer) shares the pending stop
     if (!recorder) {
       stopTracks();
       setState('error');
       return Promise.reject({ code: 'unknown', message: 'The recorder is unavailable.' });
     }
 
+    const ticket = session;
+    const active = recorder;
     const result = new Promise((resolve, reject) => {
-      recorder.__resolve = resolve;
-      recorder.__reject = reject;
+      active.__resolve = resolve;
+      active.__reject = reject;
     });
 
     try {
-      recorder.stop();
+      active.stop();
     } catch (error) {
-      recorder.__reject(describeMicError(error));
+      active.__reject(describeMicError(error));
     }
 
-    return finish(result.then(() => makeResult()), 'stopped');
+    stopping = finish(result.then(() => makeResult(ticket)), ticket);
+    return stopping;
   };
 
   const start = () => {
@@ -155,21 +172,41 @@ export function createRecorder({
         throw error;
       }
 
+      const mySession = ++session;
       lastResult = null;
       setState('requesting');
+
+      let acquired;
       try {
-        stream = await getUserMedia({ audio: true });
+        acquired = await getUserMedia({ audio: true });
+      } catch (error) {
+        if (mySession !== session) throw CANCELLED; // discarded while the permission prompt was open
+        setState('error');
+        throw describeMicError(error);
+      }
+      if (mySession !== session) {
+        // Discarded while the prompt was open and permission was granted afterwards: release the microphone.
+        acquired.getTracks().forEach((track) => track.stop());
+        throw CANCELLED;
+      }
+      stream = acquired;
+
+      try {
         const requestedMimeType = pickMimeType((mimeType) => MediaRecorder.isTypeSupported(mimeType));
         const mediaRecorder = requestedMimeType
           ? new MediaRecorder(stream, { mimeType: requestedMimeType })
           : new MediaRecorder(stream);
         recorder = mediaRecorder;
-        chunks = [];
+        const ownChunks = [];
+        chunks = ownChunks;
 
+        // Events from a recorder that has since been discarded must not touch the current recording.
         mediaRecorder.ondataavailable = (event) => {
-          if (event.data && event.data.size > 0) chunks.push(event.data);
+          if (recorder !== mediaRecorder) return;
+          if (event.data && event.data.size > 0) ownChunks.push(event.data);
         };
         mediaRecorder.onerror = (event) => {
+          if (recorder !== mediaRecorder) return;
           const error = describeMicError(event.error || event);
           clearMaxTimer();
           stopTracks();
@@ -177,6 +214,7 @@ export function createRecorder({
           setState('error');
         };
         mediaRecorder.onstop = () => {
+          if (recorder !== mediaRecorder) return;
           if (mediaRecorder.__resolve) mediaRecorder.__resolve();
         };
         mediaRecorder.start();
@@ -185,7 +223,7 @@ export function createRecorder({
           if (currentState === 'recording') {
             stopInternal().catch(() => {});
           }
-        }, Math.max(0, maxSeconds) * 1000);
+        }, maxSeconds * 1000);
       } catch (error) {
         clearMaxTimer();
         stopTracks();
@@ -203,7 +241,10 @@ export function createRecorder({
   };
 
   const discard = () => {
+    session += 1;
+    stopping = null;
     clearMaxTimer();
+    if (recorder?.__reject) recorder.__reject(CANCELLED); // settle a Stop that is still waiting for the browser
     if (recorder && currentState === 'recording') {
       try {
         recorder.stop();

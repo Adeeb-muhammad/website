@@ -253,3 +253,203 @@ test('rejects unsupported APIs', async () => {
   await assert.rejects(recorder.start(), { code: 'unsupported' });
   assert.equal(recorder.state, 'error');
 });
+
+// ---------------------------------------------------------------------------------------------
+// Races and edge cases. These use a fake MediaRecorder that, like a real browser, delivers its
+// final data and "stop" event a moment AFTER stop() is called, and a getUserMedia that takes
+// time to answer (the permission prompt).
+// ---------------------------------------------------------------------------------------------
+const pause = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
+
+function asyncWorld({ permissionDelay = 20, fail = null } = {}) {
+  const world = { streams: [], recorders: [], getUserMediaCalls: [] };
+  world.getUserMedia = async constraints => {
+    world.getUserMediaCalls.push(constraints);
+    await pause(permissionDelay);
+    if (fail) throw Object.assign(new Error(fail), { name: fail });
+    const tracks = [{ stopped: false, stop() { this.stopped = true; } }];
+    const stream = { tracks, getTracks: () => tracks };
+    world.streams.push(stream);
+    return stream;
+  };
+  world.MediaRecorder = class {
+    static isTypeSupported(type) { return type === 'audio/webm;codecs=opus'; }
+    constructor(stream, options) { this.mimeType = options?.mimeType || ''; this.state = 'inactive'; this.started = false; world.recorders.push(this); }
+    start() { this.state = 'recording'; this.started = true; }
+    stop() {
+      if (this.state === 'inactive') throw Object.assign(new Error('already stopped'), { name: 'InvalidStateError' });
+      this.state = 'inactive';
+      setTimeout(() => { this.ondataavailable?.({ data: new Blob([new Uint8Array(10)]) }); this.onstop?.(); }, 5);
+    }
+  };
+  world.micOn = () => world.streams.some(stream => stream.tracks.some(track => !track.stopped));
+  world.recorder = options => createRecorder({ getUserMedia: world.getUserMedia, MediaRecorder: world.MediaRecorder, ...options });
+  return world;
+}
+
+test('creating a recorder never touches the microphone; start() asks for audio only', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  assert.equal(world.getUserMediaCalls.length, 0);
+  await recorder.start();
+  assert.deepEqual(world.getUserMediaCalls, [{ audio: true }]);
+  recorder.discard();
+});
+
+test('a normal recording works with a browser-style asynchronous stop', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  const states = [];
+  recorder.onState(state => states.push(state));
+  await recorder.start();
+  await pause(5);
+  const result = await recorder.stop();
+  assert.equal(result.blob.size, 10);
+  assert.equal(result.extension, 'webm');
+  assert.equal(world.micOn(), false);
+  assert.deepEqual(states, ['requesting', 'recording', 'stopped'], 'each state is reported once, in order');
+});
+
+test('Discard while the permission prompt is open: nothing records and the microphone stays off', async () => {
+  const world = asyncWorld({ permissionDelay: 30 });
+  const recorder = world.recorder();
+  const started = recorder.start();
+  await pause(5);
+  recorder.discard();
+  await assert.rejects(started, { code: 'cancelled' });
+  await pause(50);
+  assert.equal(recorder.state, 'idle');
+  assert.equal(world.recorders.length, 0, 'no MediaRecorder was created');
+  assert.equal(world.micOn(), false, 'permission granted after the discard must release the microphone');
+});
+
+test('Discard while the prompt is open, then an error: reported as cancelled, not as an error state', async () => {
+  const world = asyncWorld({ permissionDelay: 20, fail: 'NotAllowedError' });
+  const recorder = world.recorder();
+  const started = recorder.start();
+  await pause(5);
+  recorder.discard();
+  await assert.rejects(started, { code: 'cancelled' });
+  assert.equal(recorder.state, 'idle');
+});
+
+test('a second start() while the first prompt is still open cancels the first one', async () => {
+  const world = asyncWorld({ permissionDelay: 20 });
+  const recorder = world.recorder();
+  const first = recorder.start();
+  await pause(5);
+  recorder.discard();
+  const second = recorder.start();
+  await assert.rejects(first, { code: 'cancelled' });
+  await second;
+  assert.equal(recorder.state, 'recording');
+  assert.equal(world.recorders.length, 1, 'only the second start created a recorder');
+  recorder.discard();
+  assert.equal(world.micOn(), false);
+});
+
+test('pressing Stop twice settles both calls with the same result', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  await recorder.start();
+  await pause(5);
+  const first = recorder.stop();
+  const second = recorder.stop();
+  const [a, b] = await Promise.all([first, second]);
+  assert.equal(a, b);
+  assert.equal(a.blob.size, 10);
+  assert.equal(recorder.state, 'stopped');
+  assert.equal(world.micOn(), false);
+});
+
+test('Discard while a stop is pending keeps the recording discarded', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  await recorder.start();
+  await pause(5);
+  const stopping = recorder.stop();
+  recorder.discard();
+  await assert.rejects(stopping, { code: 'cancelled' });
+  await pause(20);
+  assert.equal(recorder.state, 'idle');
+  assert.equal(recorder.result, null);
+});
+
+test('audio from a discarded recording never leaks into the next one', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  await recorder.start();
+  await pause(5);
+  recorder.discard(); // the old recorder still has data and a stop event queued
+  await recorder.start();
+  await pause(1);
+  await pause(10);
+  const result = await recorder.stop();
+  assert.equal(result.blob.size, 10, 'only the new recording audio');
+});
+
+test('late errors from a discarded recorder are ignored', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  await recorder.start();
+  const old = world.recorders[0];
+  recorder.discard();
+  old.onerror({ error: { name: 'NotReadableError' } });
+  old.onstop();
+  assert.equal(recorder.state, 'idle');
+});
+
+test('discard() clears the stored result, and is silent when already idle', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const recorder = world.recorder();
+  const states = [];
+  await recorder.start();
+  await pause(5);
+  await recorder.stop();
+  assert.equal(recorder.result.blob.size, 10);
+  recorder.onState(state => states.push(state));
+  recorder.discard();
+  assert.equal(recorder.result, null);
+  recorder.discard();
+  assert.deepEqual(states, ['idle'], 'a second discard reports nothing');
+});
+
+test('maxSeconds must be a sensible number, or creating the recorder throws', () => {
+  const world = asyncWorld();
+  for (const bad of [0, -1, NaN, Infinity, 3601, 1e7, '30', null]) {
+    assert.throws(() => world.recorder({ maxSeconds: bad }), RangeError, `maxSeconds=${String(bad)}`);
+  }
+  assert.doesNotThrow(() => world.recorder({ maxSeconds: 0.5 }));
+  assert.doesNotThrow(() => world.recorder({ maxSeconds: 3600 }));
+  assert.doesNotThrow(() => world.recorder());
+});
+
+test('the max-length timer waits maxSeconds in milliseconds and is cleared when recording ends', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  const timers = [];
+  const cleared = [];
+  const recorder = world.recorder({
+    maxSeconds: 7,
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout: id => cleared.push(id)
+  });
+  await recorder.start();
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, 7000);
+  await pause(5);
+  await recorder.stop();
+  assert.deepEqual(cleared, [1], 'the pending timer is cancelled by Stop');
+});
+
+test('the max-length timer firing while a manual stop is pending shares that stop', async () => {
+  const world = asyncWorld({ permissionDelay: 0 });
+  let fire;
+  const recorder = world.recorder({ setTimeout: fn => { fire = fn; return 1; }, clearTimeout() {} });
+  await recorder.start();
+  await pause(5);
+  const manual = recorder.stop();
+  fire();
+  const result = await manual;
+  assert.equal(result.blob.size, 10);
+  assert.equal(recorder.state, 'stopped');
+});
