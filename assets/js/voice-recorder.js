@@ -48,6 +48,8 @@ export function extensionFor(mimeType) {
 
 /** Convert browser microphone errors into stable codes and plain-language messages. */
 export function describeMicError(error) {
+  if (error == null) return errorResult('unsupported');
+
   const name = typeof error?.name === 'string' ? error.name : '';
   let code = 'unknown';
 
