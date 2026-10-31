@@ -1,241 +1,320 @@
-const MIME_TYPES = [
+const MIME_CANDIDATES = Object.freeze([
   'audio/webm;codecs=opus',
   'audio/webm',
   'audio/mp4;codecs=mp4a.40.2',
   'audio/mp4',
   'audio/ogg;codecs=opus'
-];
+]);
 
-export function pickMimeType(isTypeSupported) {
-  if (typeof isTypeSupported !== 'function') return '';
-  return MIME_TYPES.find((mimeType) => {
-    try {
-      return isTypeSupported(mimeType) === true;
-    } catch {
-      return false;
-    }
-  }) || '';
+const ERROR_MESSAGES = Object.freeze({
+  denied: 'Microphone access was denied. Allow microphone access in your browser settings and try again.',
+  'no-device': 'No microphone was found. Connect or enable a microphone and try again.',
+  busy: 'The microphone is unavailable. Close other apps using it and try again.',
+  insecure: 'Microphone access requires a secure connection, such as HTTPS or localhost.',
+  unsupported: 'Microphone recording is not supported in this browser.',
+  unknown: 'The microphone could not be started. Please try again.',
+  empty: 'The recording contains no audio. Try recording again.'
+});
+
+function errorResult(code) {
+  return { code, message: ERROR_MESSAGES[code] ?? ERROR_MESSAGES.unknown };
 }
 
+/** Return the first MIME type the supplied MediaRecorder support check accepts. */
+export function pickMimeType(isTypeSupported) {
+  if (typeof isTypeSupported !== 'function') return '';
+
+  for (const mimeType of MIME_CANDIDATES) {
+    try {
+      if (isTypeSupported(mimeType)) return mimeType;
+    } catch {
+      // A browser's support probe should not prevent trying the next candidate.
+    }
+  }
+  return '';
+}
+
+/** Return a file extension based on the MIME type, ignoring codec parameters and case. */
 export function extensionFor(mimeType) {
-  const mediaType = String(mimeType || '').split(';', 1)[0].trim().toLowerCase();
+  const mediaType = typeof mimeType === 'string'
+    ? mimeType.split(';', 1)[0].trim().toLowerCase()
+    : '';
+
   if (mediaType === 'audio/webm') return 'webm';
   if (mediaType === 'audio/mp4') return 'm4a';
   if (mediaType === 'audio/ogg') return 'ogg';
   return 'bin';
 }
 
-const MIC_ERRORS = new Map([
-  ['NotAllowedError', ['denied', 'Microphone permission was denied.']],
-  ['PermissionDeniedError', ['denied', 'Microphone permission was denied.']],
-  ['NotFoundError', ['no-device', 'No microphone was found.']],
-  ['DevicesNotFoundError', ['no-device', 'No microphone was found.']],
-  ['NotReadableError', ['busy', 'The microphone is busy or unavailable.']],
-  ['TrackStartError', ['busy', 'The microphone is busy or unavailable.']],
-  ['SecurityError', ['insecure', 'Microphone access requires a secure connection.']],
-  ['NotSupportedError', ['unsupported', 'This browser does not support microphone recording.']]
-]);
-
+/** Convert browser microphone errors into stable codes and plain-language messages. */
 export function describeMicError(error) {
-  if (!error || error.code === 'unsupported') {
-    return { code: 'unsupported', message: 'This browser does not support microphone recording.' };
+  const name = typeof error?.name === 'string' ? error.name : '';
+  let code = 'unknown';
+
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    code = 'denied';
+  } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    code = 'no-device';
+  } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+    code = 'busy';
+  } else if (name === 'SecurityError') {
+    code = 'insecure';
   }
 
-  const result = MIC_ERRORS.get(error.name);
-  if (result) return { code: result[0], message: result[1] };
-
-  return {
-    code: 'unknown',
-    message: error.message || 'The microphone could not be started.'
-  };
+  return errorResult(code);
 }
 
-function browserGetUserMedia() {
+function defaultGetUserMedia() {
   const mediaDevices = globalThis.navigator?.mediaDevices;
   return typeof mediaDevices?.getUserMedia === 'function'
     ? mediaDevices.getUserMedia.bind(mediaDevices)
     : undefined;
 }
 
-function browserSetTimeout(...args) {
-  return globalThis.setTimeout(...args);
+function stopTracks(stream) {
+  try {
+    for (const track of stream?.getTracks?.() ?? []) {
+      try { track.stop(); } catch { /* A track may already have ended. */ }
+    }
+  } catch {
+    // A malformed or already-closed stream must not block recorder cleanup.
+  }
 }
 
-function browserClearTimeout(...args) {
-  return globalThis.clearTimeout(...args);
+function clearTimer(timer, clearTimerFn) {
+  if (timer !== null) {
+    try { clearTimerFn(timer); } catch { /* Cleanup should continue if an injected timer throws. */ }
+  }
 }
 
+/**
+ * Create an independently testable MediaRecorder controller. No browser API is
+ * accessed until start() is called; all browser-facing dependencies are injectable.
+ */
 export function createRecorder({
-  getUserMedia = browserGetUserMedia(),
-  MediaRecorder = globalThis.MediaRecorder,
+  getUserMedia = defaultGetUserMedia(),
+  MediaRecorder: MediaRecorderClass = globalThis.MediaRecorder,
   maxSeconds = 120,
-  setTimeout = browserSetTimeout,
-  clearTimeout = browserClearTimeout
+  setTimeout: setTimer = globalThis.setTimeout?.bind(globalThis),
+  clearTimeout: clearTimerFn = globalThis.clearTimeout?.bind(globalThis)
 } = {}) {
+  if (!Number.isFinite(maxSeconds) || maxSeconds <= 0) {
+    throw new RangeError('maxSeconds must be a positive finite number.');
+  }
+  if (typeof setTimer !== 'function' || typeof clearTimerFn !== 'function') {
+    throw new TypeError('A working setTimeout and clearTimeout are required.');
+  }
+
   let currentState = 'idle';
   let stream = null;
-  let recorder = null;
+  let mediaRecorder = null;
   let chunks = [];
-  let timerId = null;
+  let timer = null;
+  let generation = 0;
+  let pendingStop = null;
   let lastResult = null;
-  const subscribers = new Set();
+  const stateListeners = new Set();
 
-  const setState = (nextState) => {
+  function setState(nextState) {
     if (currentState === nextState) return;
     currentState = nextState;
-    subscribers.forEach((listener) => listener(currentState));
-  };
+    for (const listener of [...stateListeners]) {
+      try { listener(currentState); } catch { /* Observers must not interrupt recorder state changes. */ }
+    }
+  }
 
-  const stopTracks = () => {
-    if (!stream) return;
-    stream.getTracks().forEach((track) => track.stop());
+  function cancelTimer() {
+    clearTimer(timer, clearTimerFn);
+    timer = null;
+  }
+
+  function detachRecorder(recorder) {
+    if (!recorder) return;
+    recorder.ondataavailable = null;
+    recorder.onstop = null;
+    recorder.onerror = null;
+  }
+
+  function releaseMedia({ stopRecorder = false } = {}) {
+    cancelTimer();
+    const recorder = mediaRecorder;
+    detachRecorder(recorder);
+    if (stopRecorder && recorder) {
+      try {
+        if (recorder.state !== 'inactive') recorder.stop();
+      } catch { /* Tracks are still stopped below. */ }
+    }
+    stopTracks(stream);
     stream = null;
-  };
+    mediaRecorder = null;
+  }
 
-  const clearMaxTimer = () => {
-    if (timerId === null) return;
-    clearTimeout(timerId);
-    timerId = null;
-  };
+  function fail(error, token = generation) {
+    if (token !== generation) return;
+    generation += 1;
+    releaseMedia({ stopRecorder: true });
+    chunks = [];
+    lastResult = null;
+    const result = error && typeof error.code === 'string' && typeof error.message === 'string'
+      ? error
+      : describeMicError(error);
+    setState('error');
+    if (pendingStop) {
+      const reject = pendingStop.reject;
+      pendingStop = null;
+      reject(result);
+    }
+  }
 
-  const makeResult = () => {
-    const mimeType = recorder?.mimeType || recorder?.options?.mimeType || '';
-    const blob = new Blob(chunks, { type: mimeType });
+  function completeStop(token, recorder) {
+    if (token !== generation || recorder !== mediaRecorder) return;
+
+    cancelTimer();
+    const actualMimeType = typeof recorder.mimeType === 'string' ? recorder.mimeType : '';
+    const blob = new Blob(chunks, { type: actualMimeType });
+    const result = {
+      blob,
+      mimeType: actualMimeType,
+      extension: extensionFor(actualMimeType)
+    };
+
+    // MediaRecorder's final dataavailable event precedes stop. Release the tracks only
+    // after onstop so the final encoded bytes are already in chunks.
+    stopTracks(stream);
+    stream = null;
+    detachRecorder(recorder);
+    mediaRecorder = null;
+    chunks = [];
+
+    const stopWaiter = pendingStop;
+    pendingStop = null;
+
     if (blob.size === 0) {
-      const error = { code: 'empty', message: 'The recording contained no audio.' };
+      lastResult = null;
+      const emptyError = errorResult('empty');
       setState('error');
-      return Promise.reject(error);
-    }
-    return Promise.resolve({ blob, mimeType, extension: extensionFor(mimeType) });
-  };
-
-  const finish = (resultPromise, nextState = 'stopped') => {
-    clearMaxTimer();
-    stopTracks();
-    return resultPromise.then((result) => {
-      lastResult = result;
-      setState(nextState);
-      return result;
-    }, (error) => {
-      setState('error');
-      throw error;
-    });
-  };
-
-  const stopInternal = () => {
-    if (!recorder) {
-      stopTracks();
-      setState('error');
-      return Promise.reject({ code: 'unknown', message: 'The recorder is unavailable.' });
+      stopWaiter?.reject(emptyError);
+      return;
     }
 
-    const result = new Promise((resolve, reject) => {
-      recorder.__resolve = resolve;
-      recorder.__reject = reject;
+    setState('stopped');
+    lastResult = result;
+    stopWaiter?.resolve(result);
+  }
+
+  function requestStop() {
+    if (currentState !== 'recording' || !mediaRecorder || pendingStop) {
+      throw new Error('Cannot stop: the recorder is not recording.');
+    }
+
+    cancelTimer();
+    const recorder = mediaRecorder;
+    const token = generation;
+    const completion = new Promise((resolve, reject) => {
+      pendingStop = { resolve, reject };
     });
 
     try {
       recorder.stop();
     } catch (error) {
-      recorder.__reject(describeMicError(error));
+      fail(error, token);
     }
 
-    return finish(result.then(() => makeResult()), 'stopped');
-  };
+    return completion;
+  }
 
-  const start = () => {
+  function start() {
     if (currentState === 'requesting' || currentState === 'recording') {
-      throw new Error('A recording is already in progress.');
+      throw new Error('Cannot start while recorder is ' + currentState + '.');
     }
 
-    return (async () => {
-      if (typeof getUserMedia !== 'function' || typeof MediaRecorder !== 'function') {
-        const error = describeMicError({ code: 'unsupported' });
-        setState('error');
-        throw error;
-      }
-
-      lastResult = null;
-      setState('requesting');
-      try {
-        stream = await getUserMedia({ audio: true });
-        const requestedMimeType = pickMimeType((mimeType) => MediaRecorder.isTypeSupported(mimeType));
-        const mediaRecorder = requestedMimeType
-          ? new MediaRecorder(stream, { mimeType: requestedMimeType })
-          : new MediaRecorder(stream);
-        recorder = mediaRecorder;
-        chunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data && event.data.size > 0) chunks.push(event.data);
-        };
-        mediaRecorder.onerror = (event) => {
-          const error = describeMicError(event.error || event);
-          clearMaxTimer();
-          stopTracks();
-          if (mediaRecorder.__reject) mediaRecorder.__reject(error);
-          setState('error');
-        };
-        mediaRecorder.onstop = () => {
-          if (mediaRecorder.__resolve) mediaRecorder.__resolve();
-        };
-        mediaRecorder.start();
-        setState('recording');
-        timerId = setTimeout(() => {
-          if (currentState === 'recording') {
-            stopInternal().catch(() => {});
-          }
-        }, Math.max(0, maxSeconds) * 1000);
-      } catch (error) {
-        clearMaxTimer();
-        stopTracks();
-        setState('error');
-        throw describeMicError(error);
-      }
-    })();
-  };
-
-  const stop = () => {
-    if (currentState !== 'recording') {
-      throw new Error('Recording is not active.');
-    }
-    return stopInternal();
-  };
-
-  const discard = () => {
-    clearMaxTimer();
-    if (recorder && currentState === 'recording') {
-      try {
-        recorder.stop();
-      } catch {
-        // The recording is discarded regardless of the recorder's stop state.
-      }
-    }
-    recorder = null;
+    generation += 1;
+    const token = generation;
     chunks = [];
     lastResult = null;
-    stopTracks();
+    cancelTimer();
+    setState('requesting');
+
+    return (async () => {
+      try {
+        if (typeof getUserMedia !== 'function' || typeof MediaRecorderClass !== 'function') {
+          const unsupported = errorResult('unsupported');
+          fail(unsupported, token);
+          throw unsupported;
+        }
+
+        const acquiredStream = await getUserMedia({ audio: true });
+        if (token !== generation || currentState !== 'requesting') {
+          stopTracks(acquiredStream);
+          throw { code: 'cancelled', message: 'The recording request was cancelled.' };
+        }
+
+        stream = acquiredStream;
+        const mimeType = pickMimeType(
+          typeof MediaRecorderClass.isTypeSupported === 'function'
+            ? MediaRecorderClass.isTypeSupported.bind(MediaRecorderClass)
+            : undefined
+        );
+        const recorder = mimeType
+          ? new MediaRecorderClass(stream, { mimeType })
+          : new MediaRecorderClass(stream);
+        mediaRecorder = recorder;
+
+        recorder.ondataavailable = event => {
+          if (token !== generation || recorder !== mediaRecorder) return;
+          const data = event?.data;
+          if (data && (typeof data.size !== 'number' || data.size > 0)) chunks.push(data);
+        };
+        recorder.onstop = () => completeStop(token, recorder);
+        recorder.onerror = event => fail(event?.error ?? event, token);
+
+        recorder.start();
+        if (token !== generation) {
+          throw { code: 'cancelled', message: 'The recording request was cancelled.' };
+        }
+        setState('recording');
+        timer = setTimer(() => {
+          if (token === generation && currentState === 'recording') {
+            requestStop().catch(() => { /* The error state is reported through onState. */ });
+          }
+        }, maxSeconds * 1000);
+      } catch (error) {
+        if (token === generation) fail(error, token);
+        throw error && typeof error.code === 'string'
+          ? error
+          : describeMicError(error);
+      }
+    })();
+  }
+
+  function stop() {
+    return requestStop();
+  }
+
+  function discard() {
+    generation += 1;
+    releaseMedia({ stopRecorder: true });
+    chunks = [];
+    lastResult = null;
+    const stopWaiter = pendingStop;
+    pendingStop = null;
+    stopWaiter?.reject({ code: 'discarded', message: 'The recording was discarded.' });
     setState('idle');
-  };
+  }
+
+  function onState(listener) {
+    if (typeof listener !== 'function') throw new TypeError('onState expects a function.');
+    stateListeners.add(listener);
+    return () => stateListeners.delete(listener);
+  }
 
   const api = {
-    get state() {
-      return currentState;
-    },
+    get state() { return currentState; },
     start,
     stop,
     discard,
-    onState(listener) {
-      if (typeof listener !== 'function') throw new TypeError('onState requires a function.');
-      subscribers.add(listener);
-      return () => subscribers.delete(listener);
-    }
+    onState
   };
-
-  Object.defineProperty(api, 'result', {
-    get: () => lastResult,
-    enumerable: false
-  });
-
+  Object.defineProperty(api, 'result', { get: () => lastResult, enumerable: false });
   return api;
 }
