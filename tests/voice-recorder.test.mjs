@@ -164,6 +164,8 @@ test('describeMicError maps every specified browser error name', () => {
     assert.ok(result.message.length > 0, name + ' has a message');
     assert.equal(typeof result.message, 'string');
   }
+  assert.equal(describeMicError(undefined).code, 'unsupported');
+  assert.equal(describeMicError(null).code, 'unsupported');
 });
 
 // Recorder lifecycle
