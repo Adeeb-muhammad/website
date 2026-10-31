@@ -1,3 +1,5 @@
+import { createMasterLimiter } from './master-limiter.js?v=1';
+
 const tracks = [
   { id: 'kick', name: 'Kick', pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1] },
   { id: 'snare', name: 'Snare', pattern: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0] },
@@ -13,6 +15,7 @@ const state = {
   audioContext: null,
   noiseBuffer: null,
   masterGain: null,
+  masterLimiter: null,
   nextNoteTime: 0,
   displayedStep: -1,
   visualTimers: new Set(),
@@ -33,14 +36,18 @@ function getAudioContext() {
   return state.audioContext;
 }
 
-// Shared master bus. Unity gain, so the existing drum sound is unchanged. New
-// modules (chords, voice, looper) connect here to share one output.
+// Shared master bus. New modules (chords, voice, looper) connect here so the
+// final-stage limiter protects the complete mix without changing voice levels.
 function getMasterGain() {
   const audioContext = getAudioContext();
   if (!state.masterGain) {
-    state.masterGain = audioContext.createGain();
-    state.masterGain.gain.value = 1;
-    state.masterGain.connect(audioContext.destination);
+    const masterGain = audioContext.createGain();
+    const masterLimiter = createMasterLimiter(audioContext);
+    masterGain.gain.value = 1;
+    masterGain.connect(masterLimiter);
+    masterLimiter.connect(audioContext.destination);
+    state.masterGain = masterGain;
+    state.masterLimiter = masterLimiter;
   }
   return state.masterGain;
 }
