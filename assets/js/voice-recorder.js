@@ -100,8 +100,8 @@ export function createRecorder({
   setTimeout: setTimer = globalThis.setTimeout?.bind(globalThis),
   clearTimeout: clearTimerFn = globalThis.clearTimeout?.bind(globalThis)
 } = {}) {
-  if (!Number.isFinite(maxSeconds) || maxSeconds <= 0) {
-    throw new RangeError('maxSeconds must be a positive finite number.');
+  if (!Number.isFinite(maxSeconds) || maxSeconds <= 0 || maxSeconds > 3600) {
+    throw new RangeError('maxSeconds must be a finite number above 0 and at most 3600.');
   }
   if (typeof setTimer !== 'function' || typeof clearTimerFn !== 'function') {
     throw new TypeError('A working setTimeout and clearTimeout are required.');
@@ -277,7 +277,11 @@ export function createRecorder({
         setState('recording');
         timer = setTimer(() => {
           if (token === generation && currentState === 'recording') {
-            requestStop().catch(() => { /* The error state is reported through onState. */ });
+            try {
+              requestStop().catch(() => { /* The error state is reported through onState. */ });
+            } catch {
+              // A manual Stop is already in progress.
+            }
           }
         }, maxSeconds * 1000);
       } catch (error) {

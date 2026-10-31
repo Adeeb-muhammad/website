@@ -412,8 +412,51 @@ test('state observers cannot break recording transitions', async () => {
   assert.equal(h.recorder.state, 'stopped');
 });
 
-test('maxSeconds must be a positive finite number', () => {
+test('maxSeconds rejects values outside the supported finite range', () => {
   const timers = makeTimers();
-  assert.throws(() => createRecorder({ maxSeconds: 0, setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout }), RangeError);
-  assert.throws(() => createRecorder({ maxSeconds: Infinity, setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout }), RangeError);
+  const options = { setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout };
+  for (const maxSeconds of [0, -1, NaN, Infinity, -Infinity, 3601, 1e7]) {
+    assert.throws(
+      () => createRecorder({ ...options, maxSeconds }),
+      error => error instanceof RangeError
+        && error.message === 'maxSeconds must be a finite number above 0 and at most 3600.',
+      String(maxSeconds)
+    );
+  }
+});
+
+test('maxSeconds accepts fractional values and the 3600-second upper bound', () => {
+  const timers = makeTimers();
+  const options = { setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout };
+  assert.equal(createRecorder({ ...options, maxSeconds: 0.5 }).state, 'idle');
+  assert.equal(createRecorder({ ...options, maxSeconds: 3600 }).state, 'idle');
+});
+
+test('a queued max-duration callback during manual Stop does not interrupt asynchronous completion', async () => {
+  const AsyncStopRecorder = class extends makeMediaRecorderClass() {
+    stop() {
+      this.stopCalls += 1;
+      this.state = 'inactive';
+      queueMicrotask(() => {
+        this.emitData('final asynchronous audio');
+        this.onstop?.();
+      });
+    }
+  };
+  const h = makeHarness({ MediaRecorder: AsyncStopRecorder, maxSeconds: 2 });
+  await h.recorder.start();
+
+  const timerId = h.timers.firstId();
+  const queuedTimerCallback = h.timers.scheduled.get(timerId).fn;
+  const pendingStop = h.recorder.stop();
+
+  // The browser may already have queued this callback when clearTimeout runs.
+  assert.equal(h.timers.scheduled.size, 0);
+  assert.doesNotThrow(() => queuedTimerCallback());
+
+  const result = await pendingStop;
+  assert.equal(await result.blob.text(), 'final asynchronous audio');
+  assert.equal(h.recorder.state, 'stopped');
+  assert.equal(h.recorder.result, result);
+  assert.equal(h.stream.stopCalls, 2);
 });
