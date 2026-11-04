@@ -22,8 +22,9 @@ These rules apply to every assistant: Claude, ChatGPT, Gemini, or a free OpenCod
 ## Checks before opening a pull request
 
 - Run `npm run check` (syntax checks, tests, and build).
-- `npm run check` only syntax-checks `app.js`, `studio.js`, `tools.js`, `notebook.js`, and `tools-core.js`. It does **not** check `drum-machine.js` or `canvas-pro.js`, so run `node --check` on every JS file you change.
+- Run `node --check` on every JS file you change, even if `npm run check` should already cover it. A syntax error in one file can stop a whole page's script from loading.
 - Tests use Node's built-in runner and live in `tests/*.test.mjs`; `npm test` runs them. Put new logic tests there.
+- Tests for audio, microphone and timing code must use a fake that behaves like the browser. A fake `MediaRecorder` must deliver its final data after `stop()` returns, a fake `getUserMedia` must take time to answer (the permission prompt), and Web Audio parameter automation should be modelled and not only recorded. Fakes that finish instantly hide real race bugs (this once hid a microphone left on after cancelling).
 - Confirm every element id a script looks up still exists in the page, and that you added no duplicate top-level function names. In an ES module a duplicate declaration stops the whole script from loading, which is what broke the Notes Canvas once.
 
 ## Drum machine timing interface
@@ -37,7 +38,7 @@ These rules apply to every assistant: Claude, ChatGPT, Gemini, or a free OpenCod
 
 ## Which assistant for which task
 
-Adeeb has several free assistants. Free tiers are limited-time, so any model that fits the row can stand in if one disappears. Claude cannot call other models; Adeeb runs them and Claude reviews the result.
+Adeeb has several free assistants. Free tiers are limited-time, so any model that fits the row can stand in if one disappears. No assistant can call another; Adeeb runs them and an assistant other than the author reviews the result.
 
 | Task | Good choices |
 | --- | --- |
@@ -45,8 +46,19 @@ Adeeb has several free assistants. Free tiers are limited-time, so any model tha
 | Bug from a screenshot, mobile layout | Gemini, GLM 5.3 Flash, MiMo V2.6 Flash, Nemotron 3.5 Super VL (models that accept images) |
 | Reading a very large file or whole repo | 1M-context models: GLM 5.3 Flash, DeepSeek V4.1 Flash, Beam, MiMo V2.6 Flash |
 | Small, quick edits | Flint 40B (text-only and new, so verify the result) |
-| Wiring into `StepEngine`, timing and audio sync, the looper, anything security-sensitive | Claude, then Adeeb tests on a real device |
-| Reviewing another assistant's pull request before merge | Claude |
+| Wiring into `StepEngine`, timing and audio sync, the looper, anything security-sensitive | Claude or ChatGPT (one writes it, the other reviews it), then Adeeb tests on a real device |
+| Reviewing a pull request before merge | The assistant that did not write it (Claude or ChatGPT); see Working together below |
+| Browser QA: layout at 390px and 1280px, real Chromium audio measurements, console errors | Copilot with Playwright (it reports and changes no files) |
 
 - Avoid Big Pickle for anything important; the model behind it is not disclosed.
-- When a delegated assistant opens a PR, ask Claude to review it: run `node --check` and the tests, confirm only the intended files changed, and read the logic.
+- When any assistant opens a PR, ask a different assistant to review it (see below).
+
+## Working together: Claude and ChatGPT
+
+Claude and ChatGPT (Luna 6) are peer builders on this repo. They cannot talk to each other; Adeeb relays between them, so the repo is the shared memory: this file, `PROJECT_NOTES.md`, and pull request descriptions.
+
+- **The author and the reviewer are different assistants.** Whoever writes a PR does not review it. The other one reviews it before Adeeb merges.
+- **Claim work before starting.** Check open PRs and branches first. One assistant per feature, and never edit the same file in parallel branches. If two features need the same shared file, do them one after the other.
+- **A review means evidence, not a read-through.** Fetch the PR, confirm only the intended files changed, run `node --check` and `npm run check`, try to break the new code, and inject deliberate bugs ("mutation testing") to see whether the tests catch them. Put the commands and results in the PR, not only in chat.
+- **Say what you could not check.** Neither assistant can hear audio or use a real phone. State plainly what was tested only with fakes. Adeeb does the listening and device testing.
+- **Do not review by authority.** A reviewer's finding is a claim to be reproduced. If an author disagrees, show a failing test or a command, not an argument.
