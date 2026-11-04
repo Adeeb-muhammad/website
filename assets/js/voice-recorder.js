@@ -199,8 +199,8 @@ export function createRecorder({
       return;
     }
 
+    lastResult = result; // store first, so observers of the 'stopped' state can read recorder.result
     setState('stopped');
-    lastResult = result;
     stopWaiter?.resolve(result);
   }
 
