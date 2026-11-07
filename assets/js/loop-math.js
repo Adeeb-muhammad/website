@@ -37,7 +37,7 @@ export function loopFrames(sampleRate, bpm, bars, beatsPerBar = BEATS_PER_BAR) {
  * Fit a recorded take to exactly one loop. `channels` is an array of Float32Array; new arrays are returned and the
  * input is never modified. A positive offsetSeconds drops that much audio from the start (the microphone heard the beat
  * late); a negative one adds silence at the start. The end is zero-padded or trimmed to the exact length, and short
- * linear fades at both edges stop the loop point from clicking.
+ * linear fades at both edges of the audio itself stop it from clicking against the silence or at the loop point.
  */
 export function fitToLoop(channels, sampleRate, bpm, bars, { offsetSeconds = 0, fadeSeconds = DEFAULT_FADE_SECONDS } = {}) {
   if (!Array.isArray(channels) || channels.length === 0 || !channels.every(channel => channel instanceof Float32Array)) {
@@ -51,16 +51,23 @@ export function fitToLoop(channels, sampleRate, bpm, bars, { offsetSeconds = 0, 
   const offsetFrames = Math.round(offsetSeconds * sampleRate);
   const sourceStart = Math.max(0, offsetFrames);
   const targetStart = Math.max(0, -offsetFrames);
-  const fadeFrames = Math.min(Math.round(fadeSeconds * sampleRate), Math.floor(frames / 2));
+  const requestedFadeFrames = Math.round(fadeSeconds * sampleRate);
 
   return channels.map(channel => {
     const output = new Float32Array(frames);
     const count = Math.min(frames - targetStart, channel.length - sourceStart);
-    if (count > 0) output.set(channel.subarray(sourceStart, sourceStart + count), targetStart);
+    if (count <= 0) return output;
+    output.set(channel.subarray(sourceStart, sourceStart + count), targetStart);
+
+    // Fade the edges of the audio that was actually copied, not the edges of the loop: silence added by an offset or by
+    // padding sits next to the audio, so that is where an abrupt step would click. When the audio fills the loop, its
+    // edges are the loop edges. The two fades can never overlap because each is at most half the audio.
+    const fadeFrames = Math.min(requestedFadeFrames, Math.floor(count / 2));
+    const end = targetStart + count;
     for (let index = 0; index < fadeFrames; index++) {
       const gain = index / fadeFrames;
-      output[index] *= gain;
-      output[frames - 1 - index] *= gain;
+      output[targetStart + index] *= gain;
+      output[end - 1 - index] *= gain;
     }
     return output;
   });
