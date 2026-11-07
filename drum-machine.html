@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="assets/css/style.css?v=13">
   <link rel="stylesheet" href="assets/css/drum-machine.css?v=2">
   <link rel="stylesheet" href="assets/css/chord-mode.css?v=1">
+  <link rel="stylesheet" href="assets/css/voice-recorder.css?v=1">
   <title>Drum machine // Adeeb’s Vault</title>
 </head>
 <body>
@@ -108,6 +109,26 @@
           <ol class="chord-chips" id="chord-chips" aria-label="Chords in this bar"></ol>
           <p class="chord-note" id="chord-status" role="status" aria-live="polite">Chords play with the loop. Press START LOOP.</p>
         </div>
+
+        <div class="voice-panel" id="voice-panel" aria-label="Voice recorder" hidden>
+          <div class="voice-head">
+            <div>
+              <p class="eyebrow">STUDIO / VOICE</p>
+              <h3>VOICE_<span class="muted">REC</span></h3>
+            </div>
+            <span class="voice-time" id="voice-time" role="timer" aria-label="Recording time">0:00</span>
+          </div>
+          <div class="voice-actions">
+            <button id="voice-record" class="button button-accent" type="button">● RECORD</button>
+            <button id="voice-stop" class="button button-outline" type="button" disabled>■ STOP</button>
+            <button id="voice-discard" class="button button-outline" type="button" disabled>DISCARD</button>
+          </div>
+          <div class="voice-take" id="voice-take" hidden>
+            <audio id="voice-player" controls aria-label="Play your recorded take"></audio>
+            <a id="voice-download" class="button button-outline">DOWNLOAD ↓</a>
+          </div>
+          <p class="voice-note" id="voice-status" role="status" aria-live="polite">Press RECORD to start. Use headphones so the drums are not recorded. Takes stay in this tab until you download them.</p>
+        </div>
       </div>
     </section>
 
@@ -134,6 +155,7 @@
   <script src="assets/js/misc-nav.js" defer></script>
   <script type="module" src="assets/js/drum-machine.js?v=7"></script>
   <script type="module" src="assets/js/chord-mode-ui.js?v=1"></script>
+  <script type="module" src="assets/js/voice-recorder-ui.js?v=1"></script>
 </body>
 </html>
 

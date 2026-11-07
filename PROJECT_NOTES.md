@@ -20,7 +20,9 @@ Existing browser storage is in use: the archive draft key `adeeb-vault-draft-v1`
 | `assets/js/synth-voice.js` | `playChord`: a soft pad voice (detuned oscillators, lowpass, envelope) whose `stop()` fades without clicks |
 | `assets/js/chord-mode.js` | Engine: plays the progression on `StepEngine` steps 0, 4, 8, 12 through a pad bus and limiter |
 | `assets/js/chord-mode-ui.js`, `assets/css/chord-mode.css` | The CHORD_MODE panel; hidden until `StepEngine` exists |
-| `assets/js/voice-recorder.js` | Microphone recorder logic with injected browser APIs (not yet wired to a page) |
+| `assets/js/voice-recorder.js` | Microphone recorder logic with injected browser APIs. Results are available as `recorder.result` when the `stopped` state is announced |
+| `assets/js/voice-recorder-view.js` | Pure logic for the panel: status text, which buttons are enabled, error messages, filenames (tested) |
+| `assets/js/voice-recorder-ui.js`, `assets/css/voice-recorder.css` | The VOICE_REC panel under chord mode: record, stop, play, download, discard. Takes live in memory only. The microphone is requested only when RECORD is pressed |
 
 Audio path: drum voices and the chord pad bus feed the master gain, then the master limiter, then the speakers. One clock only: new audio features schedule on `StepEngine` events and the `AudioContext`, never with their own `setInterval`.
 
@@ -38,5 +40,4 @@ Audio path: drum voices and the chord pad bus feed the master gain, then the mas
 Nobody has listened to chord mode on a real device. The pad level (0.22), pad filter cutoff (1400 Hz) and pad limiter settings are untuned starting values.
 
 ## Roadmap (may be stale; confirm against open PRs)
-1. Recorder UI (record, stop, play, download, plain-language permission errors, and a latency-offset slider to align a voice take to the beat).
-2. Multi-track looper, built last on `StepEngine` and the recorder: normalise every clip to an exact bar length and schedule on the audio clock.
+1. Multi-track looper, built last on `StepEngine` and the recorder: normalise every clip to an exact bar length and schedule on the audio clock. A latency-offset control (the microphone hears the beat late) belongs here, where a take is lined up with the loop, because on its own it would do nothing.

@@ -460,3 +460,36 @@ test('a queued max-duration callback during manual Stop does not interrupt async
   assert.equal(h.recorder.result, result);
   assert.equal(h.stream.stopCalls, 2);
 });
+
+test('recorder.result is already set when observers hear "stopped" (manual Stop and max-length auto-stop)', async () => {
+  const pauseFor = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const makeWorld = () => ({
+    getUserMedia: async () => { await pauseFor(2); const track = { stop() {} }; return { getTracks: () => [track] }; },
+    MediaRecorder: class {
+      static isTypeSupported(type) { return type === 'audio/webm;codecs=opus'; }
+      constructor(stream, options) { this.mimeType = options?.mimeType || ''; this.state = 'inactive'; }
+      start() { this.state = 'recording'; }
+      stop() {
+        this.state = 'inactive';
+        setTimeout(() => { this.ondataavailable?.({ data: new Blob([new Uint8Array(10)]) }); this.onstop?.(); }, 3);
+      }
+    }
+  });
+
+  // Manual Stop.
+  const manual = createRecorder(makeWorld());
+  const seenManual = [];
+  manual.onState(state => { if (state === 'stopped') seenManual.push(manual.result?.blob.size); });
+  await manual.start();
+  await pauseFor(5);
+  await manual.stop();
+  assert.deepEqual(seenManual, [10], 'result is readable inside the stopped notification');
+
+  // Max-length auto-stop: nobody awaits stop(), so this notification is the only way to get the take.
+  const auto = createRecorder({ ...makeWorld(), maxSeconds: 0.05 });
+  const seenAuto = [];
+  auto.onState(state => { if (state === 'stopped') seenAuto.push(auto.result?.blob.size); });
+  await auto.start();
+  await pauseFor(150);
+  assert.deepEqual(seenAuto, [10], 'the auto-stopped take is available when the stopped state is announced');
+});
