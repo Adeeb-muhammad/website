@@ -25,6 +25,8 @@ Existing browser storage is in use: the archive draft key `adeeb-vault-draft-v1`
 | `assets/js/voice-recorder-ui.js`, `assets/css/voice-recorder.css` | The VOICE_REC panel under chord mode: record, stop, play, download, discard. Takes live in memory only. The microphone is requested only when RECORD is pressed |
 | `assets/js/loop-math.js` | Pure loop maths: exact frame counts for 1, 2 or 4 bars, `fitToLoop` (cut a take to one loop, apply an offset, fade the audio's own edges so it cannot click), `isLoopStart` |
 | `assets/js/looper.js` | Looper engine, four tracks, no DOM. Arms a track, counts in at least one bar, records until a loop boundary, fits the take and plays it on every loop start from `StepEngine` events. The tempo is locked while takes exist; the engine starts no timers of its own |
+| `assets/js/looper-view.js` | Pure logic for the LOOP_STATION panel: which buttons are enabled, labels, banner text, the offset readout (tested) |
+| `assets/js/looper-ui.js`, `assets/css/looper.css` | The LOOP_STATION panel under the voice recorder: four track rows (length, REC/CANCEL, MUTE, CLEAR), a tempo-lock label, and a take-timing slider. The microphone is requested only when REC is pressed |
 
 Audio path: drum voices and the chord pad bus feed the master gain, then the master limiter, then the speakers. One clock only: new audio features schedule on `StepEngine` events and the `AudioContext`, never with their own `setInterval`.
 
@@ -42,6 +44,5 @@ Audio path: drum voices and the chord pad bus feed the master gain, then the mas
 Nobody has listened to chord mode on a real device. The pad level (0.22), pad filter cutoff (1400 Hz) and pad limiter settings are untuned starting values.
 
 ## Roadmap (may be stale; confirm against open PRs)
-1. Looper panel (UI) for `looper.js`: four tracks with record, bars, mute, clear, a count-in/status line, a latency-offset slider (the microphone hears the beat late; no browser API gives the amount exactly, so the user calibrates it), and a tempo-mismatch warning.
-2. Real-device checks by Adeeb: chord mode, the voice recorder and the looper (alignment against the beat, volume, tone), plus a Copilot browser pass at 390px and 1280px.
-3. A final hardening pass: deliberate-bug testing across the project, then fixes.
+1. Real-device checks by Adeeb: chord mode, the voice recorder and the looper (alignment against the beat, the right take-timing offset for his phone, volume, tone), plus a Copilot browser pass at 390px and 1280px.
+2. A final hardening pass: deliberate-bug testing across the project, then fixes.

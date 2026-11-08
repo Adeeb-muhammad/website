@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="assets/css/drum-machine.css?v=2">
   <link rel="stylesheet" href="assets/css/chord-mode.css?v=1">
   <link rel="stylesheet" href="assets/css/voice-recorder.css?v=1">
+  <link rel="stylesheet" href="assets/css/looper.css?v=1">
   <title>Drum machine // Adeeb’s Vault</title>
 </head>
 <body>
@@ -129,6 +130,20 @@
           </div>
           <p class="voice-note" id="voice-status" role="status" aria-live="polite">Press RECORD to start. Use headphones so the drums are not recorded. Takes stay in this tab until you download them.</p>
         </div>
+
+        <div class="looper-panel" id="looper-panel" aria-label="Looper" hidden>
+          <div class="looper-head">
+            <div>
+              <p class="eyebrow">STUDIO / LOOPS</p>
+              <h3>LOOP_<span class="muted">STATION</span></h3>
+            </div>
+            <span class="looper-lock" id="looper-lock"></span>
+          </div>
+          <ol class="looper-tracks" id="looper-tracks" aria-label="Loop tracks"></ol>
+          <label class="looper-offset" for="looper-offset"><span>TAKE TIMING</span><input id="looper-offset" type="range" min="-250" max="250" step="5" value="0"><strong id="looper-offset-value">0 ms</strong></label>
+          <p class="looper-hint">Record a clap along with the beat. If it sounds late, move the slider right; if early, move it left. It applies to the next take you record.</p>
+          <p class="looper-note" id="looper-status" role="status" aria-live="polite"></p>
+        </div>
       </div>
     </section>
 
@@ -156,6 +171,7 @@
   <script type="module" src="assets/js/drum-machine.js?v=7"></script>
   <script type="module" src="assets/js/chord-mode-ui.js?v=1"></script>
   <script type="module" src="assets/js/voice-recorder-ui.js?v=1"></script>
+  <script type="module" src="assets/js/looper-ui.js?v=1"></script>
 </body>
 </html>
 
