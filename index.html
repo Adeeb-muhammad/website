@@ -54,7 +54,14 @@
           <div class="hero-bottom"><a href="#home-latest" class="scroll-cue">SCROLL TO EXPLORE <span>↓</span></a><span class="micro">INDEPENDENT TASTE. ONGOING EXPERIMENTS.</span><span class="micro hero-coordinate">UAE / EARTH</span></div>
         </section>
         <div class="ticker" aria-hidden="true"><div>PERSONAL, NOT ALGORITHMIC <span>✳</span> FILMS WORTH A SECOND THOUGHT <span>✳</span> BUILDING AS I GO <span>✳</span> ADEEBMUH.ME <span>✳</span> PERSONAL, NOT ALGORITHMIC <span>✳</span> FILMS WORTH A SECOND THOUGHT <span>✳</span> BUILDING AS I GO <span>✳</span> ADEEBMUH.ME <span>✳</span></div></div>
-        <section id="home-latest" class="section-pad archive-section"><div class="section-heading"><div><p class="eyebrow">01 / THE WATCHED FILES</p><h2>CORE_<span class="muted">ARCHIVE</span></h2><p class="section-caption">Stories that stay after the credits.</p></div><a class="text-link" href="#films">VIEW ALL RECORDS <span>↗</span></a></div><p class="sample-note" id="home-sample-note" hidden><span>STARTER COLLECTION</span> Entries from the original design. Ratings shown here are examples.</p><div id="featured-grid" class="featured-grid"></div><div class="archive-summary" id="archive-summary"></div></section>
+        <aside id="chemistry-inspection-banner" hidden style="margin:0 auto 30px;max-width:1100px;padding:22px 26px;border:1px solid #b5a1ff;border-radius:16px;background:linear-gradient(120deg,#171522,#111713);color:#f3f5ec">
+  <p style="margin:0 0 7px;color:#d4ff43;font-size:.72rem;font-weight:800;letter-spacing:.18em">ONE-DAY FEATURE · 10 NOVEMBER 2026</p>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap">
+    <div><h2 style="margin:0 0 5px;font-size:clamp(1.35rem,3vw,2rem)">Class XII Chemistry Lab is open.</h2><p style="margin:0;color:#b8c2b6">Explore interactive VBT orbital diagrams, magnetic behaviour and 3D coordination complexes.</p></div>
+    <a href="chemistry.html" style="display:inline-block;padding:11px 16px;border-radius:999px;background:#d4ff43;color:#10140b;text-decoration:none;font-weight:900;white-space:nowrap">ENTER CHEMISTRY LAB ↗</a>
+  </div>
+</aside>
+<section id="home-latest" class="section-pad archive-section"><div class="section-heading"><div><p class="eyebrow">01 / THE WATCHED FILES</p><h2>CORE_<span class="muted">ARCHIVE</span></h2><p class="section-caption">Stories that stay after the credits.</p></div><a class="text-link" href="#films">VIEW ALL RECORDS <span>↗</span></a></div><p class="sample-note" id="home-sample-note" hidden><span>STARTER COLLECTION</span> Entries from the original design. Ratings shown here are examples.</p><div id="featured-grid" class="featured-grid"></div><div class="archive-summary" id="archive-summary"></div></section>
         <section class="section-pad projects-preview"><div class="section-heading"><div><p class="eyebrow">02 / OUTSIDE THE SCREEN</p><h2>WORK_<span class="muted">IN PROGRESS</span></h2></div><a class="text-link" href="#projects">OPEN THE WORKSHOP <span>↗</span></a></div><div id="home-projects" class="project-preview-grid"></div></section>
         <section class="section-pad operator-teaser"><p class="eyebrow">03 / THE PERSON BEHIND THE PIXELS</p><div><h2>CURIOUS BY DEFAULT.<br><span class="outline-text">STILL FIGURING IT OUT.</span></h2><div><p>I’m Adeeb, a student in the UAE, currently working with Project Phantom. I build things, follow my curiosity, and enjoy fiction in all its forms.</p><a class="text-link" href="#about">A LITTLE MORE ABOUT ME <span>↗</span></a></div></div></section>
       </section>
@@ -112,5 +119,20 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript><div class="noscript-message">This archive uses JavaScript to display its film collection. Please enable it, or visit <a href="https://github.com/Adeeb-muhammad">my GitHub profile</a>.</div></noscript>
   <script type="module" src="assets/js/app.js?v=8"></script>
+<script>
+(function () {
+  const notice = document.getElementById('chemistry-inspection-banner');
+  if (!notice) return;
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const date = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    notice.hidden = !(date.year === '2026' && date.month === '11' && date.day === '10');
+  } catch {
+    notice.hidden = true;
+  }
+})();
+</script>
 </body>
 </html>
