@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ff">
+<meta name="description" content="Interactive Class XII VBT challenge: construct electron arrangements, shade hybridising orbitals, identify geometry and answer CBSE-style questions.">
+<title>VBT Challenge – CAT4 Architect Activity</title>
+<style>
+:root{--bg:#f4f1ff;--card:#fff;--tx:#242038;--mut:#6b6785;--bd:#e6e0fb;--ac:#7c3aed;--ok:#12b76a;--no:#f04438;--hy:#ffb703;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--tx:#e8ebf1;--mut:#9aa3b2;--bd:#333a47;--ac:#6b9bff}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--tx:#e8ebf1;--mut:#9aa3b2;--bd:#333a47;--ac:#6b9bff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:0 auto;padding:14px}
+.lab-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.lab-nav a{color:var(--ac);font-size:.84rem;font-weight:800;text-decoration:none}
+h1{font-size:1.5rem;margin:0;background:linear-gradient(90deg,#7c3aed,#ff6b6b,#ff9f1c);-webkit-background-clip:text;background-clip:text;color:transparent}.mut{color:var(--mut);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--bd);border-top:6px solid var(--c,var(--ac));border-radius:18px;padding:14px;margin:14px 0;box-shadow:0 4px 14px rgba(124,58,237,.08)}
+button{font:inherit;border:2px solid var(--bd);background:var(--card);color:var(--tx);border-radius:99px;padding:7px 13px;cursor:pointer}.geo button,.opt{border-radius:14px}
+button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+button:focus-visible{outline:3px solid var(--hy);outline-offset:2px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.scroll{overflow-x:auto;padding-bottom:4px}
+.orb{display:flex;gap:4px;align-items:flex-end;min-width:max-content}
+.grp{display:flex;flex-direction:column;gap:2px;align-items:center}
+.grp .boxes{display:flex;gap:3px}
+.b{width:36px;height:40px;border:2px solid var(--tx);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;cursor:pointer;user-select:none}
+.b.sel{background:var(--hy);color:#000}
+.geo{display:flex;gap:8px;flex-wrap:wrap}
+.geo button{padding:4px 8px;text-align:center;font-size:.8rem}.geo svg{display:block;width:70px;height:60px;stroke:currentColor;fill:none;stroke-width:1.6}
+#res{font-weight:600;min-height:1.4em}
+.tag{font-size:.7rem;padding:1px 7px;border-radius:99px;background:var(--bd)}
+.q{margin:10px 0 14px}.q p{margin:0 0 6px}
+.opt{display:block;width:100%;text-align:left;margin:4px 0}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,transparent)}
+.opt.wrong{border-color:var(--no);background:color-mix(in srgb,var(--no) 15%,transparent)}
+.opt:disabled{cursor:default;opacity:1}
+.exp{font-size:.88rem;color:var(--mut);margin-top:4px}
+@media(max-width:420px){main{padding:11px}.card{padding:12px}.b{width:33px;height:38px}}
+</style>
+</head>
+<body>
+<main>
+<nav class="lab-nav" aria-label="Chemistry Lab navigation"><a href="../chemistry.html">← CHEMISTRY LAB</a><span class="mut">ACTIVITY 03 · CAT4 ARCHITECT</span></nav>
+<h1>🏛️ VBT Challenge</h1>
+<div class="mut">Class 12 · Coordination Compounds · CAT4 Architect Activity</div>
+
+<div class="card" style="--c:#ff6b6b"><b>① Pick your complex</b>
+ <div class="row" id="pick" style="margin-top:6px"></div></div>
+
+<div class="card" style="--c:#ff9f1c"><b>② Draw it</b>
+ <div class="mut" id="brief" style="margin:2px 0 8px"></div>
+ <div class="row" style="margin-bottom:8px"><button id="m1" class="on" type="button">✏️ Fill 3d electrons (tap box)</button><button id="m2" type="button">🎨 Shade hybridising orbitals</button></div>
+ <div class="scroll"><div class="orb" id="orb"></div></div>
+ <div class="mut" style="margin-top:6px">Tap a 3d box: empty → ↑ → ↑↓ → empty. In shade mode, tap any box to colour it orange.</div>
+</div>
+
+<div class="card" style="--c:#12b5a6"><b>③ Pick the shape</b>
+ <div class="geo" id="geo" style="margin-top:6px"></div></div>
+
+<div class="row"><button class="on" id="check" type="button">✅ Check my diagram</button><span id="res" role="status" aria-live="polite"></span></div>
+
+<div class="card" style="--c:#7c3aed"><b>④ PY Board Qn</b> <span class="tag">CBSE Class 12</span>
+ <div class="mut" style="margin:2px 0 6px">Tap an answer.</div>
+ <div id="mcq"></div></div>
+
+<script>
+"use strict";
+const C=[
+{n:"[Fe(CN)₆]⁴⁻",t:"Core",ion:"Fe²⁺",e:6,u:0,L:"CN⁻",hy:"d²sp³",g:"oct"},
+{n:"[FeF₆]³⁻",t:"Core",ion:"Fe³⁺",e:5,u:5,L:"F⁻",hy:"sp³d²",g:"oct"},
+{n:"[Ni(CN)₄]²⁻",t:"Stretch",ion:"Ni²⁺",e:8,u:0,L:"CN⁻",hy:"dsp²",g:"sq"},
+{n:"[NiCl₄]²⁻",t:"Stretch",ion:"Ni²⁺",e:8,u:2,L:"Cl⁻",hy:"sp³",g:"tet"}
+];
+const HY={
+ "d²sp³":{a:2,s:1,p:3,b:0},
+ "sp³d²":{a:0,s:1,p:3,b:2},
+ "dsp²":{a:1,s:1,p:2,b:0},
+ "sp³":{a:0,s:1,p:3,b:0}
+};
+const GN={oct:"Octahedral",sq:"Square planar",tet:"Tetrahedral"};
+const SV={
+ oct:'<svg viewBox="0 0 70 60" aria-hidden="true"><path d="M35 4 L58 30 L35 56 L12 30Z M35 4 L50 40 L35 56 M35 4 L20 40 L35 56 M12 30 L50 40 L58 30 M12 30 L20 40 L58 30"/></svg>',
+ sq:'<svg viewBox="0 0 70 60" aria-hidden="true"><path d="M35 30 L10 30 M35 30 L60 30 M35 30 L35 8 M35 30 L35 52"/><circle cx="35" cy="30" r="4"/></svg>',
+ tet:'<svg viewBox="0 0 70 60" aria-hidden="true"><path d="M35 6 L12 48 L58 48Z M35 6 L40 38 M12 48 L40 38 M58 48 L40 38"/></svg>'
+};
+let cur=0,d=[0,0,0,0,0],sel=new Set(),md=1,pickG=null;
+const ids=["d0","d1","d2","d3","d4","s","p0","p1","p2","f0","f1"];
+const $=id=>document.getElementById(id);
+
+function render(){
+ $("pick").innerHTML=C.map((c,i)=>'<button type="button" class="'+(i===cur?'on':'')+'" data-pick="'+i+'">'+c.n+' <span class="tag">'+c.t+'</span></button>').join("");
+ const c=C[cur];
+ $("brief").innerHTML='Metal ion <b>'+c.ion+'</b> (3d<sup>'+c.e+'</sup>) + ligand <b>'+c.L+'</b>. Fill the electrons, shade the orbitals used for hybridisation, then choose the shape.';
+ const bx=id=>{
+  const k=id[0]==="d"?Number(id[1]):-1;
+  const mark=k>=0?["","↑","↑↓"][d[k]]:"";
+  return '<div class="b '+(sel.has(id)?'sel':'')+'" role="button" tabindex="0" data-box="'+id+'" aria-label="'+id+' orbital, '+(mark||'empty')+'">'+mark+'</div>';
+ };
+ const grp=(lab,arr)=>'<div class="grp"><div class="boxes">'+arr.map(bx).join("")+'</div><div class="mut">'+lab+'</div></div>';
+ $("orb").innerHTML=grp("3d",ids.slice(0,5))+grp("4s",["s"])+grp("4p",["p0","p1","p2"])+grp("4d",["f0","f1"]);
+ $("geo").innerHTML=Object.keys(GN).map(k=>'<button type="button" class="'+(pickG===k?'on':'')+'" data-geometry="'+k+'">'+SV[k]+GN[k]+'</button>').join("");
+}
+function pick(i){cur=i;d=[0,0,0,0,0];sel=new Set();pickG=null;$("res").textContent="";render()}
+function mode(m){md=m;$("m1").classList.toggle("on",m===1);$("m2").classList.toggle("on",m===2)}
+function tap(id){
+ if(md===1){if(id[0]!=="d")return;const k=Number(id[1]);d[k]=(d[k]+1)%3}
+ else{if(sel.has(id))sel.delete(id);else sel.add(id)}
+ $("res").textContent="";render();
+}
+function pg(k){pickG=k;$("res").textContent="";render()}
+function check(){
+ const c=C[cur],h=HY[c.hy];
+ const tot=d.reduce((a,b)=>a+b,0),un=d.filter(x=>x===1).length;
+ const cnt={a:0,s:0,p:0,b:0};let bad=false;
+ sel.forEach(x=>{
+  if(x[0]==="d"){cnt.a++;if(d[Number(x[1])]!==0)bad=true}
+  else if(x==="s")cnt.s++;
+  else if(x[0]==="p")cnt.p++;
+  else cnt.b++;
+ });
+ const wrong=[];
+ if(tot!==c.e||un!==c.u)wrong.push("electrons");
+ if(bad||cnt.a!==h.a||cnt.s!==h.s||cnt.p!==h.p||cnt.b!==h.b)wrong.push("hybrid orbitals");
+ if(pickG!==c.g)wrong.push("shape");
+ const r=$("res");
+ if(!wrong.length){r.style.color="var(--ok)";r.textContent="✅ Correct! Well built."}
+ else{r.style.color="var(--no)";r.textContent="❌ Recheck: "+wrong.join(", ")}
+}
+
+const OLDQ=[
+{q:"The hybridisation states of Ni in [Ni(CO)₄], [Ni(CN)₄]²⁻ and [NiCl₄]²⁻ respectively are:",o:["sp³, dsp², sp³","sp³, sp³, dsp²","dsp², sp³, sp³","dsp², dsp², sp³"],a:0,e:"Ni(CO)₄: Ni(0) 3d¹⁰ → sp³ (tetrahedral). [Ni(CN)₄]²⁻: strong field pairs electrons → dsp² (square planar). [NiCl₄]²⁻: weak field → sp³ (tetrahedral)."},
+{q:"According to VBT, [Co(NH₃)₆]³⁺ is:",o:["sp³d², outer orbital, paramagnetic","d²sp³, inner orbital, diamagnetic","d²sp³, inner orbital, paramagnetic","sp³d², outer orbital, diamagnetic"],a:1,e:"Co³⁺ is 3d⁶. NH₃ is strong field in this classic VBT example, so the electrons pair up, leaving 2 empty 3d orbitals for d²sp³. No unpaired electrons → diamagnetic."},
+{q:"The number of unpaired electrons and magnetic moment (BM) of [FeF₆]³⁻ are:",o:["0, 0","1, 1.73","5, 5.92","4, 4.90"],a:2,e:"Fe³⁺ is 3d⁵. F⁻ is a weak-field ligand so no pairing: n = 5, μ = √[5(5+2)] = √35 ≈ 5.92 BM (sp³d², outer orbital)."},
+{q:"[Fe(CN)₆]⁴⁻ is diamagnetic whereas [FeF₆]³⁻ is strongly paramagnetic because:",o:["CN⁻ is a weak-field ligand","F⁻ is a strong-field ligand","CN⁻ pairs the 3d electrons (d²sp³) but F⁻ does not (sp³d²)","Both have the same hybridisation"],a:2,e:"The strong-field CN⁻ causes pairing and uses inner 3d orbitals; weak-field F⁻ leaves 5 unpaired electrons and uses outer 4d orbitals."}
+];
+const Q=[
+{q:"A complex with sp³ hybridisation has which shape?",o:["Octahedral","Tetrahedral","Square planar","Linear"],a:1,e:"sp³ points to the four corners of a tetrahedron, for example [NiCl₄]²⁻."},
+...OLDQ
+];
+function renderQuestions(){
+ $("mcq").innerHTML=Q.map((x,i)=>'<div class="q" id="q'+i+'"><p><b>Q'+(i+1)+'.</b> '+x.q+'</p>'+x.o.map((o,j)=>'<button type="button" class="opt" data-question="'+i+'" data-answer="'+j+'">'+("ABCD"[j])+'. '+o+'</button>').join("")+'<div class="exp" id="e'+i+'"></div></div>').join("");
+}
+function ans(i,j){
+ const x=Q[i];
+ document.querySelectorAll("#q"+i+" .opt").forEach((b,k)=>{
+  b.classList.toggle("right",k===x.a);
+  b.classList.toggle("wrong",k===j&&j!==x.a);
+  b.disabled=true;
+ });
+ $("e"+i).textContent=(j===x.a?"✅ Correct. ":"❌ Correct answer: "+("ABCD"[x.a])+". ")+x.e;
+}
+
+$("pick").addEventListener("click",e=>{const b=e.target.closest("[data-pick]");if(b)pick(Number(b.dataset.pick))});
+$("orb").addEventListener("click",e=>{const b=e.target.closest("[data-box]");if(b)tap(b.dataset.box)});
+$("orb").addEventListener("keydown",e=>{const b=e.target.closest("[data-box]");if(b&&(e.key==="Enter"||e.key===" ")){e.preventDefault();tap(b.dataset.box)}});
+$("geo").addEventListener("click",e=>{const b=e.target.closest("[data-geometry]");if(b)pg(b.dataset.geometry)});
+$("m1").addEventListener("click",()=>mode(1));
+$("m2").addEventListener("click",()=>mode(2));
+$("check").addEventListener("click",check);
+$("mcq").addEventListener("click",e=>{const b=e.target.closest("[data-question]");if(b&&!b.disabled)ans(Number(b.dataset.question),Number(b.dataset.answer))});
+
+render();
+renderQuestions();
+</script>
+</main>
+</body>
+</html>
