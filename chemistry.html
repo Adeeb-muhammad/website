@@ -17,7 +17,7 @@
     h1{font-size:clamp(2.7rem,8vw,6rem);line-height:.95;letter-spacing:-.06em;margin:0;max-width:900px}
     h1 span{color:transparent;-webkit-text-stroke:1px var(--acid)}
     .intro{max-width:680px;color:var(--muted);font-size:1.08rem;margin:22px 0 38px}
-    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
     .card{min-height:300px;border:1px solid var(--line);border-radius:18px;padding:25px;background:linear-gradient(145deg,#151e18,#0d120f);display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;transition:border-color .2s,transform .2s}
     .card:hover{border-color:var(--acid);transform:translateY(-3px)}
     .number{color:var(--violet);font-weight:900;letter-spacing:.14em;font-size:.8rem}
@@ -27,6 +27,7 @@
     .open{margin-top:22px;color:var(--acid);font-weight:900;letter-spacing:.08em;font-size:.82rem}
     .note{border-left:3px solid var(--violet);padding:12px 16px;background:#171522;color:#c9c1e7;margin-top:22px;border-radius:0 10px 10px 0;font-size:.9rem}
     footer{border-top:1px solid var(--line);margin-top:52px;padding-top:18px;color:#879187;font-size:.78rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    @media(max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:700px){.cards{grid-template-columns:1fr}.wrap{padding:22px 16px 48px}.eyebrow{margin-top:44px}.card{min-height:260px}}
   </style>
 </head>
@@ -35,7 +36,7 @@
     <div class="top"><a class="brand" href="index.html">ADEEB’S <span>VAULT</span></a><a class="back" href="index.html">← Back to the main website</a></div>
     <p class="eyebrow">Class XII Chemistry · Coordination Compounds · VBT</p>
     <h1>THE CHEMISTRY<br><span>LAB.</span></h1>
-    <p class="intro">Two interactive learning tools for exploring Valence Bond Theory: follow electron pairing, identify hybridisation, inspect coordination geometries, and connect unpaired electrons to magnetic behaviour.</p>
+    <p class="intro">Three interactive learning activities for exploring Valence Bond Theory: follow electron pairing, identify hybridisation, inspect coordination geometries, and connect unpaired electrons to magnetic behaviour.</p>
     <section class="cards" aria-label="Chemistry activities">
       <a class="card" href="chemistry/vbt-orbital-lab.html">
         <span class="number">01 / ORBITAL EXPLORER</span>
@@ -50,6 +51,13 @@
         <p>Choose a metal ion, oxidation state, ligand, and coordination number. Rotate a schematic 3D model and inspect the predicted geometry, hybridisation, d-electron count, unpaired electrons, and magnetic moment.</p>
         <div class="tags"><span class="tag">Interactive 3D</span><span class="tag">Complex builder</span><span class="tag">Hybridisation</span></div>
         <span class="open">BUILD A COMPLEX ↗</span>
+      </a>
+      <a class="card" href="chemistry/vbt-challenge.html">
+        <span class="number">03 / CAT4 ARCHITECT CHALLENGE</span>
+        <h2>VBT Challenge</h2>
+        <p>Build orbital electron diagrams, shade the hybridising orbitals, choose the coordination geometry, and test your understanding with CBSE-style board questions.</p>
+        <div class="tags"><span class="tag">Electron arrangement</span><span class="tag">Hybridisation</span><span class="tag">CBSE quiz</span></div>
+        <span class="open">START THE CHALLENGE ↗</span>
       </a>
     </section>
     <div class="note"><strong>Classroom note:</strong> These are learning models based on the Class XII VBT treatment. The 3D builder labels its non-preset combinations as simplified educational predictions; real coordination chemistry can be more nuanced. Use the orbital lab for the focused Fe(II) magnetic-behaviour comparison.</div>
