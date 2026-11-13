@@ -29,6 +29,8 @@ export function createLooper(engine, options = {}) {
   const listeners = new Set();
   let bus = null;
   let absolute = -1; // 16th-note steps seen since the loop started, kept in step with StepEngine's 0 to 15
+  let lastWhen = 0; // audio-clock time of the most recent step event
+  let lastStepDuration = 0; // seconds per step for that event, as reported by StepEngine
   let latencyOffset = 0;
   let tempoMismatch = false;
   let session = null;
@@ -141,9 +143,11 @@ export function createLooper(engine, options = {}) {
     }
   }
 
-  const offStep = engine.on('step', ({ step, when, bpm }) => {
+  const offStep = engine.on('step', ({ step, when, bpm, stepDuration }) => {
     absolute = absolute < 0 ? step : absolute + 1;
     absolute += ((step - (absolute % STEPS_PER_BAR)) + STEPS_PER_BAR) % STEPS_PER_BAR; // stay in line with the engine's step
+    lastWhen = when;
+    lastStepDuration = stepDuration;
 
     const locked = lockedBpm();
     const mismatch = locked !== null && bpm !== locked;
@@ -165,6 +169,8 @@ export function createLooper(engine, options = {}) {
   const offStop = engine.on('stop', () => {
     tracks.forEach(stopSources);
     absolute = -1;
+    lastWhen = 0;
+    lastStepDuration = 0; // nothing is playing, so do not extrapolate from the previous run's last step
     if (tempoMismatch) {
       tempoMismatch = false;
       notify();
@@ -224,9 +230,14 @@ export function createLooper(engine, options = {}) {
       }
 
       active.recorderStartTime = engine.getAudioContext().currentTime;
-      const armedAt = Math.max(0, absolute);
+      // Step events are sent ahead of their audio time, so the last event's index can understate how far into the
+      // bar the real clock already is. Add the fraction of the current step that has elapsed on the audio clock,
+      // clamped to one step in case that step's event has not arrived yet. This keeps the count-in at least a bar.
+      const ctx = engine.getAudioContext();
+      const elapsed = lastStepDuration > 0 ? Math.min(1, Math.max(0, (ctx.currentTime - lastWhen) / lastStepDuration)) : 0;
+      const position = Math.max(0, absolute) + elapsed;
       const cycle = STEPS_PER_BAR * bars;
-      active.captureStart = Math.ceil((armedAt + COUNT_IN_STEPS) / cycle) * cycle; // a loop boundary, at least a bar away
+      active.captureStart = Math.ceil((position + COUNT_IN_STEPS) / cycle) * cycle; // a loop boundary, at least a bar away
       active.phase = 'count-in';
       track.status = 'count-in';
       notify();
