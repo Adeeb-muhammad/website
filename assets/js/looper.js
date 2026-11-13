@@ -32,6 +32,7 @@ export function createLooper(engine, options = {}) {
   let latencyOffset = 0;
   let tempoMismatch = false;
   let session = null;
+  let disposed = false;
 
   const lockedBpm = () => tracks.find(track => track.buffer)?.bpm ?? null;
   const snapshot = () => ({
@@ -279,6 +280,8 @@ export function createLooper(engine, options = {}) {
     },
 
     dispose() {
+      if (disposed) return;
+      disposed = true;
       offStep();
       offStop();
       this.clearAll();
