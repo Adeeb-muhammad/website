@@ -57,15 +57,6 @@ export function StatusBar() {
         </span>
       )}
 
-      <a
-        className="shrink-0 text-fg-faint underline underline-offset-2 hover:text-ink"
-        href="../LICENSES/"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Licenses
-      </a>
-
       <span className="ml-auto shrink-0 text-fg-faint tabular-nums">
         {bpm} BPM · NeonDAW
       </span>
