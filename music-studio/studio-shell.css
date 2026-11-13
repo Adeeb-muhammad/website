@@ -1,0 +1,27 @@
+/* Music Studio page shell: keeps the site's chrome around the DAW. */
+.studio-page .site-header{position:relative;background:#080808;backdrop-filter:none}
+.studio-page .site-main{margin-left:0;padding-top:0;min-height:0}
+.studio-page .site-header,
+.studio-bar{-webkit-user-select:text;user-select:text}
+
+.studio-bar{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:10px 24px;padding-top:15px;padding-bottom:15px;
+  border-bottom:1px solid var(--line);background:#080808;
+}
+.studio-bar .text-link{color:var(--ink);white-space:nowrap}
+.studio-bar .text-link:hover{color:var(--accent)}
+.studio-bar .eyebrow{margin:0;color:var(--muted)}
+.studio-bar .micro{color:var(--dim);font-size:9px}
+
+/* Restore the icon weight the DAW expects after style.css's global svg rule. */
+#root svg{stroke-width:2}
+
+@media(max-width:1100px){
+  .studio-page .site-header{position:relative}
+}
+@media(max-width:650px){
+  .studio-bar{padding-top:12px;padding-bottom:12px;gap:6px 14px}
+  .studio-bar .eyebrow{order:3;flex-basis:100%;margin-top:2px;font-size:8px}
+  .studio-bar .micro{display:none}
+}
