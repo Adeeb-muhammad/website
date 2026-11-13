@@ -41,7 +41,7 @@ async function copy(text) {
 
 function poster(entry, { featured = false, index = 0 } = {}) {
   const image = safeURL(featured ? entry.image || entry.poster : entry.poster, { image: true });
-  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}${image ? ' has-image' : ''}"><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="512" height="512"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
+  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}${image ? ' has-image' : ''}"${image ? ` style="--poster:url('${e(image)}')"` : ''}><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="512" height="512"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
 }
 
 function filmCard(entry, index, featured = false) {
