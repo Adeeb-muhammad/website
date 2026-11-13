@@ -12,7 +12,16 @@ export const flush = async () => { for (let index = 0; index < 20; index++) awai
 export function makeNode(kind) {
   return {
     kind, connections: [], startCalls: [], stopCalls: [], buffer: null, onended: null,
-    gain: { value: 1, calls: [], setTargetAtTime(value, time) { this.value = value; this.calls.push({ value, time }); } },
+    // `timeline` records scheduled gain automation in order. Values are not applied instantly, so a test can see
+    // exactly when a ramp starts and ends, and that it starts from the value in force when the stop was requested.
+    gain: {
+      value: 1,
+      calls: [],
+      timeline: [],
+      setTargetAtTime(value, time) { this.value = value; this.calls.push({ value, time }); },
+      setValueAtTime(value, time) { this.timeline.push({ type: 'set', value, time }); return this; },
+      linearRampToValueAtTime(value, time) { this.timeline.push({ type: 'linear', value, time }); return this; }
+    },
     connect(to) { this.connections.push(to); return to; },
     disconnect() { this.connections = []; },
     start(time) { this.startCalls.push(time); },

@@ -1,6 +1,6 @@
 // Wires the looper panel in drum-machine.html to the looper engine.
 // The microphone is only requested when REC is pressed on a track.
-import { createLooper } from './looper.js?v=2';
+import { createLooper } from './looper.js?v=3';
 import { describeLooperState, looperMessageFor, offsetFromMilliseconds } from './looper-view.js?v=1';
 
 const TRACKS = 4;
