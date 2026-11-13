@@ -53,9 +53,10 @@ test('the finished take plays on every loop start, at that step time and no othe
   assert.deepEqual(world.ctx.sources.map(source => source.startCalls[0]), [world.engine.whenOf(64)]);
   world.engine.tick(16);
   assert.deepEqual(world.ctx.sources.map(source => source.startCalls[0]), [world.engine.whenOf(64), world.engine.whenOf(80)]);
-  const gain = world.ctx.sources[0].connections[0];
-  assert.equal(gain.gain.value, 1);
-  assert.equal(gain.connections[0].connections[0], world.engine.master, 'track gain, looper bus, then the master gain');
+  const sourceGain = world.ctx.sources[0].connections[0];
+  const trackGainNode = sourceGain.connections[0];
+  assert.equal(sourceGain.gain.value, 1);
+  assert.equal(trackGainNode.connections[0].connections[0], world.engine.master, 'source gain, track gain, looper bus, then the master gain');
 });
 
 test('a two-bar take is two bars long, starts on a two-bar boundary and plays every two bars', async () => {
@@ -186,7 +187,7 @@ test('a microphone error leaves the track as it was and can be retried', async (
 test('mute silences a track without dropping out of sync, and unmute brings it back', async () => {
   const { world, looper } = await recordedWorld();
   world.engine.tick(64 - world.engine.absolute + 1);
-  const gain = world.ctx.sources[0].connections[0];
+  const gain = world.ctx.sources[0].connections[0].connections[0];
   looper.setMuted(0, true);
   assert.equal(gain.gain.value, 0);
   assert.equal(looper.snapshot().tracks[0].muted, true);

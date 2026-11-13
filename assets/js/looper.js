@@ -11,6 +11,10 @@ const COUNT_IN_STEPS = 16; // at least one full bar of count-in before a take be
 const STOP_MARGIN_STEPS = 4;
 const MAX_LATENCY_OFFSET = 0.5;
 const ALLOWED_BARS = [1, 2, 4];
+// Stopping a playing loop at once cuts the waveform mid-cycle and clicks. Give each source a short fade instead:
+// ramp its own gain to zero over this long, then stop it just after the ramp has finished.
+const STOP_FADE_SECONDS = 0.008;
+const STOP_DELAY_SECONDS = 0.01;
 
 function looperError(code, message) {
   return { code, message };
@@ -60,20 +64,44 @@ export function createLooper(engine, options = {}) {
     }
     return track.gain;
   }
-  function stopSources(track) {
-    for (const source of track.sources) {
+  function disconnectSource(source) {
+    try { source.disconnect(); } catch { /* already detached */ }
+    try { source.sourceGain?.disconnect(); } catch { /* already detached */ }
+  }
+  function stopSource(source, now) {
+    // A source scheduled for the future has not been heard yet, so it can stop at once without a ramp.
+    if (source.startTime > now) {
       try { source.stop(); } catch { /* already ended */ }
+      disconnectSource(source);
+      return;
     }
+    const gain = source.sourceGain?.gain;
+    if (gain) {
+      const current = typeof gain.value === 'number' ? gain.value : 1;
+      gain.setValueAtTime(current, now);
+      gain.linearRampToValueAtTime(0, now + STOP_FADE_SECONDS);
+    }
+    try { source.stop(now + STOP_DELAY_SECONDS); } catch { /* already ended */ }
+  }
+  function stopSources(track) {
+    const now = engine.getAudioContext().currentTime;
+    for (const source of track.sources) stopSource(source, now);
     track.sources.clear();
   }
   function playTake(track, ctx, when) {
     const source = ctx.createBufferSource();
+    // Each source gets its own gain so a stop can fade just that voice, leaving the track's mute gain untouched.
+    const sourceGain = ctx.createGain();
+    sourceGain.gain.value = 1;
     source.buffer = track.buffer;
-    source.connect(trackGain(track, ctx));
+    source.sourceGain = sourceGain;
+    source.startTime = when;
+    source.connect(sourceGain);
+    sourceGain.connect(trackGain(track, ctx));
     track.sources.add(source);
     source.onended = () => {
       track.sources.delete(source);
-      try { source.disconnect(); } catch { /* already detached */ }
+      disconnectSource(source);
     };
     source.start(when);
   }

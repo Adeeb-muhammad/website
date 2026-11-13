@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mountLooper } from '../assets/js/looper-ui.js';
-import { createLooper } from '../assets/js/looper.js?v=2';
+import { createLooper } from '../assets/js/looper.js?v=3';
 
 const emptySnapshot = () => ({
   tracks: Array.from({ length: 4 }, (_, index) => ({
