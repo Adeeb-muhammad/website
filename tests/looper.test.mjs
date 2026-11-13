@@ -2,98 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLooper } from '../assets/js/looper.js';
 import { loopFrames } from '../assets/js/loop-math.js';
+import { flush, makeWorld, RATE, recordedWorld } from './looper-fakes.mjs';
 
-const STEP = 0.125; // seconds per 16th step at 120 BPM
-const RATE = 48000;
-const flush = async () => { for (let index = 0; index < 20; index++) await Promise.resolve(); };
-
-function makeNode(kind) {
-  return {
-    kind, connections: [], startCalls: [], stopCalls: [], buffer: null, onended: null,
-    gain: { value: 1, calls: [], setTargetAtTime(value, time) { this.value = value; this.calls.push({ value, time }); } },
-    connect(to) { this.connections.push(to); return to; },
-    disconnect() { this.connections = []; },
-    start(time) { this.startCalls.push(time); },
-    stop(time) { this.stopCalls.push(time); }
-  };
-}
-
-function makeWorld({ bpm = 120, signal = null, recorderStart = null } = {}) {
-  const ctx = {
-    currentTime: 0, sources: [], gains: [],
-    createGain() { const node = makeNode('gain'); ctx.gains.push(node); return node; },
-    createBufferSource() { const node = makeNode('source'); ctx.sources.push(node); return node; },
-    createBuffer(channels, length, sampleRate) {
-      const data = Array.from({ length: channels }, () => new Float32Array(length));
-      return { numberOfChannels: channels, length, sampleRate, getChannelData: index => data[index], copyToChannel(source, index) { data[index].set(source); } };
-    }
-  };
-  const handlers = { step: new Set(), stop: new Set() };
-  const master = makeNode('master');
-  const engine = {
-    ctx, master, handlers, bpm, playing: false, absolute: 0, base: 0,
-    on(type, listener) { handlers[type].add(listener); return () => handlers[type].delete(listener); },
-    getAudioContext: () => ctx,
-    getMasterGain: () => master,
-    getBpm: () => engine.bpm,
-    isPlaying: () => engine.playing,
-    start() { engine.playing = true; engine.absolute = 0; engine.base = ctx.currentTime + 0.05; },
-    // Emit `count` consecutive steps. The audio clock runs 50 ms behind each event's time, like the real lookahead.
-    tick(count = 1) {
-      for (let index = 0; index < count; index++) {
-        const when = engine.base + engine.absolute * (60 / engine.bpm / 4);
-        ctx.currentTime = when - 0.05;
-        handlers.step.forEach(listener => listener({ step: engine.absolute % 16, when, bpm: engine.bpm, stepDuration: 60 / engine.bpm / 4 }));
-        engine.absolute++;
-      }
-    },
-    whenOf: absolute => engine.base + absolute * (60 / engine.bpm / 4),
-    stop() { engine.playing = false; handlers.stop.forEach(listener => listener()); engine.absolute = 0; }
-  };
-  const recorders = [];
-  const world = {
-    ctx, engine, recorders,
-    options: {
-      createRecorder() {
-        const recorder = {
-          started: false, stopped: false, discarded: false,
-          async start() {
-            if (recorderStart) await recorderStart(recorder);
-            await Promise.resolve();
-            recorder.started = true;
-          },
-          async stop() {
-            await Promise.resolve();
-            recorder.stopped = true;
-            return { blob: { arrayBuffer: async () => new ArrayBuffer(8) }, mimeType: 'audio/webm', extension: 'webm' };
-          },
-          discard() { recorder.discarded = true; }
-        };
-        recorders.push(recorder);
-        return recorder;
-      },
-      decode: async () => {
-        const data = signal ?? Float32Array.from({ length: 700000 }, (_, index) => index + 1); // sample k holds k + 1
-        return { numberOfChannels: 1, sampleRate: RATE, getChannelData: () => data };
-      }
-    }
-  };
-  return world;
-}
-
-// Arm track `index` at step 4, then play through the whole take. Returns the looper and the world.
-async function recordedWorld({ index = 0, bars = 1, armAt = 4, ...worldOptions } = {}) {
-  const world = makeWorld(worldOptions);
-  const looper = createLooper(world.engine, world.options);
-  world.engine.start();
-  world.engine.tick(armAt + 1);
-  await looper.recordTrack(index, bars);
-  const cycle = 16 * bars;
-  const captureStart = Math.ceil((armAt + 16) / cycle) * cycle;
-  world.engine.tick(captureStart + cycle + 4 - world.engine.absolute + 1);
-  await flush();
-  return { world, looper, captureStart };
-}
+// The fake AudioContext, StepEngine and asynchronous recorder live in tests/looper-fakes.mjs so the
+// latency-freeze tests can reuse the exact same harness.
 
 test('a take is recorded against the beat, cut to exactly one bar, and aligned by the pre-roll', async () => {
   const world = makeWorld();

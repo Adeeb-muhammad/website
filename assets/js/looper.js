@@ -95,8 +95,9 @@ export function createLooper(engine, options = {}) {
       if (session !== active) return;
       const ctx = engine.getAudioContext();
       const channels = Array.from({ length: audio.numberOfChannels }, (_, index) => audio.getChannelData(index));
-      // Audio before the take's first beat is dropped, then the user's latency setting is applied on top.
-      const offsetSeconds = (active.takeStartTime - active.recorderStartTime) + latencyOffset;
+      // Audio before the take's first beat is dropped, then this take's latency setting is applied on top.
+      // The setting was frozen when capture began, so moving the slider during the take cannot move this take.
+      const offsetSeconds = (active.takeStartTime - active.recorderStartTime) + active.latencyOffset;
       const fitted = fitToLoop(channels, audio.sampleRate, active.bpm, active.bars, { offsetSeconds });
       const buffer = ctx.createBuffer(fitted.length, fitted[0].length, audio.sampleRate);
       fitted.forEach((data, index) => buffer.copyToChannel(data, index));
@@ -124,6 +125,10 @@ export function createLooper(engine, options = {}) {
     if (active.phase === 'count-in' && absolute >= active.captureStart) {
       active.phase = 'recording';
       active.takeStartTime = when;
+      // Freeze the TAKE TIMING setting for this take at the moment capture starts. The panel says it applies to the
+      // next take, and the slider stays enabled while recording, so reading the shared value later would let a
+      // mid-take change move a take that was already captured.
+      active.latencyOffset = latencyOffset;
       track.status = 'recording';
       notify();
     }
@@ -190,7 +195,12 @@ export function createLooper(engine, options = {}) {
       }
 
       const track = tracks[index];
-      const active = { index, bars, bpm, recorder: makeRecorder(), phase: 'preparing', recorderStartTime: 0, captureStart: 0, takeStartTime: 0 };
+      // The session carries its own copy of the TAKE TIMING offset. It is set again when capture actually starts,
+      // so a change made during the count-in still applies and a change made during the take does not.
+      const active = {
+        index, bars, bpm, recorder: makeRecorder(), phase: 'preparing',
+        recorderStartTime: 0, captureStart: 0, takeStartTime: 0, latencyOffset
+      };
       session = active;
       track.status = 'preparing';
       track.message = '';
