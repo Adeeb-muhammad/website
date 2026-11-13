@@ -27,6 +27,10 @@ Instagram links are controlled by `profile.instagram` and can be updated under *
 - `assets/css/` — responsive site and editor styles
 - `assets/js/` — shared validation/filtering, public renderer, and editor
 - `assets/images/` / `assets/fonts/` — self-hosted assets
+- `music-studio/` — the pinned Music Studio (NeonDAW) build served at `/music-studio/`
+- `music-studio-src/` — Music Studio source; not part of the served site
+- `LICENSES/` — third-party software and instrument-sample credits for the studio
+- `archives/` — the retired drum machine snapshot and notes
 
 ## Miscellaneous tools
 
@@ -38,6 +42,12 @@ The two tool cards in Miscellaneous open `tools.html#notes` (Notes Canvas) and `
 - Link checker: validate URL syntax and duplicates locally, then optionally contact up to 50 URLs from the browser using four concurrent requests, seven-second timeouts, no credentials, and cancellation. Blocked, timed-out, or unreadable responses are **unverified**, not proof of a broken link. Readable 404/410 responses are unavailable; 401/403/429 are restricted. No CORS proxy or server is used. CSV reports can be downloaded.
 
 The Markdown parser is pinned and self-hosted with its MIT license under `assets/vendor/`. PDF generation uses a small local JPEG-to-PDF writer. Run `npm run check` to validate both the archive and the tool helpers.
+
+## Music Studio
+
+`music-studio/index.html` is the music page: a pinned, prebuilt build of NeonDAW with step drums, a piano roll, a mixer, song arrangement and WAV export, all in the browser. It is static and needs no account, service, or API key. Instrument samples ship in `music-studio/samples/`, third-party credits are listed in [`LICENSES/index.html`](LICENSES/index.html), and the matching source is kept in `music-studio-src/`, which GitHub Pages does not serve. To update it, rebuild from that source and replace `music-studio/`.
+
+The earlier hand-written drum machine — with chord mode, the voice recorder and the looper — has been retired. Its final code, styles and tests live in git history at commit `046befd`, and a snapshot with notes is in [`archives/`](archives/).
 
 ## Check locally
 
