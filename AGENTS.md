@@ -12,7 +12,7 @@
 These rules apply to every assistant: Claude, ChatGPT, Gemini, or a free OpenCode model.
 
 - One feature per branch and one pull request. Never push to `main`; Adeeb merges.
-- Prefer new files over editing shared ones (`assets/js/drum-machine.js`, `assets/js/tools.js`, `drum-machine.html`, `tools.html`). List any shared-file change in the PR description.
+- Prefer new files over editing shared ones (`assets/js/tools.js`, `tools.html`, the navigation blocks duplicated in the HTML pages). List any shared-file change in the PR description.
 - Do not touch `assets/js/notebook.js`, the Notes Canvas, or existing `localStorage` keys. New storage must use a new, clearly prefixed key, and the PR must say so.
 - Bump the `?v=` query string on any CSS or JS file you change, in every page that loads it.
 - Keep the site static: no backend and no new npm packages.
@@ -27,14 +27,11 @@ These rules apply to every assistant: Claude, ChatGPT, Gemini, or a free OpenCod
 - Tests for audio, microphone and timing code must use a fake that behaves like the browser. A fake `MediaRecorder` must deliver its final data after `stop()` returns, a fake `getUserMedia` must take time to answer (the permission prompt), and Web Audio parameter automation should be modelled and not only recorded. Fakes that finish instantly hide real race bugs (this once hid a microphone left on after cancelling).
 - Confirm every element id a script looks up still exists in the page, and that you added no duplicate top-level function names. In an ES module a duplicate declaration stops the whole script from loading, which is what broke the Notes Canvas once.
 
-## Drum machine timing interface
+## Music Studio
 
-`assets/js/drum-machine.js` exposes `window.StepEngine`. New features (chords, voice, looper) use it instead of making their own timers.
+`music-studio/` is the music page: a pinned, prebuilt NeonDAW bundle. `music-studio-src/` holds the matching source; do not hand-edit the built files — rebuild from the source and replace the build. It owns its own Web Audio graph.
 
-- `StepEngine.on('step', fn)` receives `{ step, when, bpm, stepDuration }`. `when` is in `AudioContext.currentTime` seconds. Schedule sounds against it. Never add a second `setInterval` clock.
-- `StepEngine.on('stop', fn)` fires when playback stops. Cancel anything you scheduled.
-- `StepEngine.getMasterGain()` is the shared output. Connect new voices there. `getAudioContext()`, `getBpm()` and `isPlaying()` are also available.
-- A `stepengine:ready` event fires on `document` once the API exists. `on()` returns an unsubscribe function.
+The hand-written drum machine (`window.StepEngine`), chord mode, the voice recorder and the looper were retired. Their final code, styles and tests live in git history at commit `046befd`, with a snapshot in `archives/`.
 
 ## Which assistant for which task
 
@@ -46,7 +43,7 @@ Adeeb has several free assistants. Free tiers are limited-time, so any model tha
 | Bug from a screenshot, mobile layout | Gemini, GLM 5.3 Flash, MiMo V2.6 Flash, Nemotron 3.5 Super VL (models that accept images) |
 | Reading a very large file or whole repo | 1M-context models: GLM 5.3 Flash, DeepSeek V4.1 Flash, Beam, MiMo V2.6 Flash |
 | Small, quick edits | Flint 40B (text-only and new, so verify the result) |
-| Wiring into `StepEngine`, timing and audio sync, the looper, anything security-sensitive | Claude or ChatGPT (one writes it, the other reviews it), then Adeeb tests on a real device |
+| Music Studio changes, timing and audio sync, anything security-sensitive | Claude or ChatGPT (one writes it, the other reviews it), then Adeeb tests on a real device |
 | Reviewing a pull request before merge | The assistant that did not write it (Claude or ChatGPT); see Working together below |
 | Browser QA: layout at 390px and 1280px, real Chromium audio measurements, console errors | Copilot with Playwright (it reports and changes no files) |
 
