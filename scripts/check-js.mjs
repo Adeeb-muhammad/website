@@ -1,5 +1,5 @@
 // Syntax-checks every JavaScript file in assets/js, so a new file can never be left out of `npm run check`.
-import { readdirSync } from 'node:fs';
+import { accessSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -14,6 +14,12 @@ for (const name of files) {
 
 if (failures.length) {
   for (const { name, output } of failures) console.error(`Syntax error in ${directory}/${name}\n${output}\n`);
+  process.exit(1);
+}
+try {
+  accessSync('music-studio/index.html');
+} catch {
+  console.error('Missing built music studio at music-studio/index.html.');
   process.exit(1);
 }
 console.log(`Syntax OK: ${files.length} files in ${directory}.`);
