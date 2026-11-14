@@ -38,10 +38,15 @@
       if (submitButton) submitButton.disabled = true;
       formStatus.textContent = 'Sending message…';
 
+      // Do not leave the button disabled forever if the request hangs.
+      var controller = new AbortController();
+      var timeout = setTimeout(function () { controller.abort(); }, 12000);
+
       fetch(FORM_ENDPOINT, {
         method: 'POST',
         body: data,
-        headers: { Accept: 'application/json' }
+        headers: { Accept: 'application/json' },
+        signal: controller.signal
       }).then(function (response) {
         if (!response.ok) {
           return response.json().catch(function () { return {}; }).then(function (result) {
@@ -54,10 +59,14 @@
         formStatus.textContent = 'Message sent. Thanks for reaching out!';
         form.reset();
       }).catch(function (error) {
-        formStatus.textContent = error && error.message
-          ? error.message
-          : 'Could not send the message. Please email ' + EMAIL + ' directly.';
+        var timedOut = error && error.name === 'AbortError';
+        formStatus.textContent = timedOut
+          ? 'The message timed out. Please email ' + EMAIL + ' directly.'
+          : error && error.message
+            ? error.message
+            : 'Could not send the message. Please email ' + EMAIL + ' directly.';
       }).then(function () {
+        clearTimeout(timeout);
         if (submitButton) submitButton.disabled = false;
       });
     });
