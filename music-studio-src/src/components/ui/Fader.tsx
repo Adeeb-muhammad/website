@@ -5,6 +5,8 @@ export interface FaderProps {
   value: number;
   onChange: (value: number) => void;
   label?: string;
+  /** Accessible name when the visible label is omitted. */
+  ariaLabel?: string;
   /** 推子帽上的荧光条颜色 */
   color?: string;
   /** 轨道高度 px */
@@ -30,6 +32,7 @@ export function Fader({
   value,
   onChange,
   label,
+  ariaLabel,
   color = '#00E5FF',
   height = 180,
   defaultValue,
@@ -91,7 +94,7 @@ export function Fader({
       <div
         ref={railRef}
         role="slider"
-        aria-label={label}
+        aria-label={ariaLabel ?? label}
         aria-valuemin={0}
         aria-valuemax={1}
         aria-valuenow={value}

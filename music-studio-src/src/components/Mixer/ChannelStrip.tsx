@@ -290,6 +290,7 @@ export function ChannelStrip({
         <Fader
           value={track.volume}
           onChange={(v) => setTrackVolume(track.id, v)}
+          ariaLabel={`${track.name} volume`}
           color={color}
           height={compact ? 104 : 150}
           defaultValue={isMaster ? 0.85 : 0.8}
@@ -305,6 +306,7 @@ export function ChannelStrip({
             max={1}
             step={0.02}
             defaultValue={0}
+            ariaLabel={`${track.name} pan`}
             onChange={(v) => setTrackPan(track.id, v)}
             color={color}
             size={34}

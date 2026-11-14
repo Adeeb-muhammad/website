@@ -1,10 +1,12 @@
 /**
- * Microphone recorder core, ported from the hand-written drum machine's
+ * Recorder core, ported from the hand-written drum machine's
  * voice-recorder.js (retired at commit 046befd) and kept framework-free so it
  * can be tested against a fake browser in tests/mic-recorder.test.mjs.
  *
- * It deliberately creates no AudioContext: phase 1 only needs MediaRecorder,
- * so the single audio clock stays the Tone.js context owned by the engine.
+ * It deliberately creates no AudioContext: the microphone needs only
+ * MediaRecorder, and the song/mix capture graph lives in captureGraph.ts on
+ * the Tone.js context the engine already owns, so there is still one audio
+ * clock. The microphone is optional (needsMic: false) for song-only takes.
  */
 
 const MIME_CANDIDATES = Object.freeze([
@@ -30,6 +32,7 @@ const ERROR_MESSAGES: Record<string, string> = Object.freeze({
   unsupported: 'Microphone recording is not supported in this browser.',
   unknown: 'The microphone could not be started. Please try again.',
   empty: 'The recording contains no audio. Try recording again.',
+  capture: 'The song could not be captured in this browser. Try recording the microphone instead.',
 });
 
 export interface RecorderError {
@@ -43,6 +46,13 @@ export interface Take {
   blob: Blob;
   mimeType: string;
   extension: string;
+}
+
+export interface RecordedStream {
+  /** The stream handed to MediaRecorder: the microphone, the master mix, or both. */
+  stream: MediaStream;
+  /** Disconnect the capture graph; called after the final encoded chunk arrives. */
+  release?: () => void;
 }
 
 type GetUserMedia = (constraints: MediaStreamConstraints) => Promise<MediaStream>;
@@ -65,6 +75,10 @@ export interface CreateMicRecorderOptions {
   constraints?: MediaTrackConstraints;
   setTimeout?: (handler: () => void, ms: number) => TimerHandle;
   clearTimeout?: (handle: TimerHandle) => void;
+  /** False for song-only takes: the microphone is never requested. */
+  needsMic?: boolean;
+  /** Build the stream to record from the (optional) microphone stream. */
+  createRecordStream?: (micStream: MediaStream | null) => RecordedStream;
 }
 
 function errorResult(code: string): RecorderError {
@@ -145,6 +159,8 @@ export function createMicRecorder({
   constraints = MIC_AUDIO_CONSTRAINTS,
   setTimeout: setTimer = globalThis.setTimeout.bind(globalThis),
   clearTimeout: clearTimerFn = globalThis.clearTimeout.bind(globalThis),
+  needsMic = true,
+  createRecordStream,
 }: CreateMicRecorderOptions = {}): MicRecorder {
   if (!Number.isFinite(maxSeconds) || maxSeconds <= 0 || maxSeconds > 3600) {
     throw new RangeError('maxSeconds must be a finite number above 0 and at most 3600.');
@@ -155,6 +171,8 @@ export function createMicRecorder({
 
   let currentState: RecorderState = 'idle';
   let stream: MediaStream | null = null;
+  let recordedStream: MediaStream | null = null;
+  let releaseRecorded: (() => void) | null = null;
   let mediaRecorder: MediaRecorder | null = null;
   let chunks: Blob[] = [];
   let timer: TimerHandle | null = null;
@@ -202,6 +220,11 @@ export function createMicRecorder({
     }
     stopTracks(stream);
     stream = null;
+    stopTracks(recordedStream);
+    recordedStream = null;
+    const release = releaseRecorded;
+    releaseRecorded = null;
+    try { release?.(); } catch { /* The capture graph is best-effort cleanup. */ }
     mediaRecorder = null;
   }
 
@@ -235,13 +258,18 @@ export function createMicRecorder({
       extension: extensionFor(actualMimeType),
     };
 
-    // MediaRecorder's final dataavailable event precedes stop. Release the tracks only
-    // after onstop so the final encoded bytes are already in chunks.
+    // MediaRecorder's final dataavailable event precedes stop. Release the microphone
+    // and the capture graph only after onstop so the final encoded bytes are in chunks.
     stopTracks(stream);
     stream = null;
+    stopTracks(recordedStream);
+    recordedStream = null;
     detachRecorder(recorder);
     mediaRecorder = null;
     chunks = [];
+    const release = releaseRecorded;
+    releaseRecorded = null;
+    try { release?.(); } catch { /* The final blob is already captured. */ }
 
     const stopWaiter = pendingStop;
     pendingStop = null;
@@ -294,27 +322,48 @@ export function createMicRecorder({
 
     return (async () => {
       try {
-        if (typeof getUserMedia !== 'function' || typeof MediaRecorderClass !== 'function') {
+        if (typeof MediaRecorderClass !== 'function' || (needsMic && typeof getUserMedia !== 'function')) {
           const unsupported = errorResult('unsupported');
           fail(unsupported, token);
           throw unsupported;
         }
 
-        const acquiredStream = await getUserMedia({ audio: constraints });
-        if (token !== generation || !isRequesting()) {
-          stopTracks(acquiredStream);
-          throw { code: 'cancelled', message: 'The recording request was cancelled.' } as RecorderError;
+        let micStream: MediaStream | null = null;
+        if (needsMic) {
+          micStream = await (getUserMedia as GetUserMedia)({ audio: constraints });
+          if (token !== generation || !isRequesting()) {
+            stopTracks(micStream);
+            throw { code: 'cancelled', message: 'The recording request was cancelled.' } as RecorderError;
+          }
+          stream = micStream;
         }
 
-        stream = acquiredStream;
+        const captured = createRecordStream
+          ? createRecordStream(micStream)
+          : micStream
+            ? { stream: micStream }
+            : null;
+        if (!captured || !captured.stream) throw errorResult('capture');
+        if (token !== generation || !isRequesting()) {
+          stopTracks(captured.stream);
+          try { captured.release?.(); } catch { /* The microphone is still released below. */ }
+          throw { code: 'cancelled', message: 'The recording request was cancelled.' } as RecorderError;
+        }
+        const recordStream = captured.stream;
+        // Without a capture graph the recorded stream is the microphone stream;
+        // track it separately only when it is a different stream, so cleanup
+        // stops each track once.
+        recordedStream = createRecordStream ? recordStream : null;
+        releaseRecorded = captured.release ?? null;
+
         const mimeType = pickMimeType(
           typeof MediaRecorderClass.isTypeSupported === 'function'
             ? MediaRecorderClass.isTypeSupported.bind(MediaRecorderClass)
             : undefined,
         );
         const recorder = mimeType
-          ? new MediaRecorderClass(stream, { mimeType })
-          : new MediaRecorderClass(stream);
+          ? new MediaRecorderClass(recordStream, { mimeType })
+          : new MediaRecorderClass(recordStream);
         mediaRecorder = recorder;
 
         recorder.ondataavailable = event => {

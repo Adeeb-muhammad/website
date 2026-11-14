@@ -114,7 +114,9 @@ function makeHarness(options = {}) {
     MediaRecorder,
     maxSeconds: options.maxSeconds ?? 10,
     setTimeout: timers.setTimeout,
-    clearTimeout: timers.clearTimeout
+    clearTimeout: timers.clearTimeout,
+    needsMic: options.needsMic,
+    createRecordStream: options.createRecordStream
   });
   return { recorder, stream, MediaRecorder, timers, calls };
 }
@@ -310,4 +312,122 @@ test('unsupported browsers fail without asking for the microphone', async () => 
   });
   await assert.rejects(recorder.start(), error => error.code === 'unsupported');
   assert.equal(calls.length, 0);
+});
+
+/* Song capture and combined microphone + song (phases 2 and 3) */
+
+function makeCapture() {
+  const recorded = makeStream();
+  const micStreams = [];
+  const log = [];
+  return {
+    recorded,
+    micStreams,
+    log,
+    createRecordStream(micStream) {
+      log.push('build');
+      micStreams.push(micStream);
+      return {
+        stream: recorded,
+        release() { log.push('release'); }
+      };
+    }
+  };
+}
+
+test('song-only recording never asks for the microphone and records the capture stream', async () => {
+  const capture = makeCapture();
+  const h = makeHarness({ needsMic: false, createRecordStream: capture.createRecordStream });
+
+  await h.recorder.start();
+  assert.equal(h.calls.length, 0, 'getUserMedia was not called');
+  assert.equal(h.MediaRecorder.calls[0].stream, capture.recorded);
+  assert.equal(capture.micStreams[0], null);
+
+  const result = await h.recorder.stop();
+  assert.equal(await result.blob.text(), 'take audio');
+  assert.deepEqual(capture.log, ['build', 'release']);
+  assert.equal(capture.recorded.stopCalls, 2);
+});
+
+test('song-only recording does not need getUserMedia to exist', async () => {
+  const capture = makeCapture();
+  const recorder = createMicRecorder({
+    needsMic: false,
+    MediaRecorder: makeMediaRecorderClass(),
+    createRecordStream: capture.createRecordStream,
+    maxSeconds: 5,
+    setTimeout: () => 1,
+    clearTimeout: () => {}
+  });
+
+  await recorder.start();
+  assert.equal(recorder.state, 'recording');
+  await recorder.stop();
+  assert.deepEqual(capture.log, ['build', 'release']);
+});
+
+test('combined recording builds from the microphone and releases after the final chunk', async () => {
+  const capture = makeCapture();
+  const h = makeHarness({ createRecordStream: capture.createRecordStream });
+
+  await h.recorder.start();
+  assert.equal(h.calls.length, 1, 'the microphone was requested');
+  assert.equal(capture.micStreams[0], h.stream);
+  assert.equal(h.MediaRecorder.calls[0].stream, capture.recorded);
+
+  const pending = h.recorder.stop();
+  assert.deepEqual(capture.log, ['build'], 'not released before the final data arrives');
+  const result = await pending;
+
+  assert.equal(await result.blob.text(), 'take audio');
+  assert.deepEqual(capture.log, ['build', 'release']);
+  assert.equal(h.stream.stopCalls, 2);
+  assert.equal(capture.recorded.stopCalls, 2);
+});
+
+test('discard releases the capture graph and both streams', async () => {
+  const capture = makeCapture();
+  const h = makeHarness({ createRecordStream: capture.createRecordStream });
+  await h.recorder.start();
+
+  h.recorder.discard();
+  assert.equal(h.recorder.state, 'idle');
+  assert.deepEqual(capture.log, ['build', 'release']);
+  assert.equal(h.stream.stopCalls, 2);
+  assert.equal(capture.recorded.stopCalls, 2);
+});
+
+test('a recording error releases the capture graph', async () => {
+  const capture = makeCapture();
+  const h = makeHarness({ createRecordStream: capture.createRecordStream });
+  await h.recorder.start();
+
+  h.MediaRecorder.calls[0].onerror?.({ error: new Error('encoder failed') });
+  assert.equal(h.recorder.state, 'error');
+  assert.deepEqual(capture.log, ['build', 'release']);
+  assert.equal(h.stream.stopCalls, 2);
+});
+
+test('the maximum length releases the capture graph too', async () => {
+  const capture = makeCapture();
+  const h = makeHarness({ createRecordStream: capture.createRecordStream, maxSeconds: 1 });
+  await h.recorder.start();
+
+  h.timers.fire(h.timers.firstId());
+  await flush();
+
+  assert.equal(h.recorder.state, 'stopped');
+  assert.deepEqual(capture.log, ['build', 'release']);
+});
+
+test('a failing capture graph stops the microphone and reports the error', async () => {
+  const error = { code: 'capture', message: 'The song could not be captured in this browser.' };
+  const h = makeHarness({ createRecordStream() { throw error; } });
+
+  await assert.rejects(h.recorder.start(), (caught) => caught.code === 'capture' && caught.message === error.message);
+  assert.equal(h.recorder.state, 'error');
+  assert.equal(h.stream.stopCalls, 2);
+  assert.equal(h.MediaRecorder.calls.length, 0);
+  assert.equal(h.timers.scheduled.size, 0);
 });
