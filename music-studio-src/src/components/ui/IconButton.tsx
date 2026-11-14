@@ -62,7 +62,7 @@ export function IconButton({
         disabled={disabled}
         onClick={onClick}
         initial={false}
-        style={{ boxShadow: restShadow, backgroundColor: active ? activeColor : '#FFFFFF' }}
+        style={{ boxShadow: restShadow, backgroundColor: active ? activeColor : '#131313' }}
         whileHover={disabled ? undefined : { y: -2, boxShadow: hoverShadow }}
         whileTap={
           disabled

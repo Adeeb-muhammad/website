@@ -77,7 +77,7 @@ function VirtualKeyboard({ channelId, color }: { channelId: string; color: strin
               : undefined
           }
         >
-          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-black text-ink/40">
+          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-black text-black/40">
             {noteName(m)}
           </span>
         </button>
@@ -103,7 +103,7 @@ function VirtualKeyboard({ channelId, color }: { channelId: string; color: strin
             onPointerLeave={(e) => {
               if (e.buttons) release(m);
             }}
-            className="absolute top-0 z-10 h-[60%] rounded-b-md border-2 border-ink bg-ink transition-transform active:translate-y-0.5"
+            className="absolute top-0 z-10 h-[60%] rounded-b-md border-2 border-ink bg-[#0a0a0a] transition-transform active:translate-y-0.5"
             style={{
               left: `${leftPct}%`,
               width: `${wPct}%`,

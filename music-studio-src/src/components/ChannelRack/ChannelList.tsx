@@ -72,7 +72,7 @@ function ChannelRow({
         if (e.key === 'Enter') selectChannel(ch.id);
       }}
       className={`relative flex cursor-pointer items-center gap-2 border-b-2 border-ink/10 pr-2.5 pl-3.5 select-none ${
-        selected ? 'bg-[#EDFAFE]' : 'bg-card hover:bg-[#F6F8FB]'
+        selected ? 'bg-[#14272b]' : 'bg-card hover:bg-[#1a1a18]'
       }`}
       style={{
         height: rowH,

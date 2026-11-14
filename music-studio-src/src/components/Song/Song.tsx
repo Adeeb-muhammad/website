@@ -368,7 +368,7 @@ export function Song() {
                             e.stopPropagation();
                             copyClip(t.id, c.id);
                           }}
-                          className="rounded border-2 border-ink bg-white p-0.5 text-ink"
+                          className="rounded border-2 border-ink bg-card p-0.5 text-ink"
                         >
                           <Copy className="h-2.5 w-2.5" strokeWidth={3} />
                         </button>
@@ -380,7 +380,7 @@ export function Song() {
                             removeClip(t.id, c.id);
                             setSelectedClip(null);
                           }}
-                          className="rounded border-2 border-ink bg-white p-0.5 text-neon-pink"
+                          className="rounded border-2 border-ink bg-card p-0.5 text-neon-pink"
                         >
                           <Trash2 className="h-2.5 w-2.5" strokeWidth={3} />
                         </button>
