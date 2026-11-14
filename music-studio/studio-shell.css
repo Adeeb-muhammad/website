@@ -25,3 +25,18 @@
   .studio-bar .eyebrow{order:3;flex-basis:100%;margin-top:2px;font-size:8px}
   .studio-bar .micro{display:none}
 }
+
+
+/* Visibility fixes for the Synth piano and recorder source picker. */
+#root button.bg-white {
+  background-color: #f4f0e6;
+  color: #171717;
+}
+
+/* The recorder is rendered through a portal, so scope by the page body. */
+body.studio-page [role="dialog"] button[aria-pressed="true"] {
+  background-color: #39ff88 !important;
+  color: #080808 !important;
+  border-color: #39ff88;
+  box-shadow: 0 0 0 1px #39ff88, 0 0 12px rgb(57 255 136 / 45%);
+}
