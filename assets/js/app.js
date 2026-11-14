@@ -9,6 +9,7 @@ let layout = 'grid';
 let toastTimer;
 let entryFocus;
 let entryScrollY = 0;
+let firstRoute = true;
 const collectionInfo = {
   films: ['THE WATCHED FILES / A PERSONAL COLLECTION', 'FILM_', 'ARCHIVE', 'Films, ratings, and the thoughts that stay after the credits.'],
   series: ['THE LONGER STORIES / EPISODE BY EPISODE', 'SERIES_', 'ARCHIVE', 'Longer stories, across languages. Some finished, some still unfolding.'],
@@ -41,7 +42,10 @@ async function copy(text) {
 
 function poster(entry, { featured = false, index = 0 } = {}) {
   const image = safeURL(featured ? entry.image || entry.poster : entry.poster, { image: true });
-  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}${image ? ' has-image' : ''}"${image ? ` style="--poster:url('${e(image)}')"` : ''}><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="900" height="1125"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
+  // A custom property consumed by style.css resolves relative to that stylesheet,
+  // so the backdrop needs an absolute URL or it requests assets/css/assets/…
+  const backdrop = image ? new URL(image, document.baseURI).href : '';
+  return `<div class="${featured ? 'feature-media' : 'poster-frame'} poster-tone-${index % 5}${image ? ' has-image' : ''}"${image ? ` style="--poster:url('${e(backdrop)}')"` : ''}><div class="poster-fallback" aria-hidden="true"><span class="micro">Adeeb’s Vault / ${e(entry.year)}</span><span class="poster-type">${e(entry.title)}</span><span class="micro">${e(entry.director || entry.type.toUpperCase())}</span></div>${image ? `<img src="${e(image)}" alt="${e(entry.title)}${featured ? ' — film artwork' : entry.category === 'anime' ? ' cover art' : ' poster'}" loading="lazy" decoding="async" ${featured ? 'width="900" height="1125"' : 'width="500" height="750"'}>` : ''}<span class="poster-arrow" aria-hidden="true">↗</span></div>`;
 }
 
 function filmCard(entry, index, featured = false) {
@@ -168,9 +172,21 @@ function route() {
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
   else if (hash === 'contact' || hash === 'projects') requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' }));
   else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
-  if (closingEntry && ['films', 'series', 'anime', 'watchlist'].includes(hash)) {
-    $(`#collection-grid a[href="#film/${closingEntry}"]`)?.focus({ preventScroll: true });
+  const anchor = hash === 'contact' || hash === 'projects' ? hash : '';
+  const focusTarget = closingEntry
+    ? $(`#collection-grid a[href="#film/${closingEntry}"]`)
+    : anchor
+      ? document.getElementById(anchor)
+      : document.querySelector('.view:not([hidden]) h1');
+
+  // Move focus with the view so keyboard and screen-reader users land where the
+  // page changed. Skipped on first load, where the browser starts at the top.
+  if (closingEntry && focusTarget) focusTarget.focus({ preventScroll: true });
+  else if (!firstRoute && focusTarget) {
+    focusTarget.setAttribute('tabindex', '-1');
+    focusTarget.focus({ preventScroll: true });
   }
+  firstRoute = false;
 }
 
 function closeEntry() {

@@ -2,7 +2,7 @@
 
 A personal portfolio, film diary, series archive, and watchlist. The original black/chrome and neon-yellow palette, with the earlier cosmos gradient retained for the Vault wordmark and browser-tab icon, built as a responsive static site.
 
-**No backend, account system, API key, paid database, or production build step is required.** GitHub stores the public content in [`data/archive.json`](data/archive.json), alongside the frontend. GitHub Pages can serve the repository root directly. The existing `CNAME` remains `adeebmuh.me`.
+**No backend, account system, API key, or paid database is required.** GitHub stores the public content in [`data/archive.json`](data/archive.json), alongside the frontend. GitHub Pages can serve the repository root directly; `npm run check` validates the content, the local references and the cache versions, and writes a stamped copy to `dist/` for previews. The existing `CNAME` remains `adeebmuh.me`.
 
 ## Update your ratings without editing HTML
 
@@ -21,8 +21,9 @@ Instagram links are controlled by `profile.instagram` and can be updated under *
 
 ## Project structure
 
-- `index.html` — public portfolio and archive
+- `index.html` — public portfolio, archive, miscellaneous links and About me (operator, projects, contact)
 - `studio.html` — local draft editor, preview, import/export, and GitHub publishing instructions
+- `currently-watching.html`, `reading-log.html`, `canvas-pro.html`, `tools.html` — the misc pages
 - `data/archive.json` — public profile, projects, and film/series records
 - `assets/css/` — responsive site and editor styles
 - `assets/js/` — shared validation/filtering, public renderer, and editor
@@ -47,6 +48,8 @@ The Markdown parser is pinned and self-hosted with its MIT license under `assets
 
 `music-studio/index.html` is the music page: a pinned, prebuilt build of NeonDAW with step drums, a piano roll, a mixer, song arrangement and WAV export, all in the browser. It is static and needs no account, service, or API key. Instrument samples ship in `music-studio/samples/`, third-party credits are listed in [`LICENSES/index.html`](LICENSES/index.html), and the matching source is kept in `music-studio-src/`, which GitHub Pages does not serve. To update it, rebuild from that source and replace `music-studio/`.
 
+Its recorder can capture the microphone, the song's master output, or both together; takes stay in the page and can be downloaded. The recorder core, the capture graph and the React binding are covered by `tests/mic-recorder.test.mjs` and `tests/capture-graph.test.mjs`.
+
 The earlier hand-written drum machine — with chord mode, the voice recorder and the looper — has been retired. Its final code, styles and tests live in git history at commit `046befd`, and a snapshot with notes is in [`archives/`](archives/).
 
 ## Check locally
@@ -58,7 +61,7 @@ npm test
 npm run build
 ```
 
-The build validates the archive and local asset references, then creates `dist/`. The original source also works directly on GitHub Pages; there are no npm dependencies. For a local preview with Python installed, run `python -m http.server 8000` in the repository and open `http://localhost:8000`. Opening the HTML with `file://` will not load the JSON archive.
+The build validates the archive, every local page reference, stylesheet `url()` targets and the cache versions, then creates `dist/`. The original source also works directly on GitHub Pages; there are no npm dependencies. A GitHub Actions workflow runs `npm run check` on every push and pull request. For a local preview with Python installed, run `python -m http.server 8000` in the repository and open `http://localhost:8000`. Opening the HTML with `file://` will not load the JSON archive.
 
 ## GitHub Pages
 
@@ -75,4 +78,4 @@ Film posters and anime covers belong to their respective rightsholders and are n
 
 The code is licensed under the MIT License.
 
-When application code or CSS changes, bump the asset query versions in HTML and the `core.js` module imports together so returning visitors receive the matching renderer and validator. Content-only changes to `data/archive.json` do not require a version bump.
+When application code or CSS changes, bump the asset query versions in HTML and the `core.js` module imports together so returning visitors receive the matching renderer and validator. Stylesheets use one shared version: change `CACHE_VERSION` in `scripts/build.mjs` and every `style.css?v=` reference together — `npm run check` fails if they disagree. Content-only changes to `data/archive.json` do not require a version bump.

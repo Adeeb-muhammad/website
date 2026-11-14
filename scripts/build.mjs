@@ -4,18 +4,50 @@ import path from 'node:path';
 import { validateArchive } from '../assets/js/core.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const CACHE_VERSION = '15';
+const CACHE_VERSION = '16';
 const data = JSON.parse(await readFile(path.join(root, 'data/archive.json'), 'utf8'));
 const errors = validateArchive(data);
 if (errors.length) throw new Error(`Invalid archive:\n${errors.join('\n')}`);
 for (const entry of data.entries) {
   for (const key of ['image', 'poster']) if (entry[key].startsWith('assets/')) await access(path.join(root, entry[key]));
 }
-for (const file of ['index.html', 'studio.html', 'currently-watching.html', 'reading-log.html', 'tools.html']) {
+const htmlFiles = ['index.html', 'studio.html', 'currently-watching.html', 'reading-log.html', 'tools.html', 'vault-archive.html', 'canvas-pro.html', '404.html', 'LICENSES/index.html', 'music-studio/index.html'];
+
+for (const file of htmlFiles) {
   const html = await readFile(path.join(root, file), 'utf8');
+
+  // Every local reference must exist, including absolute /paths (404.html) and ../ paths (music-studio).
   for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
     const ref = match[1];
-    if (!ref.startsWith('http') && !ref.startsWith('#') && !ref.startsWith('mailto:') && !ref.startsWith('data:')) await access(path.join(root, ref.split(/[?#]/)[0]));
+    if (/^(?:https?:|#|mailto:|data:|javascript:)/.test(ref)) continue;
+    const clean = ref.split(/[?#]/)[0];
+    if (!clean) continue;
+    const target = clean.startsWith('/')
+      ? path.join(root, clean)
+      : path.join(root, path.dirname(file), clean);
+    await access(target);
+  }
+
+  // Cache versions must be bumped in source, not only rewritten in dist.
+  for (const match of html.matchAll(/(?:\.\.\/|\/)?assets\/css\/style\.css\?v=(\d+)/g)) {
+    if (match[1] !== CACHE_VERSION) {
+      throw new Error(`${file}: style.css?v=${match[1]} should be ?v=${CACHE_VERSION}`);
+    }
+  }
+  if (html.includes('misc-nav.js') && !/misc-nav\.js\?v=\d+/.test(html)) {
+    throw new Error(`${file}: misc-nav.js needs a ?v= cache version`);
+  }
+}
+
+// Stylesheet url() references resolve relative to the stylesheet itself, which is
+// how the poster-backdrop bug shipped once.
+for (const name of await readdir(path.join(root, 'assets/css'))) {
+  if (!name.endsWith('.css')) continue;
+  const css = await readFile(path.join(root, 'assets/css', name), 'utf8');
+  for (const match of css.matchAll(/url\((['"]?)([^)'"\s]+)\1\)/g)) {
+    const ref = match[2];
+    if (/^(?:https?:|data:|%23|#)/.test(ref)) continue;
+    await access(path.join(root, 'assets/css', ref.split(/[?#]/)[0]));
   }
 }
 const fonts = await readFile(path.join(root, 'assets/fonts/fonts.css'), 'utf8');
@@ -25,7 +57,6 @@ await rm(path.join(root, 'dist'), { recursive: true, force: true });
 await mkdir(path.join(root, 'dist'), { recursive: true });
 for (const file of ['index.html', 'studio.html', 'currently-watching.html', 'reading-log.html', 'tools.html', 'vault-archive.html', 'canvas-pro.html', '404.html', 'CNAME', '.nojekyll', 'robots.txt', 'sitemap.xml', 'assets', 'data', 'LICENSES', 'music-studio']) await cp(path.join(root, file), path.join(root, 'dist', file), { recursive: true });
 
-const htmlFiles = ['index.html', 'studio.html', 'currently-watching.html', 'reading-log.html', 'tools.html', 'vault-archive.html', 'canvas-pro.html', '404.html', 'LICENSES/index.html', 'music-studio/index.html'];
 for (const file of htmlFiles) {
   const output = path.join(root, 'dist', file);
   let html = await readFile(output, 'utf8');
