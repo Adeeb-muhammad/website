@@ -6,18 +6,18 @@
    ============================================================ */
 @theme {
   /* ---- 底层 · 大面积高级感 ---- */
-  --color-bg: #f1f0f7; /* 冷紫白页面底 */
-  --color-bg-warm: #fafaf8; /* 米白 */
-  --color-card: #ffffff; /* 纯白卡片 */
-  --color-panel: #f5f5f4; /* 浅灰面板 */
+  --color-bg: #080808; /* site --bg */
+  --color-bg-warm: #0e0e0e; /* site --panel */
+  --color-card: #131313; /* site --surface */
+  --color-panel: #0b0b0b; /* inset wells */
 
   /* ---- 中层 · 轮廓 ---- */
-  --color-ink: #17171c; /* 黑描边 / 主文字 */
+  --color-ink: #e8e5df; /* site --ink (light on dark) */
 
   /* ---- 文字三级 ---- */
-  --color-fg: #17171c; /* 主 */
-  --color-fg-muted: #6e6e78; /* 次 */
-  --color-fg-faint: #a8a8b2; /* 弱 */
+  --color-fg: #e8e5df; /* site --ink */
+  --color-fg-muted: #888780; /* site --muted */
+  --color-fg-faint: #6f6f69; /* dimmer than --muted */
 
   /* ---- 顶层 · 荧光高光（小面积 ≤10%） ---- */
   --color-neon-cyan: #00e5ff;
@@ -36,9 +36,9 @@
   --color-ch-magenta: #ff5ca8;
 
   /* ---- 硬阴影（不模糊的贴纸阴影） ---- */
-  --shadow-hard: 3px 3px 0 #17171c;
-  --shadow-hard-lg: 5px 5px 0 #17171c;
-  --shadow-hard-sm: 1px 1px 0 #17171c;
+  --shadow-hard: 3px 3px 0 #000;
+  --shadow-hard-lg: 5px 5px 0 #000;
+  --shadow-hard-sm: 1px 1px 0 #000;
 
   /* ---- 荧光辉光 ---- */
   --shadow-glow-cyan: 0 0 10px rgba(0, 229, 255, 0.65);
@@ -47,7 +47,7 @@
   --shadow-glow-green: 0 0 10px rgba(57, 255, 136, 0.65);
 
   /* ---- 字体 ---- */
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "PingFang SC",
+  --font-sans: "Geist", "Inter", "Segoe UI", system-ui, -apple-system, "PingFang SC",
     "Microsoft YaHei", sans-serif;
 
   /* ---- spring 弹跳动效曲线 ---- */
@@ -65,7 +65,7 @@
     /* 冷紫白底 + 极淡点阵纹理（纸感） */
     background-color: var(--color-bg);
     background-image: radial-gradient(
-      rgba(23, 23, 28, 0.055) 1px,
+      rgba(232, 229, 223, 0.045) 1px,
       transparent 1.2px
     );
     background-size: 22px 22px;
@@ -107,11 +107,11 @@
     display: none;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(23, 23, 28, 0.08);
+    background: rgba(232, 229, 223, 0.06);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(23, 23, 28, 0.85);
+    background: rgba(232, 229, 223, 0.35);
     border: 3px solid transparent;
     border-radius: 999px;
     background-clip: padding-box;
@@ -126,7 +126,7 @@
   @supports (-moz-images-in-menus: 0) {
     * {
       scrollbar-width: thin;
-      scrollbar-color: rgba(23, 23, 28, 0.72) rgba(23, 23, 28, 0.08);
+      scrollbar-color: rgba(232, 229, 223, 0.35) rgba(232, 229, 223, 0.06);
     }
   }
 }
@@ -193,14 +193,14 @@
 @keyframes note-hit {
   0% {
     box-shadow:
-      1.5px 1.5px 0 #17171c,
+      1.5px 1.5px 0 #000,
       0 0 4px rgba(0, 229, 255, 1),
       0 0 14px rgba(0, 229, 255, 0.95);
     filter: brightness(1.9);
   }
   100% {
     box-shadow:
-      1.5px 1.5px 0 #17171c,
+      1.5px 1.5px 0 #000,
       0 0 0 rgba(0, 229, 255, 0);
     filter: brightness(1);
   }
@@ -266,4 +266,73 @@
   .group\/tip > [role='tooltip'] {
     display: none;
   }
+}
+
+
+/* ============================================================
+   Adeeb's Vault dark theme. Site tokens: --bg #080808, --panel #0e0e0e,
+   --surface #131313, --ink #e8e5df, --muted #888780, --accent #faff00.
+   Unlayered on purpose, so these win over the Tailwind utility layer.
+   ============================================================ */
+:root {
+  color-scheme: dark;
+  --vault-accent: #faff00;
+  --vault-line-hi: #3a3a35;
+}
+body {
+  font-family: var(--font-sans);
+}
+.border-ink {
+  border-color: var(--vault-line-hi);
+}
+/* Solid ink fills were the "selected / primary" look: use the site accent. */
+.bg-ink {
+  background-color: var(--vault-accent);
+}
+.text-white {
+  color: #080808;
+}
+.text-white\/70 {
+  color: rgb(8 8 8 / 0.7);
+}
+.border-white\/40 {
+  border-color: rgb(8 8 8 / 0.4);
+}
+.bg-white\/10 {
+  background-color: rgb(8 8 8 / 0.1);
+}
+.bg-white\/70 {
+  background-color: rgb(232 229 223 / 0.08);
+}
+.bg-ink\/45 {
+  background-color: rgb(0 0 0 / 0.65);
+}
+/* Dark text on solid neon fills: re-scope the ink token locally. */
+[class~="bg-neon-cyan"],
+[class~="bg-neon-pink"],
+[class~="bg-neon-yellow"],
+[class~="bg-neon-green"],
+[class~="bg-ch-cyan"],
+[class~="bg-ch-pink"],
+[class~="bg-ch-yellow"],
+[class~="bg-ch-green"],
+[class~="bg-ch-purple"],
+[class~="bg-ch-blue"],
+[class~="bg-ch-orange"],
+[class~="bg-ch-magenta"] {
+  --color-ink: #17171c;
+  --color-fg: #17171c;
+  --color-fg-muted: #3d3d46;
+  color: #17171c;
+}
+/* Inline-coloured fills (channel colours set from JS): dark text on them too. */
+[style*="background: rgb("] {
+  --color-ink: #17171c;
+  --color-fg: #17171c;
+  --color-fg-muted: #3d3d46;
+  color: #17171c;
+}
+:focus-visible {
+  outline: 2px solid var(--vault-accent);
+  outline-offset: 2px;
 }

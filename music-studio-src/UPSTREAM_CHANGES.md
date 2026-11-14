@@ -39,3 +39,19 @@ open.
 `tests/mic-recorder.test.mjs` and `tests/capture-graph.test.mjs` in the site
 repo's root test suite, so `npm run check` exercises them without needing the
 Vite build.
+
+
+## Dark theme (Adeeb's Vault)
+
+Visual only; no audio, state or storage changes.
+
+- `src/index.css`: design tokens switched to the site palette (`--bg #080808`,
+  panel `#0e0e0e`, surface `#131313`, ink `#e8e5df`, muted `#888780`), Geist
+  font, plus an unlayered override block at the end (accent `#faff00` for
+  selected states, dim borders, dark text on neon and inline-coloured fills).
+- Hard-coded light colours replaced in: `ui/IconButton`, `ui/Tooltip`,
+  `Keyboard/LiveKeys` (black keys, beat dots, labels), `Synth/Synth`,
+  `Synth/SynthPanel` (strokes), `Song/Song`, `ChannelRack/StepGrid`,
+  `ChannelRack/ChannelList`, `layout/HomeGrid`, and the grid lines and
+  velocity tint in `PianoRoll/{GridArea,PianoRoll,VelocityStrip}`.
+- The built output in `music-studio/assets/` was regenerated.

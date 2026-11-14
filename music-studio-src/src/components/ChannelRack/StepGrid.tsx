@@ -48,10 +48,10 @@ const StepCell = memo(function StepCell({
 }) {
   const pct = Math.round(35 + 65 * (velocity / 127));
   const background = on
-    ? `color-mix(in srgb, ${color} ${pct}%, #ffffff)`
+    ? `color-mix(in srgb, ${color} ${pct}%, #131313)`
     : isPlay
-      ? '#D8F7FD'
-      : '#F0F0F5';
+      ? '#16363b'
+      : '#1c1c1a';
   return (
     <div
       data-cell

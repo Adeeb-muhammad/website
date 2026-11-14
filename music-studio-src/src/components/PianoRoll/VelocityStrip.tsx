@@ -79,7 +79,7 @@ export function VelocityStrip({
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `repeating-linear-gradient(90deg, rgba(23,23,28,0.18) 0 1px, transparent 1px ${stepW * 4}px)`,
+          backgroundImage: `repeating-linear-gradient(90deg, rgba(232,229,223,0.081) 0 1px, transparent 1px ${stepW * 4}px)`,
         }}
       />
       <div ref={areaRef} className="absolute inset-x-0 top-1 bottom-1">
@@ -100,7 +100,7 @@ export function VelocityStrip({
                   ? Math.max(16, stepW / 2)
                   : Math.max(4, Math.min(8, stepW / 4)),
                 height: `${(v / 127) * 100}%`,
-                background: `color-mix(in srgb, ${color} ${pct}%, #ffffff)`,
+                background: `color-mix(in srgb, ${color} ${pct}%, #131313)`,
               }}
             />
           );

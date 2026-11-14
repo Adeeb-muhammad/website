@@ -39,7 +39,7 @@ export function Tooltip({
         role="tooltip"
         className={`pointer-events-none absolute z-50 ${sideClasses[side]}`}
       >
-        <span className="rounded-lg border-2 border-ink bg-ink px-2 py-1 text-xs font-semibold whitespace-nowrap text-white opacity-0 transition-[opacity,translate] duration-150 delay-120 group-hover/tip:opacity-100">
+        <span className="rounded-lg border-2 border-ink bg-card px-2 py-1 text-xs font-semibold whitespace-nowrap text-ink opacity-0 transition-[opacity,translate] duration-150 delay-120 group-hover/tip:opacity-100">
           {content}
         </span>
       </span>

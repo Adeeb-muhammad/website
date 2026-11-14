@@ -206,7 +206,7 @@ function Keyboard({
           }
         >
           {m % 12 === 0 && (
-            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-ink/40">
+            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black text-black/40">
               {noteName(m)}
             </span>
           )}
@@ -225,7 +225,7 @@ function Keyboard({
             type="button"
             aria-label={noteName(m)}
             {...keyHandlers(m)}
-            className="absolute top-0 z-10 h-[58%] rounded-b-lg border-2 border-ink bg-ink transition-transform active:translate-y-0.5"
+            className="absolute top-0 z-10 h-[58%] rounded-b-lg border-2 border-ink bg-[#0a0a0a] transition-transform active:translate-y-0.5"
             style={{
               left: `${leftPct}%`,
               width: `${wPct}%`,
@@ -261,8 +261,8 @@ function StepDots({ color }: { color: string }) {
           key={i}
           className="h-2 rounded-full border transition-all duration-75"
           style={{
-            borderColor: i % 4 === 0 ? '#17171C' : '#17171C33',
-            background: i === lit ? color : '#E7E6EE',
+            borderColor: i % 4 === 0 ? '#e8e5df' : '#e8e5df33',
+            background: i === lit ? color : '#2a2a27',
             boxShadow: i === lit ? `0 0 6px ${color}` : undefined,
           }}
         />

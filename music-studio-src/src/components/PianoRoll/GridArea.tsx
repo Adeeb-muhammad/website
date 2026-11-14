@@ -58,7 +58,7 @@ const NoteView = memo(function NoteView({
         top,
         width: Math.max(5, width),
         height: ROW_H - 3,
-        background: `color-mix(in srgb, ${color} ${pct}%, #ffffff)`,
+        background: `color-mix(in srgb, ${color} ${pct}%, #131313)`,
         boxShadow: selected
           ? `1.5px 1.5px 0 ${INK}, 0 0 8px ${color}`
           : `1.5px 1.5px 0 rgba(23,23,28,0.85)`,
@@ -440,12 +440,12 @@ export function GridArea({
                 top: r * ROW_H,
                 height: ROW_H,
                 background: isBlackKey(midi)
-                  ? 'rgba(23,23,28,0.05)'
+                  ? 'rgba(232,229,223,0.023)'
                   : undefined,
                 boxShadow:
                   midi % 12 === 0
-                    ? 'inset 0 -2px 0 rgba(23,23,28,0.28)'
-                    : 'inset 0 -1px 0 rgba(23,23,28,0.08)',
+                    ? 'inset 0 -2px 0 rgba(232,229,223,0.126)'
+                    : 'inset 0 -1px 0 rgba(232,229,223,0.036)',
               }}
             />
           );
@@ -456,7 +456,7 @@ export function GridArea({
       <div
         className="pointer-events-none absolute inset-0 z-0"
         style={{
-          backgroundImage: `repeating-linear-gradient(90deg, rgba(23,23,28,0.22) 0 1px, transparent 1px ${stepW * 4}px), repeating-linear-gradient(90deg, rgba(23,23,28,0.09) 0 1px, transparent 1px ${stepW}px)`,
+          backgroundImage: `repeating-linear-gradient(90deg, rgba(232,229,223,0.099) 0 1px, transparent 1px ${stepW * 4}px), repeating-linear-gradient(90deg, rgba(232,229,223,0.041) 0 1px, transparent 1px ${stepW}px)`,
         }}
       />
       {/* 小节分割线（粗） */}
@@ -504,7 +504,7 @@ export function GridArea({
             top: (PITCH_MAX - ghost.pitch) * ROW_H + 1.5,
             width: Math.max(5, ghost.lengthSteps * stepW - 2),
             height: ROW_H - 3,
-            background: `color-mix(in srgb, ${ghostColor} 55%, #ffffff)`,
+            background: `color-mix(in srgb, ${ghostColor} 55%, #131313)`,
           }}
         />
       )}

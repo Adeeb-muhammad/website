@@ -69,8 +69,8 @@ function KeyboardCol({
             style={{
               height: ROW_H,
               boxShadow: isC
-                ? 'inset 0 -2px 0 rgba(23,23,28,0.32)'
-                : 'inset 0 -1px 0 rgba(23,23,28,0.14)',
+                ? 'inset 0 -2px 0 rgba(232,229,223,0.144)'
+                : 'inset 0 -1px 0 rgba(232,229,223,0.063)',
             }}
           >
             {isC && (
@@ -79,7 +79,7 @@ function KeyboardCol({
               </span>
             )}
             {black && (
-              <span className="absolute top-0 right-0 bottom-0 w-1.5 bg-ink" />
+              <span className="absolute top-0 right-0 bottom-0 w-1.5 bg-ink/40" />
             )}
           </div>
         );
@@ -107,7 +107,7 @@ function Ruler({
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `repeating-linear-gradient(90deg, rgba(23,23,28,0.3) 0 1px, transparent 1px ${stepW * 4}px)`,
+          backgroundImage: `repeating-linear-gradient(90deg, rgba(232,229,223,0.135) 0 1px, transparent 1px ${stepW * 4}px)`,
         }}
       />
       {Array.from({ length: bars }, (_, b) => (
@@ -273,7 +273,7 @@ export function PianoRoll() {
               }`}
               style={
                 c.id === effectiveChannelId
-                  ? { background: `color-mix(in srgb, ${c.color} 30%, #ffffff)` }
+                  ? { background: `color-mix(in srgb, ${c.color} 30%, #131313)` }
                   : undefined
               }
             >

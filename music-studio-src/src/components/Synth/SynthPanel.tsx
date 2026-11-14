@@ -59,7 +59,7 @@ function WaveButtons({
             <svg viewBox="0 0 24 20" className="h-3.5 w-5" fill="none">
               <path
                 d={WAVE_PATHS[w]}
-                stroke="#17171C"
+                stroke={active ? "#17171C" : "#e8e5df"}
                 strokeWidth={2.4}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -161,7 +161,7 @@ function EnvelopeCurve({
           x2={W - PAD}
           y1={y(g)}
           y2={y(g)}
-          stroke="#17171C"
+          stroke="#e8e5df"
           strokeOpacity={0.08}
           strokeWidth={1.5}
         />
@@ -177,8 +177,8 @@ function EnvelopeCurve({
         style={{ filter: `drop-shadow(0 0 3px ${color})` }}
       />
       {/* 峰值与 sustain 标记点 */}
-      <circle cx={x(a)} cy={y(1)} r={2.6} fill="#17171C" />
-      <circle cx={x(a + d + HOLD)} cy={y(s)} r={2.6} fill="#17171C" />
+      <circle cx={x(a)} cy={y(1)} r={2.6} fill="#e8e5df" />
+      <circle cx={x(a + d + HOLD)} cy={y(s)} r={2.6} fill="#e8e5df" />
     </svg>
   );
 }

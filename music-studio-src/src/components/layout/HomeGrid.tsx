@@ -25,7 +25,7 @@ function MiniPreview({ color }: { color: string }) {
             key={i}
             className="mx-auto h-2 w-2 rounded-full border border-ink/50 transition-colors duration-75"
             style={{
-              background: on ? color : '#E7E6EE',
+              background: on ? color : '#2a2a27',
               boxShadow: on ? `0 0 6px ${color}` : undefined,
             }}
           />
