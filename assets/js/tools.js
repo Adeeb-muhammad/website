@@ -1,4 +1,4 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=4';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=3';
 import { initNotebook } from './notebook.js?v=2';
 import { escapeHTML as e } from './core.js?v=6';
 
