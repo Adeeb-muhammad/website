@@ -54,7 +54,7 @@ The earlier hand-written drum machine — with chord mode, the voice recorder an
 
 ## Check locally
 
-With Node.js 20 or later:
+With Node.js 22.18 or later (the tests import the TypeScript recorder modules directly, which needs Node's type stripping):
 
 ```sh
 npm test
