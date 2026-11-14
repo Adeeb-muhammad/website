@@ -158,13 +158,15 @@ function route() {
     collection = hash; showView('collection'); renderCollection(reset);
     document.title = `${hash === 'films' ? 'Film archive' : hash === 'series' ? 'Series archive' : hash === 'anime' ? 'Anime archive' : 'Watchlist'} // Adeeb’s Vault`;
   } else {
-    const view = ['projects', 'about', 'misc'].includes(hash) ? hash : 'home';
+    // Projects and Contact live inside the About me page now; old links still land there.
+    const aboutAnchor = hash === 'projects' || hash === 'contact' ? hash : '';
+    const view = aboutAnchor ? 'about' : ['about', 'misc'].includes(hash) ? hash : 'home';
     showView(view);
-    document.title = view === 'home' ? 'Adeeb’s Vault' : `${view === 'about' ? 'The operator' : view === 'misc' ? 'Miscellaneous' : 'Projects'} // Adeeb’s Vault`;
+    document.title = view === 'home' ? 'Adeeb’s Vault' : `${view === 'about' ? 'About me' : 'Miscellaneous'} // Adeeb’s Vault`;
   }
   lastRoute = ['films', 'series', 'anime', 'watchlist'].includes(hash) ? hash : 'films';
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
-  else if (hash === 'contact') requestAnimationFrame(() => $('#contact').scrollIntoView({ behavior: 'smooth' }));
+  else if (hash === 'contact' || hash === 'projects') requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' }));
   else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
   if (closingEntry && ['films', 'series', 'anime', 'watchlist'].includes(hash)) {
     $(`#collection-grid a[href="#film/${closingEntry}"]`)?.focus({ preventScroll: true });
