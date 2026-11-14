@@ -29,16 +29,16 @@ const htmlFiles = ['index.html', 'studio.html', 'currently-watching.html', 'read
 for (const file of htmlFiles) {
   const output = path.join(root, 'dist', file);
   let html = await readFile(output, 'utf8');
-  html = html.replace(/((?:\.\.\/|\/)?assets\/css\/style\.css)\?v=\d+/g, \`$1?v=\${CACHE_VERSION}\`);
+  html = html.replace(/((?:\.\.\/|\/)?assets\/css\/style\.css)\?v=\d+/g, (match, assetPath) => assetPath + '?v=' + CACHE_VERSION);
   const versions = [...html.matchAll(/(?:\.\.\/|\/)?assets\/css\/style\.css\?v=(\d+)/g)].map(match => match[1]);
-  if (versions.some(version => version !== CACHE_VERSION)) throw new Error(\`Inconsistent stylesheet cache version in \${file}\`);
+  if (versions.some(version => version !== CACHE_VERSION)) throw new Error('Inconsistent stylesheet cache version in ' + file);
   await writeFile(output, html);
 }
 for (const file of ['assets/js/tools.js', 'assets/js/notebook.js']) {
   const output = path.join(root, 'dist', file);
   let source = await readFile(output, 'utf8');
-  source = source.replace(/(\.\/tools-core\.js)\?v=\d+/g, \`$1?v=\${CACHE_VERSION}\`);
-  if (!source.includes(\`./tools-core.js?v=\${CACHE_VERSION}\`)) throw new Error(\`Missing shared tools-core version in \${file}\`);
+  source = source.replace(/(\.\/tools-core\.js)\?v=\d+/g, (match, modulePath) => modulePath + '?v=' + CACHE_VERSION);
+  if (!source.includes('./tools-core.js?v=' + CACHE_VERSION)) throw new Error('Missing shared tools-core version in ' + file);
   await writeFile(output, source);
 }
 console.log(`Static site built: ${data.entries.length} archive entries, ${data.projects.length} projects. No backend or runtime dependencies.`);
