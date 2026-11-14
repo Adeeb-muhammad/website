@@ -27,10 +27,18 @@
 }
 
 
-/* Visibility fixes for the Synth piano and recorder source picker. */
-#root button.bg-white {
+/* White and black piano keys in both Synth and Live Keys.
+   The app's old #0a0a0a black keys blended into the new dark canvas. */
+#root .touch-none.select-none > button.bg-white {
   background-color: #f4f0e6;
   color: #171717;
+  border: 2px solid #5b5a52;
+}
+
+#root .touch-none.select-none > button[class*="bg-[#0a0a0a]"] {
+  background-color: #242520;
+  border-color: #b4b1a5;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 3px 5px rgb(0 0 0 / 65%);
 }
 
 /* The recorder is rendered through a portal, so scope by the page body. */
