@@ -314,6 +314,7 @@ function MasterKnob() {
       step={0.01}
       defaultValue={0.85}
       onChange={setMasterVolume}
+      ariaLabel="Master volume"
       color="#00E5FF"
       size={44}
       format={(v) => `${(20 * Math.log10(Math.max(v, 0.001))).toFixed(0)} dB`}

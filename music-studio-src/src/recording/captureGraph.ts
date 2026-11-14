@@ -13,6 +13,9 @@ export type CaptureMode = 'mic' | 'master' | 'combined';
 /** Leave headroom so a loud mix plus a loud voice does not clip the take. */
 export const MASTER_CAPTURE_GAIN = 0.85;
 
+/** A close, loud microphone can reach full scale; trim it slightly. */
+export const MIC_CAPTURE_GAIN = 0.9;
+
 /**
  * The output Tone.getDestination() offers. Typed structurally so this module
  * can be tested against a fake without importing Tone.
@@ -79,7 +82,7 @@ export function createCaptureGraph({
   if (mode === 'combined' && micStream) {
     const source = context.createMediaStreamSource(micStream);
     const gain = context.createGain();
-    gain.gain.value = 1;
+    gain.gain.value = MIC_CAPTURE_GAIN;
     // Microphone → gain → MediaStreamDestination only. No path to the speakers.
     source.connect(gain);
     gain.connect(destination);

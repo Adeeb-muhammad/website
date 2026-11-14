@@ -9,7 +9,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createCaptureGraph,
-  MASTER_CAPTURE_GAIN
+  MASTER_CAPTURE_GAIN,
+  MIC_CAPTURE_GAIN
 } from '../music-studio-src/src/recording/captureGraph.ts';
 
 function makeNode(kind) {
@@ -115,6 +116,8 @@ test('combined capture mixes the microphone into the same destination', () => {
   assert.equal(source.stream, mic);
   assert.deepEqual(source.outputs, [micGain]);
   assert.deepEqual(micGain.outputs, [destination]);
+  assert.equal(micGain.gain.value, MIC_CAPTURE_GAIN);
+  assert.ok(MIC_CAPTURE_GAIN < 1, 'microphone capture leaves headroom');
   // Every output stays inside the capture graph: nothing reaches the speakers.
   for (const node of [source, micGain, ...context.created]) {
     for (const target of node.outputs ?? []) {

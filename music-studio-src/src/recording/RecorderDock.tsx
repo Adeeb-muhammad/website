@@ -51,6 +51,8 @@ export function RecorderDock() {
   const [mode, setMode] = useState<CaptureMode>('mic');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const { state, error, elapsed, take, start, stop, discard } = useStudioRecorder(mode, MAX_SECONDS);
   const activeOption = SOURCE_OPTIONS.find((option) => option.mode === mode) ?? SOURCE_OPTIONS[0];
 
@@ -64,25 +66,71 @@ export function RecorderDock() {
     return () => URL.revokeObjectURL(url);
   }, [take]);
 
+  const openRecorder = () => {
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
+    setOpen(true);
+  };
+
   const close = () => {
     if (state === 'requesting') discard();
     setOpen(false);
   };
 
-  useEffect(() => {
-    if (open) closeRef.current?.focus();
-  }, [open]);
+  const changeMode = (next: CaptureMode) => {
+    if (next === mode) return;
+    if (take && !window.confirm('Switching the source discards this take. Continue?')) return;
+    setMode(next);
+  };
 
   useEffect(() => {
     if (!open) return;
+    const panel = panelRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+
+    const focusable = () => panel
+      ? [...panel.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )]
+      : [];
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      close();
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        close();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (!panel?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     document.addEventListener('keydown', onKey, true);
-    return () => document.removeEventListener('keydown', onKey, true);
-    // close() reads `state`; re-register when it changes so Esc cancels a prompt.
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = previousOverflow;
+      // Give focus back to the button that opened the panel (or whatever had it).
+      const previous = restoreFocusRef.current;
+      restoreFocusRef.current = null;
+      previous?.focus?.();
+    };
+    // close() reads `state`; re-register when it changes so Esc cancels a permission prompt.
   }, [open, state]);
 
   const download = () => {
@@ -104,7 +152,7 @@ export function RecorderDock() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openRecorder}
         aria-label="Open the recorder"
         className="fixed right-3 bottom-12 z-[75] flex items-center gap-2 rounded-xl border-2 border-ink bg-card px-3 py-2 text-[11px] font-extrabold text-ink shadow-hard-sm transition-transform hover:-translate-y-0.5 active:translate-y-0.5 md:right-4 md:bottom-14"
       >
@@ -120,6 +168,7 @@ export function RecorderDock() {
           onClick={(event) => { if (event.target === event.currentTarget) close(); }}
         >
           <section
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="recorder-title"
@@ -146,7 +195,7 @@ export function RecorderDock() {
                   type="button"
                   aria-pressed={mode === option.mode}
                   disabled={busy}
-                  onClick={() => setMode(option.mode)}
+                  onClick={() => changeMode(option.mode)}
                   className={`rounded-xl border-2 border-ink px-1 py-2 text-[10px] font-extrabold tracking-wide shadow-hard-sm transition-transform active:translate-y-0.5 disabled:opacity-40 ${
                     mode === option.mode ? 'bg-neon-yellow' : 'bg-card'
                   }`}
@@ -214,6 +263,9 @@ export function RecorderDock() {
                   {mode === 'mic' && 'Nothing is sent to the speakers here.'}
                   {mode === 'master' && 'Captured from the master output; turning the speakers down does not change the take.'}
                   {mode === 'combined' && 'Use headphones: the song plays while the microphone records, and speaker bleed would be captured too.'}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold text-fg-muted">
+                  Closing this panel keeps recording — reopen it from the RECORD button to stop.
                 </p>
               </div>
             )}

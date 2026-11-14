@@ -7,6 +7,8 @@ export interface KnobProps {
   max?: number;
   onChange: (value: number) => void;
   label?: string;
+  /** Accessible name when the visible label is omitted. */
+  ariaLabel?: string;
   /** 荧光通道色（弧线 + 中心点高光） */
   color?: string;
   /** 旋钮直径 px */
@@ -51,6 +53,7 @@ export function Knob({
   max = 100,
   onChange,
   label,
+  ariaLabel,
   color = '#00E5FF',
   size = 56,
   step = 1,
@@ -131,7 +134,7 @@ export function Knob({
     >
       <div
         role="slider"
-        aria-label={label}
+        aria-label={ariaLabel ?? label}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}

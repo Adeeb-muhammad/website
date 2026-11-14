@@ -2,12 +2,17 @@
 
 Pinned source: the commit in `UPSTREAM_COMMIT` (unchanged by this work).
 
-The recorder is implemented in new files under `src/recording/`. Only one
-upstream file is edited, and only to mount the panel:
+The recorder is implemented in new files under `src/recording/`. Upstream
+files are edited only for the mount and for accessible names on custom
+sliders:
 
 | File | Change |
 | --- | --- |
 | `src/App.tsx` | One import of `RecorderDock` and one `<RecorderDock />` element next to `<SideNav />`. No other logic touched. |
+| `src/components/ui/Knob.tsx` | Optional `ariaLabel` prop used as the slider's accessible name when there is no visible label. |
+| `src/components/ui/Fader.tsx` | Same optional `ariaLabel` prop. |
+| `src/components/layout/TopBar.tsx` | `ariaLabel="Master volume"` on the master knob. |
+| `src/components/Mixer/ChannelStrip.tsx` | Accessible names on each channel fader and pan knob. |
 
 New files (not upstream):
 
@@ -26,7 +31,9 @@ New files (not upstream):
 
 Recording phases: microphone only, the song's master output, or both. All
 three produce a downloadable take in the page; none is placed on a track,
-because NeonDAW has pattern clips rather than audio clip tracks.
+because NeonDAW has pattern clips rather than audio clip tracks. The panel
+traps Tab, restores focus to its button, and locks background scrolling while
+open.
 
 `micRecorder.ts` and `captureGraph.ts` are covered by
 `tests/mic-recorder.test.mjs` and `tests/capture-graph.test.mjs` in the site
