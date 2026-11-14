@@ -11,6 +11,7 @@ import { MobileNavDrawer } from './components/layout/MobileNavDrawer';
 import { ModuleWorkspace } from './components/layout/ModuleWorkspace';
 import { PatternManagerSheet } from './components/PatternManager/PatternManagerSheet';
 import { SideNav } from './components/layout/SideNav';
+import { RecorderDock } from './recording/RecorderDock';
 import { StatusBar } from './components/layout/StatusBar';
 import { MODULES } from './components/layout/modules';
 import { isOverlayOpen } from './components/ui/OverlaySheet';
@@ -91,6 +92,7 @@ export default function App() {
   return (
     <div className="flex h-screen supports-[height:100dvh]:h-dvh overflow-hidden">
       <SideNav />
+      <RecorderDock />
       <MobileNavDrawer />
       <PatternManagerSheet />
 
