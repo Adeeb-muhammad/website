@@ -286,7 +286,7 @@ body {
   border-color: var(--vault-line-hi);
 }
 /* Solid ink fills were the "selected / primary" look: use the site accent. */
-.bg-ink {
+#root .bg-ink {
   background-color: var(--vault-accent);
 }
 .text-white {
@@ -298,13 +298,13 @@ body {
 .border-white\/40 {
   border-color: rgb(8 8 8 / 0.4);
 }
-.bg-white\/10 {
+#root .bg-white\/10 {
   background-color: rgb(8 8 8 / 0.1);
 }
-.bg-white\/70 {
+#root .bg-white\/70 {
   background-color: rgb(232 229 223 / 0.08);
 }
-.bg-ink\/45 {
+#root .bg-ink\/45 {
   background-color: rgb(0 0 0 / 0.65);
 }
 /* Dark text on solid neon fills: re-scope the ink token locally. */
@@ -337,7 +337,8 @@ body {
    hid the piano keys. Inside the app, hand control back to the utility layer. */
 #root button {
   background: revert-layer;
-  border: revert-layer;
+  border-width: revert-layer;
+  border-style: revert-layer;
 }
 #root svg {
   width: revert-layer;
