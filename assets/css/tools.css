@@ -77,6 +77,16 @@
 .preview-placeholder{color:#6b655c;font-style:italic}
 .segmented-controls{display:flex}.segmented-controls button+button{border-left:0}
 .segmented-controls button[aria-pressed="true"]{color:var(--accent);background:#2b2319;border-color:#8c7450}
+
+/* Notes Canvas pen/eraser toolbar icons. */
+#tool-notes .segmented-controls button{width:44px;height:44px;min-width:44px;padding:0;position:relative;transition:border-color .15s,color .15s,background .15s,transform .12s}
+#tool-notes .segmented-controls button svg{display:block}
+#tool-notes .segmented-controls button:hover{border-color:var(--accent);color:var(--accent);background:#1a1712}
+#tool-notes .segmented-controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;color:var(--accent)}
+#tool-notes .segmented-controls button:active{transform:translateY(1px)}
+#tool-notes .segmented-controls button[aria-pressed="true"]{color:var(--accent);background:#2b2319;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+#tool-notes .segmented-controls button::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:4px 7px;font:8px var(--mono);letter-spacing:.04em;color:var(--accent);background:#14120f;border:1px solid #625340;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
+#tool-notes .segmented-controls button:hover::after,#tool-notes .segmented-controls button:focus-visible::after{opacity:1}
 .inline-field{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted);min-height:44px}
 .inline-field input[type="color"]{width:42px;height:44px;border:1px solid #494035;padding:4px;background:#15130f;cursor:pointer}
 .inline-field select{width:auto;min-height:44px;font-size:12px;padding:8px}
