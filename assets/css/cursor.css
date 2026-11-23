@@ -1,0 +1,56 @@
+/* An original acid-yellow reticle cursor, only for fine-pointer, motion-safe devices. */
+.vault-cursor-dot,
+.vault-cursor-ring{
+  position:fixed;
+  left:0;
+  top:0;
+  z-index:9999;
+  pointer-events:none;
+  border-radius:50%;
+  opacity:0;
+  will-change:transform;
+}
+.vault-cursor-dot{
+  width:6px;
+  height:6px;
+  background:var(--accent,#faff00);
+  box-shadow:0 0 9px rgba(250,255,0,.35);
+  transition:width .18s ease,height .18s ease,opacity .18s ease;
+}
+.vault-cursor-ring{
+  width:34px;
+  height:34px;
+  border:1px solid rgba(250,255,0,.62);
+  background:rgba(250,255,0,.018);
+  box-shadow:0 0 22px rgba(250,255,0,.08);
+  transition:width .18s ease,height .18s ease,border-color .18s ease,background .18s ease,opacity .18s ease;
+}
+.vault-cursor-ring::before,
+.vault-cursor-ring::after{
+  content:"";
+  position:absolute;
+  background:rgba(250,255,0,.55);
+}
+.vault-cursor-ring::before{width:1px;height:6px;left:50%;top:-4px;transform:translateX(-50%)}
+.vault-cursor-ring::after{width:6px;height:1px;left:-4px;top:50%;transform:translateY(-50%)}
+body.vault-cursor-ready:not(.vault-native-cursor),
+body.vault-cursor-ready:not(.vault-native-cursor) *{cursor:none!important}
+body.vault-cursor-ready .vault-cursor-dot,
+body.vault-cursor-ready .vault-cursor-ring{opacity:1}
+body.vault-native-cursor .vault-cursor-dot,
+body.vault-native-cursor .vault-cursor-ring,
+body.vault-cursor-hidden .vault-cursor-dot,
+body.vault-cursor-hidden .vault-cursor-ring{opacity:0}
+body.vault-cursor-hover .vault-cursor-ring{width:48px;height:48px;border-color:var(--accent,#faff00);background:rgba(250,255,0,.045)}
+body.vault-cursor-hover .vault-cursor-dot{width:9px;height:9px}
+body.vault-cursor-pressed .vault-cursor-ring{width:27px;height:27px;border-color:var(--accent,#faff00);background:rgba(250,255,0,.10)}
+@media(hover:none),(pointer:coarse){
+  .vault-cursor-dot,.vault-cursor-ring{display:none!important}
+  body.vault-cursor-ready:not(.vault-native-cursor),
+  body.vault-cursor-ready:not(.vault-native-cursor) *{cursor:auto!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .vault-cursor-dot,.vault-cursor-ring{display:none!important}
+  body.vault-cursor-ready:not(.vault-native-cursor),
+  body.vault-cursor-ready:not(.vault-native-cursor) *{cursor:auto!important}
+}
