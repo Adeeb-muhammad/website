@@ -50,6 +50,12 @@ test('a valid exported project is accepted and missing step channels are filled'
   assert.equal(MAX_PROJECT_FILE_BYTES, 5 * 1024 * 1024);
 });
 
+test('a project survives the JSON export/import round trip unchanged', () => {
+  const project = validProject();
+  const exported = JSON.parse(JSON.stringify(project));
+  assert.deepEqual(validateProject(exported), project);
+});
+
 test('missing and wrong top-level fields are rejected', () => {
   for (const key of ['patterns', 'channels', 'mixerTracks', 'song', 'currentPatternId', 'bpm']) {
     const project = validProject();
