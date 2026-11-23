@@ -1,4 +1,4 @@
-import { upgradeNotebook, validateNotebook, safeFilename } from './tools-core.js?v=4';
+import { upgradeNotebook, validateNotebook, safeFilename } from './tools-core.js?v=5';
 
 export function initNotebook({ download, confirmChange }) {
   const $ = selector => document.querySelector(selector);
