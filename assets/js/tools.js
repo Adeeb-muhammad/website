@@ -1,4 +1,4 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename } from './tools-core.js?v=3';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, createTar, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=4';
 import { initNotebook } from './notebook.js?v=2';
 import { escapeHTML as e } from './core.js?v=6';
 
@@ -449,10 +449,6 @@ function renderFileSelection(){
 fileMode.addEventListener('change',updateFileMode);
 fileInput.addEventListener('change',()=>{fileSelection=Array.from(fileInput.files||[]);if(fileSelection.some(f=>f.size>100*1024*1024)){fileSelection=[];fileInput.value='';setStatus(fileStatus,'Each file must be 100 MB or smaller.',true);}else setStatus(fileStatus,fileSelection.length+' file(s) ready.');renderFileSelection();});
 $('#file-convert-clear').addEventListener('click',()=>{fileSelection=[];fileInput.value='';renderFileSelection();setStatus(fileStatus,'Selection cleared.');});
-const loadScript = src => new Promise((resolve,reject)=>{
- const existing=[...document.scripts].find(s=>s.src===src);if(existing){if(existing.dataset.loaded==='yes')return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
- const s=document.createElement('script');s.src=src;s.async=true;s.onload=()=>{s.dataset.loaded='yes';resolve();};s.onerror=()=>reject(new Error('Could not load a required conversion library. Check your connection and retry.'));document.head.append(s);
-});
 async function getJsPDF(){if(!window.jspdf?.jsPDF)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');return window.jspdf.jsPDF;}
 async function getJSZip(){if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');return window.JSZip;}
 async function getPDFJS(){if(!window.pdfjsLib)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');if(window.pdfjsLib.GlobalWorkerOptions)window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';return window.pdfjsLib;}
@@ -489,32 +485,39 @@ async function convertFiles(){
   let blob,filename;
   if(mode==='images-pdf'){
    if(files.some(f=>!['image/jpeg','image/png'].includes(f.type)))throw new Error('Choose only JPG or PNG images.');
+   if(files.length>20)throw new Error('Choose at most 20 images for one PDF.');
+   if(files.reduce((sum,f)=>sum+f.size,0)>60*1024*1024)throw new Error('The images total more than 60 MB. Use fewer or smaller files.');
    const PDF=await getJsPDF();const doc=new PDF({unit:'pt',format:'a4'});
-   for(let i=0;i<files.length;i++){const url=await imageFileToDataURL(files[i]);const img=new Image();img.src=url;await img.decode();if(i)doc.addPage();const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),scale=Math.min((pw-48)/img.width,(ph-48)/img.height);doc.addImage(url,files[i].type==='image/png'?'PNG':'JPEG',(pw-img.width*scale)/2,(ph-img.height*scale)/2,img.width*scale,img.height*scale);}
+   for(let i=0;i<files.length;i++){const url=await imageFileToDataURL(files[i]);const img=new Image();img.src=url;await img.decode();if(img.width*img.height>40000000)throw new Error(files[i].name+': please resize this image first (maximum 40 megapixels).');if(i)doc.addPage();const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),scale=Math.min((pw-48)/img.width,(ph-48)/img.height);doc.addImage(url,files[i].type==='image/png'?'PNG':'JPEG',(pw-img.width*scale)/2,(ph-img.height*scale)/2,img.width*scale,img.height*scale);}
    blob=doc.output('blob');filename=outputName('pdf');
   } else if(mode==='txt-pdf'||mode==='docx-pdf'||mode==='epub-pdf'){
    let textContent='';
    if(mode==='txt-pdf')textContent=await files[0].text();
+   if(textContent.length>CONVERSION_LIMITS.textChars)throw new Error('The text is too long (limit '+CONVERSION_LIMITS.textChars.toLocaleString()+' characters).');
    if(mode==='docx-pdf'){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js');
     const result=await window.mammoth.extractRawText({arrayBuffer:await readAsArrayBuffer(files[0])});textContent=result.value;
+    if(textContent.length>CONVERSION_LIMITS.textChars)throw new Error('The document text is too long (limit '+CONVERSION_LIMITS.textChars.toLocaleString()+' characters).');
    }
    if(mode==='epub-pdf'){
     const JSZip=await getJSZip(),zip=await JSZip.loadAsync(await readAsArrayBuffer(files[0]));
+    if(Object.keys(zip.files).length>CONVERSION_LIMITS.archiveEntries)throw new Error('This EPUB has more than '+CONVERSION_LIMITS.archiveEntries+' entries.');
     const container=await zip.file('META-INF/container.xml')?.async('text');if(!container)throw new Error('This EPUB has no valid container.xml.');
     const docXML=new DOMParser().parseFromString(container,'application/xml');const opfPath=docXML.querySelector('rootfile')?.getAttribute('full-path');if(!opfPath||!zip.file(opfPath))throw new Error('Could not locate the EPUB book package.');
     const opf= new DOMParser().parseFromString(await zip.file(opfPath).async('text'),'application/xml');const base=opfPath.includes('/')?opfPath.slice(0,opfPath.lastIndexOf('/')+1):'';
     const manifest=new Map([...opf.querySelectorAll('manifest item')].map(n=>[n.getAttribute('id'),n.getAttribute('href')]));const ids=[...opf.querySelectorAll('spine itemref')].map(n=>n.getAttribute('idref'));
-    for(const id of ids){const href=manifest.get(id);if(!href)continue;const path=base+decodeURIComponent(href.split('#')[0]);const entry=zip.file(path);if(!entry)continue;const docHTML=new DOMParser().parseFromString(await entry.async('text'),'text/html');textContent+=docHTML.body.innerText+'\n\n';}
+    for(const id of ids){const href=manifest.get(id);if(!href)continue;const path=base+decodeURIComponent(href.split('#')[0]);const entry=zip.file(path);if(!entry)continue;const docHTML=new DOMParser().parseFromString(await entry.async('text'),'text/html');textContent+=docHTML.body.innerText+'\n\n';if(textContent.length>CONVERSION_LIMITS.textChars)throw new Error('The extracted book text is too long (limit '+CONVERSION_LIMITS.textChars.toLocaleString()+' characters).');}
     if(!textContent.trim())throw new Error('No readable chapter text was found in this EPUB.');
    }
+   if(textContent.length>CONVERSION_LIMITS.textChars)throw new Error('The extracted text is too long (limit '+CONVERSION_LIMITS.textChars.toLocaleString()+' characters).');
    const PDF=await getJsPDF();const doc=new PDF({unit:'pt',format:'a4'});const margin=44,width=doc.internal.pageSize.getWidth()-88;doc.setFont('helvetica','normal');doc.setFontSize(10);
    const lines=doc.splitTextToSize(textContent.replace(/\r/g,''),width);let y=48;for(const line of lines){if(y>doc.internal.pageSize.getHeight()-44){doc.addPage();y=48;}doc.text(line,44,y);y+=13;}
    blob=doc.output('blob');filename=outputName('pdf');
   } else if(mode==='pdf-txt'||mode==='pdf-images'){
    const pdfjs=await getPDFJS(),pdf=await pdfjs.getDocument({data:await readAsArrayBuffer(files[0])}).promise;
-   if(mode==='pdf-txt'){let all='';for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),content=await page.getTextContent();all+='--- Page '+p+' ---\n'+content.items.map(x=>x.str).join(' ')+'\n\n';}blob=new Blob([all],{type:'text/plain;charset=utf-8'});filename=outputName('txt');}
-   else{const JSZip=await getJSZip(),zip=new JSZip(),fmt=$('#file-convert-image-format').value,ext=fmt==='image/jpeg'?'jpg':'png';for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),viewport=page.getViewport({scale:1.5}),canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const data=await new Promise(resolve=>canvas.toBlob(resolve,fmt,.9));if(!data)throw new Error('Could not render PDF page '+p);zip.file('page-'+String(p).padStart(3,'0')+'.'+ext,data);}blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');}
+   if(pdf.numPages>CONVERSION_LIMITS.pdfPages)throw new Error('This PDF has more than '+CONVERSION_LIMITS.pdfPages+' pages; split it before converting.');
+   if(mode==='pdf-txt'){let all='';for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),content=await page.getTextContent();all+='--- Page '+p+' ---\n'+content.items.map(x=>x.str).join(' ')+'\n\n';if(all.length>CONVERSION_LIMITS.textChars)throw new Error('The extracted PDF text is too long (limit '+CONVERSION_LIMITS.textChars.toLocaleString()+' characters).');}blob=new Blob([all],{type:'text/plain;charset=utf-8'});filename=outputName('txt');}
+   else{const JSZip=await getJSZip(),zip=new JSZip(),fmt=$('#file-convert-image-format').value,ext=fmt==='image/jpeg'?'jpg':'png';let pixels=0;for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),viewport=page.getViewport({scale:1.5}),width=Math.ceil(viewport.width),height=Math.ceil(viewport.height);pixels+=width*height;if(pixels>CONVERSION_LIMITS.renderedPixels)throw new Error('This PDF is too large to render at once; split it into smaller files.');const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;try{await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;const data=await new Promise(resolve=>canvas.toBlob(resolve,fmt,.9));if(!data)throw new Error('Could not render PDF page '+p);zip.file('page-'+String(p).padStart(3,'0')+'.'+ext,data);}finally{canvas.width=0;canvas.height=0;}}blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');}
   } else if(mode==='json-csv'||mode==='csv-json'||mode==='xml-json'||mode==='json-xml'){
    const source=await files[0].text();let result,ext,type;
    if(mode==='json-csv'){result=jsonToCSV(JSON.parse(source));ext='csv';type='text/csv;charset=utf-8';}
@@ -525,14 +528,15 @@ async function convertFiles(){
   } else if(mode==='zip-tar'||mode==='tar-zip'){
    const JSZip=await getJSZip();const input=await readAsArrayBuffer(files[0]);
    if(mode==='zip-tar'){
-    const zip=await JSZip.loadAsync(input),parts=[];const enc=new TextEncoder();const oct=(n)=>enc.encode(n);
-    const pad=(n,size)=>String(n).padStart(size,'0');const writeOct=(view,off,size,n)=>{const s=pad(n,size-1)+'\0';for(let i=0;i<size;i++)view[off+i]=s.charCodeAt(i)||0;};
-    for(const [name,entry] of Object.entries(zip.files)){if(entry.dir)continue;const data=await entry.async('uint8array');const head=new Uint8Array(512),v=new DataView(head.buffer);const put=(off,len,str)=>{head.set(oct(str).slice(0,len),off);};put(0,100,name.slice(0,100));writeOct(v,100,8,420);writeOct(v,108,8,0);writeOct(v,116,8,0);writeOct(v,124,12,data.length);writeOct(v,136,12,0);head.fill(32,148,156);head[156]=48;put(257,6,'ustar\0');put(263,2,'00');let sum=head.reduce((a,b)=>a+b,0);put(148,8,pad(sum,6)+'\0 ');parts.push(head,data);const padLen=(512-data.length%512)%512;if(padLen)parts.push(new Uint8Array(padLen));}
-    parts.push(new Uint8Array(1024));blob=new Blob(parts,{type:'application/x-tar'});filename=outputName('tar');
+    const zip=await JSZip.loadAsync(input),names=Object.keys(zip.files);
+    if(names.length>CONVERSION_LIMITS.archiveEntries)throw new Error('This ZIP has more than '+CONVERSION_LIMITS.archiveEntries+' entries.');
+    const entries=[];let total=0;
+    for(const name of names){const entry=zip.files[name];if(entry.dir){entries.push({name,dir:true});continue;}const data=await entry.async('uint8array');total+=data.length;if(total>CONVERSION_LIMITS.archiveBytes)throw new Error('This ZIP expands beyond the '+Math.round(CONVERSION_LIMITS.archiveBytes/1024/1024)+' MB limit.');entries.push({name,data});}
+    const tar=createTar(entries,{maxEntries:CONVERSION_LIMITS.archiveEntries,maxBytes:CONVERSION_LIMITS.archiveBytes});
+    blob=new Blob([tar],{type:'application/x-tar'});filename=outputName('tar');
    }else{
-    const bytes=new Uint8Array(input),zip=new JSZip();let off=0,count=0;
-    const str=(a,b)=>new TextDecoder().decode(bytes.slice(a,b));const octal=(a,b)=>parseInt(str(a,b).replace(/\0.*$/,''),8)||0;
-    while(off+512<=bytes.length){const h=bytes.slice(off,off+512);if(h.every(x=>x===0))break;const name=str(off,off+100).replace(/\0.*$/,'');const prefix=str(off+345,off+500).replace(/\0.*$/,'');const full=prefix?prefix+'/'+name:name;const size=octal(off+124,off+136);const type=String.fromCharCode(bytes[off+156]||48);if(!name||off+512+size>bytes.length)throw new Error('Invalid or unsupported TAR archive.');if(type==='0'||type==='\0')zip.file(full,bytes.slice(off+512,off+512+size));else if(type==='5')zip.folder(full);else throw new Error('This TAR contains a link or special file; those entries are not imported.');off+=512+Math.ceil(size/512)*512;if(++count>10000)throw new Error('Archive contains too many entries.');}
+    const entries=readTar(new Uint8Array(input),{maxEntries:CONVERSION_LIMITS.archiveEntries,maxBytes:CONVERSION_LIMITS.archiveBytes});const zip=new JSZip();
+    for(const entry of entries){if(entry.dir)zip.folder(entry.name);else zip.file(entry.name,entry.data);}
     blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');
    }
   }

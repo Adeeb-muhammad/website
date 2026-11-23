@@ -112,3 +112,216 @@ export function upgradeNotebook(data) {
   if (data.version === 2) return data;
   return { kind: data.kind, version: 2, title: data.title, activePage: 0, pages: [{ title: 'Page 1', text: data.text, strokes: data.strokes }] };
 }
+
+/* ============================================================
+ * TAR writer / reader (USTAR)
+ *
+ * Numeric header fields are octal ASCII, never decimal: a decimal 1000
+ * written into a size field is read as octal 512 by standard tools. Names
+ * longer than 100 bytes use the USTAR prefix field instead of truncating.
+ * ============================================================ */
+
+const TAR_BLOCK = 512;
+const TAR_MAX_ENTRIES = 10000;
+const TAR_MAX_BYTES = 200 * 1024 * 1024;
+export const CONVERSION_LIMITS = Object.freeze({
+  archiveEntries: TAR_MAX_ENTRIES,
+  archiveBytes: TAR_MAX_BYTES,
+  pdfPages: 200,
+  renderedPixels: 80000000,
+  textChars: 5000000
+});
+const TAR_NAME = 100;
+const TAR_PREFIX = 155;
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+const encode = value => textEncoder.encode(value);
+
+function writeString(block, offset, length, bytes) {
+  block.set(bytes.slice(0, length), offset);
+}
+
+function writeOctal(block, offset, length, value) {
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error('Invalid TAR numeric field.');
+  const digits = value.toString(8);
+  if (digits.length > length - 1) throw new Error('This file is too large for a TAR archive.');
+  const field = digits.padStart(length - 1, '0') + '\0';
+  writeString(block, offset, length, encode(field));
+}
+
+function readOctal(block, offset, length, label) {
+  let raw = '';
+  for (let i = 0; i < length; i++) raw += String.fromCharCode(block[offset + i]);
+  const digits = raw.replace(/[\0 ]+$/g, '').replace(/^ +/, '');
+  if (!digits || !/^[0-7]+$/.test(digits)) throw new Error(`Invalid TAR ${label} field.`);
+  const value = parseInt(digits, 8);
+  if (!Number.isSafeInteger(value)) throw new Error(`Invalid TAR ${label} field.`);
+  return value;
+}
+
+function tarPath(name, isDir) {
+  if (typeof name !== 'string') throw new Error('An archive entry has no name.');
+  if (!name || name.includes('\0') || name.includes('\\')) throw new Error('An archive entry has an unsafe name.');
+  let clean = name.replace(/\/{2,}/g, '/').replace(/^\.\//, '');
+  if (clean.startsWith('/') || /^[a-zA-Z]:/.test(clean)) throw new Error(`Absolute archive path is not allowed: ${name}`);
+  const parts = clean.split('/').filter(Boolean);
+  if (!parts.length || parts.some(part => part === '.' || part === '..')) throw new Error(`Unsafe archive path: ${name}`);
+  clean = parts.join('/');
+  if (isDir) clean += '/';
+  return clean;
+}
+
+function tarNameFields(name) {
+  const full = encode(name);
+  if (full.length <= TAR_NAME) return { name: full, prefix: new Uint8Array(0) };
+  for (let i = name.length - 1; i > 0; i--) {
+    if (name[i] !== '/') continue;
+    const prefix = encode(name.slice(0, i));
+    const leaf = encode(name.slice(i + 1));
+    if (prefix.length <= TAR_PREFIX && leaf.length > 0 && leaf.length <= TAR_NAME) return { name: leaf, prefix };
+  }
+  throw new Error(`Path is too long for a USTAR archive: ${name}`);
+}
+
+function concatBytes(parts) {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) { out.set(part, offset); offset += part.length; }
+  return out;
+}
+
+/** Build a standards-compliant USTAR archive from { name, data, dir? } entries. */
+export function createTar(entries, { maxEntries = TAR_MAX_ENTRIES, maxBytes = TAR_MAX_BYTES } = {}) {
+  if (!Array.isArray(entries) || !entries.length) throw new Error('There are no files to put in the TAR archive.');
+  if (entries.length > maxEntries) throw new Error(`This archive has more than ${maxEntries} entries.`);
+  const parts = [];
+  const seen = new Set();
+  let total = 0;
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') throw new Error('An archive entry is invalid.');
+    const isDir = entry.dir === true;
+    const name = tarPath(entry.name, isDir);
+    if (seen.has(name)) throw new Error(`The archive contains a duplicate path: ${name}`);
+    seen.add(name);
+    const data = isDir ? new Uint8Array(0) : entry.data;
+    if (!(data instanceof Uint8Array)) throw new Error(`No file data for ${name}`);
+    total += data.length;
+    if (total > maxBytes) throw new Error(`The archive expands beyond the ${Math.round(maxBytes / 1024 / 1024)} MB limit.`);
+    const fields = tarNameFields(name);
+    const header = new Uint8Array(TAR_BLOCK);
+    writeString(header, 0, TAR_NAME, fields.name);
+    writeOctal(header, 100, 8, isDir ? 0o755 : 0o644);
+    writeOctal(header, 108, 8, 0);
+    writeOctal(header, 116, 8, 0);
+    writeOctal(header, 124, 12, data.length);
+    writeOctal(header, 136, 12, 0);
+    header.fill(32, 148, 156);
+    header[156] = isDir ? 53 : 48;
+    writeString(header, 257, 6, encode('ustar\0'));
+    writeString(header, 263, 2, encode('00'));
+    writeString(header, 345, TAR_PREFIX, fields.prefix);
+    let sum = 0;
+    for (const byte of header) sum += byte;
+    const checksum = sum.toString(8).padStart(6, '0');
+    if (checksum.length !== 6) throw new Error('TAR checksum overflow.');
+    header.set(encode(checksum + '\0 '), 148);
+    parts.push(header, data);
+    const pad = (TAR_BLOCK - (data.length % TAR_BLOCK)) % TAR_BLOCK;
+    if (pad) parts.push(new Uint8Array(pad));
+  }
+  parts.push(new Uint8Array(TAR_BLOCK * 2));
+  return concatBytes(parts);
+}
+
+/** Parse a USTAR archive. Rejects unsafe paths, bad checksums and special files. */
+export function readTar(bytes, { maxEntries = TAR_MAX_ENTRIES, maxBytes = TAR_MAX_BYTES } = {}) {
+  if (!(bytes instanceof Uint8Array)) throw new Error('The TAR file could not be read.');
+  const entries = [];
+  let offset = 0;
+  let total = 0;
+  let ended = false;
+  while (offset + TAR_BLOCK <= bytes.length) {
+    const header = bytes.slice(offset, offset + TAR_BLOCK);
+    if (header.every(byte => byte === 0)) { ended = true; break; }
+    let sum = 0;
+    for (let i = 0; i < TAR_BLOCK; i++) sum += (i >= 148 && i < 156) ? 32 : header[i];
+    const stored = readOctal(header, 148, 8, 'checksum');
+    if (stored !== sum) throw new Error('This TAR archive failed its checksum check.');
+    const leaf = textDecoder.decode(header.slice(0, TAR_NAME)).replace(/\0.*$/, '');
+    const prefix = textDecoder.decode(header.slice(345, 345 + TAR_PREFIX)).replace(/\0.*$/, '');
+    if (!leaf) throw new Error('This TAR archive contains an entry without a name.');
+    const name = tarPath(prefix ? `${prefix}/${leaf}` : leaf, false);
+    const size = readOctal(header, 124, 12, 'size');
+    const type = String.fromCharCode(header[156] || 48);
+    total += size;
+    if (total > maxBytes) throw new Error(`This TAR expands beyond the ${Math.round(maxBytes / 1024 / 1024)} MB limit.`);
+    if (entries.length + 1 > maxEntries) throw new Error(`This TAR has more than ${maxEntries} entries.`);
+    if (offset + TAR_BLOCK + size > bytes.length) throw new Error('This TAR archive is truncated.');
+    if (type === '0' || type === '\0') entries.push({ name, dir: false, data: bytes.slice(offset + TAR_BLOCK, offset + TAR_BLOCK + size) });
+    else if (type === '5') entries.push({ name: name.replace(/\/$/, '') + '/', dir: true, data: new Uint8Array(0) });
+    else throw new Error('This TAR contains a link or special file; those entries are not imported.');
+    offset += TAR_BLOCK + Math.ceil(size / TAR_BLOCK) * TAR_BLOCK;
+  }
+  if (!ended) throw new Error('This TAR archive has no end marker; it may be truncated.');
+  if (!entries.length) throw new Error('This TAR archive contains no files.');
+  return entries;
+}
+
+/* ============================================================
+ * CDN script loader: one promise per URL, retryable after failure
+ * ============================================================ */
+
+const scriptLoads = new Map();
+
+export function loadScript(src, { timeoutMs = 15000, documentRef = globalThis.document } = {}) {
+  if (!documentRef?.head) return Promise.reject(new Error('Script loading is unavailable in this browser.'));
+  const alreadyLoaded = [...documentRef.scripts].find(script => script.src === src && script.dataset.loaded === 'yes');
+  if (alreadyLoaded) return Promise.resolve();
+  const active = scriptLoads.get(src);
+  if (active) return active;
+  const pending = new Promise((resolve, reject) => {
+    const existing = [...documentRef.scripts].find(script => script.src === src);
+    const script = existing || documentRef.createElement('script');
+    let settled = false;
+    let timer;
+    const cleanup = () => {
+      clearTimeout(timer);
+      script.removeEventListener?.('load', onLoad);
+      script.removeEventListener?.('error', onError);
+    };
+    const detach = () => {
+      if (typeof script.remove === 'function') script.remove();
+      else script.parentNode?.removeChild?.(script);
+    };
+    const fail = message => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      scriptLoads.delete(src);
+      detach();
+      reject(new Error(message));
+    };
+    const onLoad = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      script.dataset.loaded = 'yes';
+      scriptLoads.delete(src);
+      resolve();
+    };
+    const onError = () => fail('Could not load a required conversion library. Check your connection and retry.');
+    script.addEventListener('load', onLoad, { once: true });
+    script.addEventListener('error', onError, { once: true });
+    timer = setTimeout(() => fail('A required conversion library took too long to load. Check your connection and retry.'), timeoutMs);
+    if (!existing) {
+      script.src = src;
+      script.async = true;
+      documentRef.head.append(script);
+    }
+  });
+  scriptLoads.set(src, pending);
+  return pending;
+}
+
