@@ -25,6 +25,8 @@ import type {
 import { applyFxParams, createFx } from './effects';
 import { createDrumVoice, type DrumVoice } from './drumSynths';
 import { SampleVoice } from './samples';
+import { createUnlockGate } from './unlock';
+import { NoteGate } from './noteGate';
 
 const MASTER_ID = 'track-master';
 
@@ -123,10 +125,15 @@ export class AudioEngine {
   /**
    * noteOn 是异步的（先 await unlock 起音频），快速点按/页面首次交互时
    * noteOff 会先于 attack 落地 → 松手找不到可释放的音，attack 卡成永动低频嗡嗡声。
-   * inflight 记录「noteOn 已发但还没落地」的键；pendingOff 记录其间到达的松手，落地时作废该次发声。
+   * NoteGate 记录「noteOn 已发但还没落地」的键与其间到达的松手；失败的
+   * unlock 会把该键彻底清掉，下一次按键不会误判为仍按住。
    */
-  private noteOnInflight = new Map<string, Set<number>>();
-  private noteOffWaiting = new Map<string, Set<number>>();
+  private notes = new NoteGate();
+  /** 同一时刻只发起一次 Tone.start；失败后下一次交互可重试。 */
+  private unlockGate = createUnlockGate(
+    () => Tone.getContext().state,
+    () => Tone.start(),
+  );
 
   /* ============================================================
    * 生命周期
@@ -134,7 +141,11 @@ export class AudioEngine {
 
   /** 首次用户交互解锁音频上下文（浏览器自动播放策略） */
   async unlock(): Promise<void> {
-    if (Tone.getContext().state !== 'running') await Tone.start();
+    await this.unlockGate();
+    if (Tone.getContext().state !== 'running') {
+      throw new Error('The audio context did not start.');
+    }
+    useUiStore.getState().setAudioError(false);
   }
 
   /** 初始化引擎（幂等，App 挂载时调用；StrictMode 双挂载安全） */
@@ -205,6 +216,7 @@ export class AudioEngine {
     }
     this.tracks.clear();
     this.heldFreqs.clear();
+    this.notes.clear();
     this.metroSynth?.dispose();
     this.metroSynth = null;
     this.masterLimiter?.dispose();
@@ -229,6 +241,7 @@ export class AudioEngine {
     try {
       await this.unlock();
     } catch {
+      useUiStore.getState().setAudioError(true);
       return false;
     }
     const transport = Tone.getTransport();
@@ -260,8 +273,7 @@ export class AudioEngine {
       for (const freq of held.values()) nodes?.poly?.triggerRelease(freq);
       held.clear();
     }
-    for (const waiting of this.noteOffWaiting.values()) waiting.clear();
-    for (const inflight of this.noteOnInflight.values()) inflight.clear();
+    this.notes.clear();
   }
 
   /** 跳转播放头到某个 16 分步（0 基，按循环区间夹取）；播放中即时生效 */
@@ -408,7 +420,12 @@ export class AudioEngine {
 
   /** 点击通道/键盘试听（自动解锁音频上下文） */
   async previewChannel(channelId: string, velocity = 100): Promise<void> {
-    await this.unlock();
+    try {
+      await this.unlock();
+    } catch {
+      useUiStore.getState().setAudioError(true);
+      return;
+    }
     const ch = useProjectStore.getState().channels.find((c) => c.id === channelId);
     if (ch) this.triggerChannel(ch, velocity, Tone.now() + 0.02);
   }
@@ -430,7 +447,12 @@ export class AudioEngine {
   }
 
   async previewNote(channelId: string, midi: number, velocity = 100): Promise<void> {
-    await this.unlock();
+    try {
+      await this.unlock();
+    } catch {
+      useUiStore.getState().setAudioError(true);
+      return;
+    }
     this.triggerSynthNote(channelId, midi, velocity, Tone.now() + 0.02, 1);
   }
 
@@ -441,7 +463,12 @@ export class AudioEngine {
     gapSeconds = 0.22,
     lengthSteps = 2,
   ): Promise<void> {
-    await this.unlock();
+    try {
+      await this.unlock();
+    } catch {
+      useUiStore.getState().setAudioError(true);
+      return;
+    }
     const t0 = Tone.now() + 0.03;
     midis.forEach((m, i) => {
       this.triggerSynthNote(channelId, m, 100, t0 + i * gapSeconds, lengthSteps);
@@ -450,16 +477,17 @@ export class AudioEngine {
 
   /** 虚拟键盘按下（持续发声直到 noteOff） */
   async noteOn(channelId: string, midi: number, velocity = 100): Promise<void> {
-    let inflight = this.noteOnInflight.get(channelId);
-    if (!inflight) {
-      inflight = new Set();
-      this.noteOnInflight.set(channelId, inflight);
+    this.notes.begin(channelId, midi);
+    try {
+      await this.unlock();
+    } catch {
+      // 解锁失败：清掉在途记录，下一次按键/播放可以重新尝试。
+      this.notes.fail(channelId, midi);
+      useUiStore.getState().setAudioError(true);
+      return;
     }
-    inflight.add(midi);
-    await this.unlock();
     // 解锁期间已经松手 → 丢弃这次 attack，绝不留下无主延音
-    const offed = this.noteOffWaiting.get(channelId)?.delete(midi) ?? false;
-    inflight.delete(midi);
+    const offed = this.notes.complete(channelId, midi);
     if (offed) return;
     const nodes = this.channels.get(channelId);
     if (!nodes) return;
@@ -492,14 +520,8 @@ export class AudioEngine {
     if (freq !== undefined) {
       held!.delete(midi);
       nodes?.poly?.triggerRelease(freq);
-    } else if (this.noteOnInflight.get(channelId)?.has(midi)) {
+    } else if (this.notes.noteOff(channelId, midi)) {
       // attack 还在 await unlock 路上：记下松手，落地时作废
-      let waiting = this.noteOffWaiting.get(channelId);
-      if (!waiting) {
-        waiting = new Set();
-        this.noteOffWaiting.set(channelId, waiting);
-      }
-      waiting.add(midi);
     }
   }
 

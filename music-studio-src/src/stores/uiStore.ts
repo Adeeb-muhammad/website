@@ -38,6 +38,10 @@ interface UiState {
   patternManagerOpen: boolean;
   /** Mixer 当前选中轨道（提升到全局，切模块后不丢选中） */
   selectedMixerTrackId: string | null;
+  /** 浏览器拒绝启动音频上下文；下一次手势/播放会重试 */
+  audioError: boolean;
+  /** 最近一次自动保存失败（配额/隐私模式）；内存中的工程仍可用 */
+  storageError: boolean;
 
   setView: (view: ViewModule) => void;
   goHome: () => void;
@@ -54,6 +58,8 @@ interface UiState {
   toggleMobileNav: () => void;
   setPatternManagerOpen: (open: boolean) => void;
   selectMixerTrack: (trackId: string | null) => void;
+  setAudioError: (error: boolean) => void;
+  setStorageError: (error: boolean) => void;
 }
 
 /**
@@ -71,6 +77,8 @@ export const useUiStore = create<UiState>()((set) => ({
   mobileNavOpen: false,
   patternManagerOpen: false,
   selectedMixerTrackId: null,
+  audioError: false,
+  storageError: false,
 
   setView: (view) => set({ view, mobileNavOpen: false }),
   goHome: () => set({ view: 'home', mobileNavOpen: false }),
@@ -88,4 +96,8 @@ export const useUiStore = create<UiState>()((set) => ({
   toggleMobileNav: () => set((s) => ({ mobileNavOpen: !s.mobileNavOpen })),
   setPatternManagerOpen: (patternManagerOpen) => set({ patternManagerOpen }),
   selectMixerTrack: (selectedMixerTrackId) => set({ selectedMixerTrackId }),
+  setAudioError: (audioError) =>
+    set((s) => (s.audioError === audioError ? s : { audioError })),
+  setStorageError: (storageError) =>
+    set((s) => (s.storageError === storageError ? s : { storageError })),
 }));

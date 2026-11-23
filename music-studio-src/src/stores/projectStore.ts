@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
   Channel,
   DrumTuneParams,
@@ -13,8 +13,10 @@ import type {
   SynthParams,
 } from '../types/project';
 import { useHistoryStore } from './historyStore';
+import { useUiStore } from './uiStore';
 import { SAMPLE_INSTRUMENTS } from '../audio/samples';
 import { validateProject } from '../utils/projectValidation';
+import { createDebouncedStorage } from './projectStorage';
 
 /* ============================================================
  * 工具
@@ -263,63 +265,22 @@ const buildDefaultProject = (): Project => {
  * 持久化：localStorage + 防抖自动保存（500ms）
  * ============================================================ */
 
-const SAVE_DEBOUNCE_MS = 500;
-const pendingWrites = new Map<string, { value: string; timer: ReturnType<typeof setTimeout> }>();
-
-const flushPendingWrites = () => {
-  for (const [name, { value, timer }] of pendingWrites) {
-    clearTimeout(timer);
-    try {
-      localStorage.setItem(name, value);
-    } catch {
-      /* 存储配额/隐私模式失败时静默 */
-    }
-    pendingWrites.delete(name);
-  }
-};
+const projectStorage = createDebouncedStorage(
+  {
+    getItem: (name) => localStorage.getItem(name),
+    setItem: (name, value) => localStorage.setItem(name, value),
+    removeItem: (name) => localStorage.removeItem(name),
+  },
+  {
+    onError: () => useUiStore.getState().setStorageError(true),
+    onSuccess: () => useUiStore.getState().setStorageError(false),
+  },
+);
 
 /* 页面卸载前强制落盘，防止防抖窗口内丢失最后一次编辑 */
 if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', flushPendingWrites);
+  window.addEventListener('beforeunload', projectStorage.flush);
 }
-
-const debouncedStorage: StateStorage = {
-  getItem: (name) => {
-    try {
-      return localStorage.getItem(name);
-    } catch {
-      return null;
-    }
-  },
-  setItem: (name, value) => {
-    const existing = pendingWrites.get(name);
-    if (existing) clearTimeout(existing.timer);
-    const timer = setTimeout(() => {
-      const entry = pendingWrites.get(name);
-      if (entry) {
-        try {
-          localStorage.setItem(name, entry.value);
-        } catch {
-          /* ignore */
-        }
-        pendingWrites.delete(name);
-      }
-    }, SAVE_DEBOUNCE_MS);
-    pendingWrites.set(name, { value, timer });
-  },
-  removeItem: (name) => {
-    const existing = pendingWrites.get(name);
-    if (existing) {
-      clearTimeout(existing.timer);
-      pendingWrites.delete(name);
-    }
-    try {
-      localStorage.removeItem(name);
-    } catch {
-      /* ignore */
-    }
-  },
-};
 
 /* ============================================================
  * Store
@@ -881,7 +842,7 @@ export const useProjectStore = create<ProjectState>()(
     {
       name: PROJECT_STORAGE_KEY,
       version: 1,
-      storage: createJSONStorage(() => debouncedStorage),
+      storage: createJSONStorage(() => projectStorage),
       partialize: (state) => toProject(state),
     },
   ),
