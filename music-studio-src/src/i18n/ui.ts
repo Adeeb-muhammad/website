@@ -97,6 +97,12 @@ const en = {
     click: 'click',
   },
 
+  runtime: {
+    audioBlocked: 'Audio could not start. Tap anywhere or press Play to try again.',
+    storageFailed: 'Autosave failed — this project is still open in this tab. Export the project JSON to keep your changes.',
+    dismiss: 'Dismiss',
+  },
+
   channelRack: {
     pattern: 'Pattern',
     rename: 'Click to rename',
@@ -391,6 +397,12 @@ const zh: Dict = {
     loopBars: (bars) => `LOOP ${bars} 小节`,
     loopBarsReps: (bars, reps) => `LOOP ${bars} 小节 ×${reps}`,
     click: '点击',
+  },
+
+  runtime: {
+    audioBlocked: '音频无法启动。请再次点击页面或按播放键重试。',
+    storageFailed: '自动保存失败 —— 工程仍保留在当前标签页。请导出工程 JSON 以保留更改。',
+    dismiss: '关闭',
   },
 
   channelRack: {

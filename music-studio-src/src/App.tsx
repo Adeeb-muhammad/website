@@ -23,6 +23,8 @@ import { useT } from './i18n/ui';
 
 export default function App() {
   const view = useUiStore((s) => s.view);
+  const audioError = useUiStore((s) => s.audioError);
+  const storageError = useUiStore((s) => s.storageError);
   const lang = useLang((s) => s.lang);
   const dict = useT();
 
@@ -37,16 +39,30 @@ export default function App() {
     engine.init();
   }, []);
 
-  /* 首次用户交互解锁音频 */
+  /* 首次用户交互解锁音频；失败时保留监听，下一次手势重试 */
   useEffect(() => {
-    const unlock = () => {
-      void engine.unlock();
-    };
-    window.addEventListener('pointerdown', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
-    return () => {
+    let active = true;
+    const remove = () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
+    };
+    const unlock = () => {
+      engine
+        .unlock()
+        .then(() => {
+          if (!active) return;
+          useUiStore.getState().setAudioError(false);
+          remove();
+        })
+        .catch(() => {
+          if (active) useUiStore.getState().setAudioError(true);
+        });
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      active = false;
+      remove();
     };
   }, []);
 
@@ -100,6 +116,28 @@ export default function App() {
           都不会盖过挂到 body 的浮层（OverlaySheet z-80 / 抽屉 z-95） */}
       <div className="flex min-w-0 flex-1 flex-col isolate">
         <TopBar />
+
+        {(audioError || storageError) && (
+          <div
+            role="alert"
+            className="flex items-start gap-3 border-b-2 border-ink bg-neon-pink/15 px-4 py-2 text-xs font-bold text-ink"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              {audioError && <p>{dict.runtime.audioBlocked}</p>}
+              {storageError && <p>{dict.runtime.storageFailed}</p>}
+            </div>
+            <button
+              type="button"
+              className="shrink-0 rounded-lg border-2 border-ink bg-card px-2.5 py-1 text-[10px] font-extrabold shadow-hard-sm"
+              onClick={() => {
+                useUiStore.getState().setAudioError(false);
+                useUiStore.getState().setStorageError(false);
+              }}
+            >
+              {dict.runtime.dismiss}
+            </button>
+          </div>
+        )}
 
         {/* 内容区：首页总览 ⇄ 模块工作区
             两视图绝对定位叠放（交叉淡入期间不分离、不被推出视口），

@@ -56,6 +56,25 @@ The deployed bundle was rebuilt after these changes. CI now typechecks/builds
 `music-studio-src` and fails when `music-studio/assets` is stale.
 
 
+## Audio unlock and storage reliability
+
+- `src/audio/unlock.ts` (new): serialises `Tone.start()` attempts and clears the
+  in-flight promise in `finally`, so a rejected resume cannot block retries.
+- `src/audio/noteGate.ts` (new): in-flight/waiting MIDI note bookkeeping; a
+  failed note-on removes the key instead of leaving it stuck down.
+- `src/audio/engine.ts`: uses both helpers, rejects an unlock that leaves the
+  context suspended, clears the audio-error state on success, and converts
+  unlock failures in `play`, `noteOn` and preview methods into a UI notice
+  instead of an unhandled rejection.
+- `src/stores/projectStorage.ts` (new): debounced storage adapter that reports
+  quota/security failures and successful retries.
+- `src/stores/projectStore.ts`: uses the adapter; failed autosaves mark the UI
+  error state while the in-memory project is preserved.
+- `src/stores/uiStore.ts`, `src/App.tsx`, `src/i18n/ui.ts`: accessible notice
+  for blocked audio and failed autosave, with English and Chinese copy.
+- The deployed bundle was rebuilt; no project schema or storage key changed.
+
+
 ## Dark theme (Adeeb's Vault)
 
 Visual only; no audio, state or storage changes.
