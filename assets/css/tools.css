@@ -195,3 +195,8 @@
 /* Three-tool switcher */
 .tool-switcher.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:650px){.tool-switcher.three{grid-template-columns:1fr}.tool-switcher.three a+a{border-left:0;border-top:1px solid var(--line)}}
+
+/* Expanded Notes Canvas workspace: keep the page paper-white while the toolbar stays dark. */
+#tool-notes.notes-expanded{background:#fff}
+#tool-notes.notes-expanded .notes-workspace{background:#fff}
+#tool-notes.notes-expanded .drawing-paper{box-shadow:0 0 0 1px #d9d4ca}
