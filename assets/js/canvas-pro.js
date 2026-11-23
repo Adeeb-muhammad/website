@@ -48,6 +48,8 @@ const PRESETS = {
 const SLIDERS = [['exp', 'Exposure', -100, 100], ['con', 'Contrast', -100, 100], ['hi', 'Highlights', -100, 100], ['sh', 'Shadows', -100, 100], ['temp', 'Temperature', -100, 100], ['tint', 'Tint', -100, 100], ['sat', 'Saturation', -100, 100], ['hue', 'Hue shift', -180, 180], ['fade', 'Fade', 0, 100], ['split', 'Split-tone amount', 0, 100], ['vig', 'Vignette', 0, 100], ['grain', 'Film grain', 0, 100]];
 
 const view = $('#cp-view'), vx = view.getContext('2d'), comp = document.createElement('canvas'), stroke = document.createElement('canvas');
+const cpPanel = $('.cp'), cpExpand = $('#cp-expand');
+let cpExpanded = false;
 view.width = comp.width = stroke.width = W; view.height = comp.height = stroke.height = H;
 const cx = comp.getContext('2d', { willReadFrequently: true }), sx = stroke.getContext('2d');
 const st = { tool: 'brush', brush: 'pen', color: '#1a1a1a', size: 12, opacity: 100, smooth: 40, sym: 'off', n: 6, fill: false, paper: '#f5f2ec' };
@@ -202,6 +204,37 @@ $('#cp-import').onchange = (e) => {
 document.addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName) && document.activeElement.type !== 'range') return;
   e.preventDefault(); e.shiftKey ? step(redo, undo) : step(undo, redo);
+});
+
+function setCanvasExpanded(expanded) {
+  cpExpanded = expanded;
+  cpPanel.classList.toggle('is-expanded', expanded);
+  document.body.classList.toggle('canvas-expanded', expanded);
+  cpExpand.textContent = expanded ? 'EXIT ↙' : 'EXPAND ↗';
+  cpExpand.setAttribute('aria-pressed', String(expanded));
+  cpExpand.setAttribute('aria-label', expanded ? 'Exit expanded Advanced Canvas' : 'Expand Advanced Canvas');
+}
+async function exitCanvasExpanded() {
+  setCanvasExpanded(false);
+  if (document.fullscreenElement === cpPanel) { try { await document.exitFullscreen(); } catch {} }
+  cpExpand.focus({ preventScroll: true });
+}
+cpExpand.addEventListener('click', async () => {
+  if (cpExpanded) { await exitCanvasExpanded(); return; }
+  setCanvasExpanded(true);
+  try { if (cpPanel.requestFullscreen && window.innerWidth > 1000 && window.screen.width > 1000) await cpPanel.requestFullscreen(); } catch { /* CSS overlay still works without the Fullscreen API. */ }
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && cpExpanded) {
+    setCanvasExpanded(false);
+    cpExpand.focus({ preventScroll: true });
+  }
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !cpExpanded) return;
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || '')) return;
+  event.preventDefault();
+  void exitCanvasExpanded();
 });
 
 layers.push(mk()); buildSliders(); listLayers(); btns(); paint();

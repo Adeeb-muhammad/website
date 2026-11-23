@@ -18,8 +18,8 @@
   <link rel="icon" href="assets/favicon.svg?v=6" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="assets/css/style.css?v=16">
-  <link rel="stylesheet" href="assets/css/tools.css?v=6">
-<link rel="stylesheet" href="assets/css/canvas-pro.css?v=1">
+  <link rel="stylesheet" href="assets/css/tools.css?v=7">
+<link rel="stylesheet" href="assets/css/canvas-pro.css?v=2">
   <title>Advanced canvas // Adeeb’s Vault</title>
   <link rel="stylesheet" href="assets/css/cursor.css?v=1">
 </head>
@@ -75,8 +75,8 @@
       </header>
       <nav class="tool-switcher three" aria-label="Choose a tool">
 <a href="tools.html#notes"><span>01</span> NOTES CANVAS</a>
-<a href="tools.html#utilities"><span>02</span> UTILITY DESK</a>
-<a href="canvas-pro.html" aria-current="page"><span>03</span> ADVANCED CANVAS</a>
+<a href="canvas-pro.html" aria-current="page"><span>02</span> ADVANCED CANVAS</a>
+<a href="tools.html#utilities"><span>03</span> UTILITY DESK</a>
 </nav>
 <section class="tool-panel" aria-labelledby="cp-heading">
 <div class="tool-intro"><div><p class="eyebrow">03 / DRAW, THEN GRADE</p><h2 id="cp-heading" tabindex="-1">Advanced canvas</h2><p>Seven brushes, symmetry and kaleidoscope drawing, layers, shapes, and a full colour-grading suite. Import a photo to grade it.</p></div><span class="tool-local">PROCESSED ON YOUR DEVICE</span></div>
@@ -84,9 +84,9 @@
 <div class="cp-stage">
 <div class="cp-bar">
 <div class="segmented-controls" role="group" aria-label="Tool"><button type="button" data-tool="brush" aria-pressed="true">Brush</button><button type="button" data-tool="eraser" aria-pressed="false">Eraser</button><button type="button" data-tool="line" aria-pressed="false">Line</button><button type="button" data-tool="rect" aria-pressed="false">Rect</button><button type="button" data-tool="ellipse" aria-pressed="false">Ellipse</button><button type="button" data-tool="pick" aria-pressed="false">Pick</button></div>
-<button id="cp-undo" class="small-tool-button" type="button" aria-label="Undo" disabled>↶</button><button id="cp-redo" class="small-tool-button" type="button" aria-label="Redo" disabled>↷</button><button id="cp-clear" class="small-tool-button" type="button">Clear layer</button>
+<button id="cp-undo" class="small-tool-button" type="button" aria-label="Undo" disabled>↶</button><button id="cp-redo" class="small-tool-button" type="button" aria-label="Redo" disabled>↷</button><button id="cp-clear" class="small-tool-button" type="button">Clear layer</button><button id="cp-expand" class="button button-outline cp-expand" type="button" aria-pressed="false" aria-label="Expand Advanced Canvas">EXPAND ↗</button>
 </div>
-<canvas id="cp-view" aria-label="Advanced drawing canvas. Draw with a mouse, pen, or finger."></canvas>
+<div class="cp-canvas-wrap"><canvas id="cp-view" aria-label="Advanced drawing canvas. Draw with a mouse, pen, or finger."></canvas></div>
 <p id="cp-status" class="tool-status" role="status" aria-live="polite">Pick a brush and draw. Colour grading never changes your drawing, only how it is shown and exported.</p>
 </div>
 <aside class="cp-side" aria-label="Canvas options">
@@ -141,7 +141,7 @@
   </main>
 
 <script src="assets/js/misc-nav.js?v=1" defer></script>
-<script type="module" src="assets/js/canvas-pro.js?v=2"></script>
+<script type="module" src="assets/js/canvas-pro.js?v=3"></script>
   <script type="module" src="assets/js/cursor.js?v=1"></script>
 </body>
 </html>
