@@ -4,6 +4,7 @@
  * - readProjectFile：读取用户选择的 .json 文件，返回解析后的对象（失败抛错）
  */
 import type { Project } from '../types/project';
+import { MAX_PROJECT_FILE_BYTES } from './projectValidation';
 
 export function exportProjectToFile(project: Project, filename?: string): void {
   const data = JSON.stringify(project, null, 2);
@@ -22,6 +23,10 @@ export function exportProjectToFile(project: Project, filename?: string): void {
 
 export function readProjectFile(file: File): Promise<unknown> {
   return new Promise((resolve, reject) => {
+    if (file.size > MAX_PROJECT_FILE_BYTES) {
+      reject(new Error(`Project files must be ${MAX_PROJECT_FILE_BYTES / 1024 / 1024} MB or smaller.`));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       try {

@@ -26,6 +26,7 @@ import { encodeWav, downloadBlob } from '../../audio/wavEncoder';
 import { getProjectSnapshot, useProjectStore } from '../../stores/projectStore';
 import { useT } from '../../i18n/ui';
 import { exportProjectToFile, readProjectFile } from '../../utils/projectIO';
+import { validateProject } from '../../utils/projectValidation';
 
 type MsgKind = 'ok' | 'err';
 
@@ -177,6 +178,8 @@ export function Files() {
     setImportMsg(null);
     try {
       const data = await readProjectFile(file);
+      /* Validate first: a bad file must not stop playback or replace state. */
+      validateProject(data);
       engine.stop();
       const ok = importProject(data);
       setImportMsg(

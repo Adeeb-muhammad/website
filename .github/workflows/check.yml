@@ -9,7 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - run: npm run check
+      - run: git fetch origin main:refs/remotes/origin/main
+      - run: npm run check:versions -- origin/main
+
+  studio-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: music-studio-src/package-lock.json
+      - run: npm ci --prefix music-studio-src
+      - run: npm run build --prefix music-studio-src
+      - run: npm run check:studio
