@@ -422,18 +422,18 @@ const fileMode = $('#file-convert-mode');
 const fileStatus = '#file-convert-status';
 let fileSelection = [];
 const fileModeInfo = {
-  'images-pdf': {accept:'image/jpeg,image/png',multiple:true,types:'JPG and PNG images · select multiple pages'},
-  'pdf-images': {accept:'.pdf,application/pdf',multiple:false,types:'PDF · each page becomes an image inside a ZIP'},
-  'txt-pdf': {accept:'.txt,text/plain',multiple:false,types:'Plain text (.txt)'},
-  'pdf-txt': {accept:'.pdf,application/pdf',multiple:false,types:'Text-based PDF (.pdf)'},
-  'docx-pdf': {accept:'.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document',multiple:false,types:'Word DOCX (.docx) · text/layout may change'},
+  'images-pdf': {accept:'image/jpeg,image/png',multiple:true,types:'JPG and PNG images · up to 20 images / 60 MB'},
+  'pdf-images': {accept:'.pdf,application/pdf',multiple:false,types:'PDF · up to 200 pages · each page becomes an image inside a ZIP'},
+  'txt-pdf': {accept:'.txt,text/plain',multiple:false,types:'Plain text (.txt) · up to 5,000,000 characters'},
+  'pdf-txt': {accept:'.pdf,application/pdf',multiple:false,types:'Text-based PDF (.pdf) · up to 200 pages / 5,000,000 characters'},
+  'docx-pdf': {accept:'.docx',multiple:false,types:'Word DOCX (.docx) · text/layout may change · up to 5,000,000 characters'},
   'json-csv': {accept:'.json,application/json',multiple:false,types:'JSON array of objects (.json)'},
   'csv-json': {accept:'.csv,text/csv',multiple:false,types:'CSV (.csv) · first row is treated as headers'},
   'xml-json': {accept:'.xml,text/xml,application/xml',multiple:false,types:'XML (.xml)'},
   'json-xml': {accept:'.json,application/json',multiple:false,types:'JSON object (.json)'},
-  'zip-tar': {accept:'.zip,application/zip,application/x-zip-compressed',multiple:false,types:'ZIP archive (.zip)'},
-  'tar-zip': {accept:'.tar,application/x-tar',multiple:false,types:'Uncompressed TAR archive (.tar)'},
-  'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction'}
+  'zip-tar': {accept:'.zip,application/zip,application/x-zip-compressed',multiple:false,types:'ZIP archive (.zip) · up to 10,000 entries / 200 MB expanded'},
+  'tar-zip': {accept:'.tar,application/x-tar',multiple:false,types:'Uncompressed TAR archive (.tar) · up to 10,000 entries / 200 MB'},
+  'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction · up to 5,000,000 characters'}
 };
 function updateFileMode(){
  const m=fileModeInfo[fileMode.value]; fileInput.accept=m.accept;fileInput.multiple=m.multiple;
