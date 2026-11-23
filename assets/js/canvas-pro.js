@@ -141,7 +141,7 @@ view.addEventListener('pointermove', (e) => {
   if (isShape()) shape(start, p); else { const k = 1 - st.smooth / 100 * .9; sp = { x: sp.x + (p.x - sp.x) * k, y: sp.y + (p.y - sp.y) * k, p: sp.p + (p.p - sp.p) * k }; seg(last, sp); last = sp; }
   later();
 });
-['pointerup', 'pointercancel'].forEach((n) => view.addEventListener(n, (e) => finish(pos(e))));
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach((n) => view.addEventListener(n, (e) => finish(pos(e))));
 
 function buildSliders() {
   const box = $('#cp-grade');
@@ -163,7 +163,10 @@ function applyGrade(v) {
 function exportPNG(graded) {
   composite(); const o = document.createElement('canvas'); o.width = W; o.height = H; const x = o.getContext('2d'); x.drawImage(comp, 0, 0);
   if (graded && gradeActive()) { const im = x.getImageData(0, 0, W, H); grade(im.data, W, H); x.putImageData(im, 0, 0); }
-  o.toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (graded ? 'vault-graded' : 'vault-canvas') + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); });
+  o.toBlob((b) => {
+    if (!b) { say('PNG export failed. Try a smaller canvas or another browser.'); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (graded ? 'vault-graded' : 'vault-canvas') + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
 }
 
 document.querySelectorAll('[data-tool]').forEach((b) => b.addEventListener('click', () => {
