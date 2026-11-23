@@ -8,6 +8,7 @@
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
     "check:js": "node scripts/check-js.mjs",
+    "check:studio": "node scripts/check-studio-build.mjs",
     "check": "npm run check:js && npm test && npm run build"
   }
 }

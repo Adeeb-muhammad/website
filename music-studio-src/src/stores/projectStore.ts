@@ -14,6 +14,7 @@ import type {
 } from '../types/project';
 import { useHistoryStore } from './historyStore';
 import { SAMPLE_INSTRUMENTS } from '../audio/samples';
+import { validateProject } from '../utils/projectValidation';
 
 /* ============================================================
  * 工具
@@ -695,28 +696,14 @@ export const useProjectStore = create<ProjectState>()(
 
         /* ---------------- 导入 / 新建 ---------------- */
         importProject: (data) => {
-          if (!data || typeof data !== 'object') return false;
-          const p = data as Partial<Project>;
-          if (
-            !Array.isArray(p.patterns) ||
-            !Array.isArray(p.channels) ||
-            !Array.isArray(p.mixerTracks) ||
-            !p.song ||
-            !Array.isArray((p.song as { tracks?: unknown }).tracks)
-          ) {
+          /* Validate before touching history, the store or playback. A rejected
+           * file leaves the current project exactly as it was. */
+          let project: Project;
+          try {
+            project = validateProject(data);
+          } catch {
             return false;
           }
-          const project: Project = {
-            bpm: clamp(60, 200, typeof p.bpm === 'number' ? p.bpm : 120),
-            currentPatternId:
-              typeof p.currentPatternId === 'string' && p.currentPatternId
-                ? p.currentPatternId
-                : (p.patterns as Pattern[])[0]?.id ?? '',
-            patterns: p.patterns as Pattern[],
-            channels: p.channels as Project['channels'],
-            mixerTracks: p.mixerTracks as MixerTrack[],
-            song: p.song as Project['song'],
-          };
           useHistoryStore.getState().clear();
           set(project);
           return true;
