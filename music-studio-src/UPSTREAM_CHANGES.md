@@ -41,6 +41,21 @@ repo's root test suite, so `npm run check` exercises them without needing the
 Vite build.
 
 
+## Project import validation (site fix)
+
+- `src/utils/projectValidation.ts` (new): runtime validator for imported project
+  JSON, including nested IDs, mixer/channel references, patterns, step lengths,
+  note bounds, effects, song clips and the 5 MB file limit.
+- `src/stores/projectStore.ts`: `importProject` validates before clearing
+  history or replacing state; rejected files leave the project unchanged.
+- `src/utils/projectIO.ts`: refuses files over 5 MB before reading.
+- `src/components/Files/Files.tsx`: validates first, then stops playback, so a
+  bad file cannot stop the current song.
+
+The deployed bundle was rebuilt after these changes. CI now typechecks/builds
+`music-studio-src` and fails when `music-studio/assets` is stale.
+
+
 ## Dark theme (Adeeb's Vault)
 
 Visual only; no audio, state or storage changes.
