@@ -1,5 +1,5 @@
-import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, createTar, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=4';
-import { initNotebook } from './notebook.js?v=3';
+import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=5';
+import { initNotebook } from './notebook.js?v=4';
 import { escapeHTML as e } from './core.js?v=6';
 
 const $ = selector => document.querySelector(selector);
@@ -431,7 +431,6 @@ const fileModeInfo = {
   'csv-json': {accept:'.csv,text/csv',multiple:false,types:'CSV (.csv) · first row is treated as headers'},
   'xml-json': {accept:'.xml,text/xml,application/xml',multiple:false,types:'XML (.xml)'},
   'json-xml': {accept:'.json,application/json',multiple:false,types:'JSON object (.json)'},
-  'zip-tar': {accept:'.zip,application/zip,application/x-zip-compressed',multiple:false,types:'ZIP archive (.zip) · up to 10,000 entries / 200 MB expanded'},
   'tar-zip': {accept:'.tar,application/x-tar',multiple:false,types:'Uncompressed TAR archive (.tar) · up to 10,000 entries / 200 MB'},
   'epub-pdf': {accept:'.epub,application/epub+zip',multiple:false,types:'EPUB ebook (.epub) · text extraction · up to 5,000,000 characters'}
 };
@@ -525,20 +524,11 @@ async function convertFiles(){
    if(mode==='xml-json'){const parsed=new DOMParser().parseFromString(source,'application/xml');if(parsed.querySelector('parsererror'))throw new Error('The XML is not well-formed.');result=JSON.stringify({[parsed.documentElement.tagName]:xmlNode(parsed.documentElement)},null,2);ext='json';type='application/json';}
    if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n<root>'+jsonToXML(data)+'</root>';ext='xml';type='application/xml';}
    blob=new Blob([result],{type});filename=outputName(ext);
-  } else if(mode==='zip-tar'||mode==='tar-zip'){
+  } else if(mode==='tar-zip'){
    const JSZip=await getJSZip();const input=await readAsArrayBuffer(files[0]);
-   if(mode==='zip-tar'){
-    const zip=await JSZip.loadAsync(input),names=Object.keys(zip.files);
-    if(names.length>CONVERSION_LIMITS.archiveEntries)throw new Error('This ZIP has more than '+CONVERSION_LIMITS.archiveEntries+' entries.');
-    const entries=[];let total=0;
-    for(const name of names){const entry=zip.files[name];if(entry.dir){entries.push({name,dir:true});continue;}const data=await entry.async('uint8array');total+=data.length;if(total>CONVERSION_LIMITS.archiveBytes)throw new Error('This ZIP expands beyond the '+Math.round(CONVERSION_LIMITS.archiveBytes/1024/1024)+' MB limit.');entries.push({name,data});}
-    const tar=createTar(entries,{maxEntries:CONVERSION_LIMITS.archiveEntries,maxBytes:CONVERSION_LIMITS.archiveBytes});
-    blob=new Blob([tar],{type:'application/x-tar'});filename=outputName('tar');
-   }else{
-    const entries=readTar(new Uint8Array(input),{maxEntries:CONVERSION_LIMITS.archiveEntries,maxBytes:CONVERSION_LIMITS.archiveBytes});const zip=new JSZip();
-    for(const entry of entries){if(entry.dir)zip.folder(entry.name);else zip.file(entry.name,entry.data);}
-    blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');
-   }
+   const entries=readTar(new Uint8Array(input),{maxEntries:CONVERSION_LIMITS.archiveEntries,maxBytes:CONVERSION_LIMITS.archiveBytes});const zip=new JSZip();
+   for(const entry of entries){if(entry.dir)zip.folder(entry.name);else zip.file(entry.name,entry.data);}
+   blob=await zip.generateAsync({type:'blob'});filename=outputName('zip');
   }
   if(!blob||!filename)throw new Error('This conversion is not available.');downloadBlob(blob,filename);setStatus(fileStatus,'Done — downloaded '+filename+'. Your source file was not uploaded.');
  }catch(err){setStatus(fileStatus,err?.message||'Conversion failed. Please check the file and try again.',true);}

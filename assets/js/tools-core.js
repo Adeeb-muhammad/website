@@ -114,11 +114,7 @@ export function upgradeNotebook(data) {
 }
 
 /* ============================================================
- * TAR writer / reader (USTAR)
- *
- * Numeric header fields are octal ASCII, never decimal: a decimal 1000
- * written into a size field is read as octal 512 by standard tools. Names
- * longer than 100 bytes use the USTAR prefix field instead of truncating.
+ * TAR reader (USTAR) used by TAR → ZIP
  * ============================================================ */
 
 const TAR_BLOCK = 512;
@@ -133,22 +129,7 @@ export const CONVERSION_LIMITS = Object.freeze({
 });
 const TAR_NAME = 100;
 const TAR_PREFIX = 155;
-const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
-
-const encode = value => textEncoder.encode(value);
-
-function writeString(block, offset, length, bytes) {
-  block.set(bytes.slice(0, length), offset);
-}
-
-function writeOctal(block, offset, length, value) {
-  if (!Number.isSafeInteger(value) || value < 0) throw new Error('Invalid TAR numeric field.');
-  const digits = value.toString(8);
-  if (digits.length > length - 1) throw new Error('This file is too large for a TAR archive.');
-  const field = digits.padStart(length - 1, '0') + '\0';
-  writeString(block, offset, length, encode(field));
-}
 
 function readOctal(block, offset, length, label) {
   let raw = '';
@@ -170,69 +151,6 @@ function tarPath(name, isDir) {
   clean = parts.join('/');
   if (isDir) clean += '/';
   return clean;
-}
-
-function tarNameFields(name) {
-  const full = encode(name);
-  if (full.length <= TAR_NAME) return { name: full, prefix: new Uint8Array(0) };
-  for (let i = name.length - 1; i > 0; i--) {
-    if (name[i] !== '/') continue;
-    const prefix = encode(name.slice(0, i));
-    const leaf = encode(name.slice(i + 1));
-    if (prefix.length <= TAR_PREFIX && leaf.length > 0 && leaf.length <= TAR_NAME) return { name: leaf, prefix };
-  }
-  throw new Error(`Path is too long for a USTAR archive: ${name}`);
-}
-
-function concatBytes(parts) {
-  const total = parts.reduce((sum, part) => sum + part.length, 0);
-  const out = new Uint8Array(total);
-  let offset = 0;
-  for (const part of parts) { out.set(part, offset); offset += part.length; }
-  return out;
-}
-
-/** Build a standards-compliant USTAR archive from { name, data, dir? } entries. */
-export function createTar(entries, { maxEntries = TAR_MAX_ENTRIES, maxBytes = TAR_MAX_BYTES } = {}) {
-  if (!Array.isArray(entries) || !entries.length) throw new Error('There are no files to put in the TAR archive.');
-  if (entries.length > maxEntries) throw new Error(`This archive has more than ${maxEntries} entries.`);
-  const parts = [];
-  const seen = new Set();
-  let total = 0;
-  for (const entry of entries) {
-    if (!entry || typeof entry !== 'object') throw new Error('An archive entry is invalid.');
-    const isDir = entry.dir === true;
-    const name = tarPath(entry.name, isDir);
-    if (seen.has(name)) throw new Error(`The archive contains a duplicate path: ${name}`);
-    seen.add(name);
-    const data = isDir ? new Uint8Array(0) : entry.data;
-    if (!(data instanceof Uint8Array)) throw new Error(`No file data for ${name}`);
-    total += data.length;
-    if (total > maxBytes) throw new Error(`The archive expands beyond the ${Math.round(maxBytes / 1024 / 1024)} MB limit.`);
-    const fields = tarNameFields(name);
-    const header = new Uint8Array(TAR_BLOCK);
-    writeString(header, 0, TAR_NAME, fields.name);
-    writeOctal(header, 100, 8, isDir ? 0o755 : 0o644);
-    writeOctal(header, 108, 8, 0);
-    writeOctal(header, 116, 8, 0);
-    writeOctal(header, 124, 12, data.length);
-    writeOctal(header, 136, 12, 0);
-    header.fill(32, 148, 156);
-    header[156] = isDir ? 53 : 48;
-    writeString(header, 257, 6, encode('ustar\0'));
-    writeString(header, 263, 2, encode('00'));
-    writeString(header, 345, TAR_PREFIX, fields.prefix);
-    let sum = 0;
-    for (const byte of header) sum += byte;
-    const checksum = sum.toString(8).padStart(6, '0');
-    if (checksum.length !== 6) throw new Error('TAR checksum overflow.');
-    header.set(encode(checksum + '\0 '), 148);
-    parts.push(header, data);
-    const pad = (TAR_BLOCK - (data.length % TAR_BLOCK)) % TAR_BLOCK;
-    if (pad) parts.push(new Uint8Array(pad));
-  }
-  parts.push(new Uint8Array(TAR_BLOCK * 2));
-  return concatBytes(parts);
 }
 
 /** Parse a USTAR archive. Rejects unsafe paths, bad checksums and special files. */

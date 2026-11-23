@@ -1,118 +1,100 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { createTar, readTar, loadScript } from '../assets/js/tools-core.js';
+import { dirname, join } from 'node:path';
+import { readTar, loadScript } from '../assets/js/tools-core.js';
 
 const bytes = (length, seed = 0) => Uint8Array.from({ length }, (_, i) => (i * 31 + seed) & 255);
 const ascii = (buffer, start, end) => String.fromCharCode(...buffer.slice(start, end));
-const headerSum = header => {
+const writeAscii = (buffer, offset, value, length = 100) => {
+  buffer.fill(0, offset, offset + length);
+  buffer.set(new TextEncoder().encode(value), offset);
+};
+const withValidChecksum = (tar, change) => {
+  const copy = tar.slice();
+  copy.fill(32, 148, 156);
+  change(copy);
   let sum = 0;
-  for (let i = 0; i < 512; i++) sum += (i >= 148 && i < 156) ? 32 : header[i];
-  return sum;
+  for (let i = 0; i < 512; i++) sum += copy[i];
+  copy.set(new TextEncoder().encode(sum.toString(8).padStart(6, '0') + '\0 '), 148);
+  return copy;
 };
 
-test('TAR headers use octal fields, a valid checksum and USTAR magic', () => {
-  const tar = createTar([{ name: 'small.bin', data: bytes(8) }]);
-  const header = tar.slice(0, 512);
-  assert.equal(ascii(tar, 257, 265), 'ustar\x0000');
-  assert.match(ascii(tar, 100, 108), /^[0-7]{7}\0$/);
-  assert.equal(parseInt(ascii(tar, 100, 108), 8), 0o644);
-  assert.match(ascii(tar, 124, 136), /^[0-7]{11}\0$/);
-  assert.equal(parseInt(ascii(tar, 124, 136), 8), 8);
-  assert.equal(ascii(tar, 136, 148), '00000000000\0');
-  assert.match(ascii(tar, 148, 156), /^[0-7]{6}\0 $/);
-  assert.equal(parseInt(ascii(tar, 148, 156), 8), headerSum(header));
-  assert.equal(tar[156], 48);
-  assert.equal(tar.length, 512 + 512 + 1024);
-  assert.ok(tar.slice(-1024).every(byte => byte === 0));
-});
-
-test('TAR sizes survive decimal/octal boundary values and round-trip exactly', () => {
-  const sizes = [0, 7, 8, 9, 63, 64, 1000, 4095, 4096, 12345];
-  const entries = sizes.map((size, i) => ({ name: `nested/file-${i}.bin`, data: bytes(size, i) }));
-  const tar = createTar(entries);
-  const parsed = readTar(tar);
-  assert.equal(parsed.length, entries.length);
-  for (let i = 0; i < entries.length; i++) {
-    assert.equal(parsed[i].name, entries[i].name);
-    assert.equal(parsed[i].dir, false);
-    assert.deepEqual(parsed[i].data, entries[i].data);
-  }
-  // Each block starts with the expected octal size, not its decimal spelling.
-  let offset = 0;
-  for (const entry of parsed) {
-    assert.equal(parseInt(ascii(tar, offset + 124, offset + 136), 8), entry.data.length);
-    offset += 512 + Math.ceil(entry.data.length / 512) * 512;
-  }
-});
-
-test('long paths use the USTAR prefix field and unsafe paths are rejected', () => {
-  const long = 'collection/' + 'a'.repeat(90) + '/' + 'b'.repeat(90) + '.txt';
-  const tar = createTar([{ name: long, data: bytes(3) }]);
-  const header = tar.slice(0, 512);
-  assert.ok(ascii(header, 345, 500).replace(/\0.*$/, '').length > 0);
-  assert.ok(ascii(header, 0, 100).replace(/\0.*$/, '').length <= 100);
-  assert.equal(readTar(tar)[0].name, long);
-
-  assert.throws(() => createTar([{ name: 'x'.repeat(300), data: bytes(1) }]), /too long/i);
-  assert.throws(() => createTar([{ name: '../escape.txt', data: bytes(1) }]), /unsafe/i);
-  assert.throws(() => createTar([{ name: '/absolute.txt', data: bytes(1) }]), /absolute/i);
-  assert.throws(() => createTar([{ name: 'same.txt', data: bytes(1) }, { name: 'same.txt', data: bytes(2) }]), /duplicate/i);
-  assert.throws(() => createTar([{ name: 'x', data: bytes(20) }], { maxBytes: 10 }), /limit/i);
-  assert.throws(() => createTar([{ name: 'x', data: bytes(1) }], { maxEntries: 0 }), /entries/i);
-});
-
-test('directories and empty files round-trip through TAR', () => {
-  const tar = createTar([
-    { name: 'empty', dir: true },
-    { name: 'empty/blank.txt', data: new Uint8Array(0) },
-    { name: 'empty/nested/', dir: true },
-  ]);
-  const entries = readTar(tar);
-  assert.deepEqual(entries.map(entry => entry.name), ['empty/', 'empty/blank.txt', 'empty/nested/']);
-  assert.deepEqual(entries.map(entry => entry.dir), [true, false, true]);
-});
-
-test('bad checksums, invalid octal and truncated archives are rejected', () => {
-  const tar = createTar([{ name: 'file.txt', data: bytes(20) }]);
-  const changed = tar.slice();
-  changed[0] ^= 1;
-  assert.throws(() => readTar(changed), /checksum/i);
-
-  const decimal = tar.slice();
-  decimal.set(new TextEncoder().encode('00000000008\0'), 124);
-  decimal.set(new TextEncoder().encode(headerSum(decimal).toString(8).padStart(6, '0') + '\0 '), 148);
-  assert.throws(() => readTar(decimal), /size field/i);
-
-  assert.throws(() => readTar(tar.slice(0, 512 + 512)), /end marker/i);
-  assert.throws(() => readTar(createTar([{ name: 'a', data: bytes(700) }]).slice(0, 900)), /truncated/i);
-});
-
-test('a system TAR reader accepts the generated archive', t => {
-  let available = true;
-  try { execFileSync('tar', ['--version'], { stdio: 'ignore' }); } catch { available = false; }
-  if (!available) return t.skip('system tar is unavailable');
+function systemTar(t, files, paths) {
+  try { execFileSync('tar', ['--version'], { stdio: 'ignore' }); }
+  catch { t.skip('system tar is unavailable'); return null; }
   const dir = mkdtempSync(join(tmpdir(), 'vault-tar-'));
+  for (const [name, data] of Object.entries(files)) {
+    const path = join(dir, name);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, data);
+  }
+  const archive = join(dir, 'fixture.tar');
+  execFileSync('tar', ['--format=ustar', '--owner=0', '--group=0', '--numeric-owner', '-cf', archive, '-C', dir, ...paths]);
+  return { dir, tar: new Uint8Array(readFileSync(archive)) };
+}
+
+test('a system USTAR archive reads sizes, padding, directories and empty files', t => {
+  const sizes = [0, 7, 8, 9, 63, 64, 1000, 4095, 4096, 12345];
+  const files = { 'plain.txt': 'hello' };
+  for (let i = 0; i < sizes.length; i++) files[`sizes/file-${i}.bin`] = bytes(sizes[i], i);
+  files['nested/dir/data.bin'] = bytes(12345, 7);
+  const fixture = systemTar(t, files, ['plain.txt', 'sizes', 'nested']);
+  if (!fixture) return;
   try {
-    const payload = bytes(12345, 7);
-    const tar = createTar([
-      { name: 'plain.txt', data: new TextEncoder().encode('hello') },
-      { name: 'nested/dir/data.bin', data: payload },
-      { name: 'nested/dir/', dir: true },
-    ]);
-    const path = join(dir, 'test.tar');
-    writeFileSync(path, tar);
-    const list = execFileSync('tar', ['-tf', path], { encoding: 'utf8' }).trim().split('\n');
-    assert.deepEqual(list.sort(), ['nested/dir/', 'nested/dir/data.bin', 'plain.txt'].sort());
-    const extracted = execFileSync('tar', ['-xOf', path, 'nested/dir/data.bin']);
-    assert.deepEqual(new Uint8Array(extracted), payload);
-    const text = execFileSync('tar', ['-xOf', path, 'plain.txt'], { encoding: 'utf8' });
-    assert.equal(text, 'hello');
+    const entries = readTar(fixture.tar);
+    const byName = new Map(entries.map(entry => [entry.name, entry]));
+    assert.equal(new TextDecoder().decode(byName.get('plain.txt').data), 'hello');
+    assert.equal(byName.get('plain.txt').dir, false);
+    assert.equal(byName.get('sizes/').dir, true);
+    assert.equal(byName.get('nested/dir/').dir, true);
+    assert.deepEqual(byName.get('nested/dir/data.bin').data, files['nested/dir/data.bin']);
+    for (let i = 0; i < sizes.length; i++) {
+      assert.deepEqual(byName.get(`sizes/file-${i}.bin`).data, files[`sizes/file-${i}.bin`]);
+    }
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('long USTAR paths read back through the prefix field', t => {
+  const long = 'collection/' + 'a'.repeat(90) + '/' + 'b'.repeat(90) + '.txt';
+  const fixture = systemTar(t, { [long]: bytes(3) }, ['collection']);
+  if (!fixture) return;
+  try {
+    const entries = readTar(fixture.tar);
+    assert.equal(entries.find(entry => entry.name === long)?.data.length, 3);
+    assert.ok(entries.some(entry => entry.name.endsWith('/')));
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('bad checksums, unsafe paths, invalid octal and truncated archives are rejected', t => {
+  const fixture = systemTar(t, { 'file.txt': bytes(700) }, ['file.txt']);
+  if (!fixture) return;
+  try {
+    const tar = fixture.tar;
+    assert.equal(ascii(tar, 0, 8), 'file.txt');
+    const changed = tar.slice();
+    changed[0] ^= 1;
+    assert.throws(() => readTar(changed), /checksum/i);
+
+    const decimal = withValidChecksum(tar, copy => copy.set(new TextEncoder().encode('00000000008\0'), 124));
+    assert.throws(() => readTar(decimal), /size field/i);
+
+    const unsafe = withValidChecksum(tar, copy => writeAscii(copy, 0, '../escape.txt'));
+    assert.throws(() => readTar(unsafe), /unsafe/i);
+
+    const absolute = withValidChecksum(tar, copy => writeAscii(copy, 0, '/absolute.txt'));
+    assert.throws(() => readTar(absolute), /absolute/i);
+
+    assert.throws(() => readTar(tar.slice(0, 900)), /truncated/i);
+    assert.throws(() => readTar(tar.slice(0, 512 + 1024)), /end marker/i);
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
   }
 });
 
