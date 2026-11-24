@@ -1,4 +1,4 @@
-import { DRAFT_KEY, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, safeURL, selectEntries, validateArchive } from './core.js?v=6';
+import { DRAFT_KEY, archiveFilterParams, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, readArchiveFilters, safeURL, selectEntries, validateArchive } from './core.js?v=7';
 
 const $ = selector => document.querySelector(selector);
 let archive;
@@ -84,7 +84,7 @@ function renderHome() {
   for (const name of ['films', 'series', 'anime', 'watchlist']) $(`#${name}-tab-count`).textContent = selectEntries(archive.entries, { collection: name }).length;
 }
 
-function renderCollection(reset = false) {
+function renderCollection(reset = false, filters = null) {
   reset ||= renderedCollection !== collection;
   renderedCollection = collection;
   const [eyebrow, title, outline, description] = collectionInfo[collection];
@@ -98,6 +98,7 @@ function renderCollection(reset = false) {
     $('#language-filter').innerHTML = '<option value="all">ALL LANGUAGES</option>' + [...new Set(base.flatMap(x => x.languages || []))].sort().map(language => `<option value="${e(language)}">${e(language.toUpperCase())}</option>`).join('');
     $('#archive-sort').value = 'recent';
   }
+  if (filters) applyFilters(filters);
   const query = $('#archive-search').value, genre = $('#genre-filter').value, language = $('#language-filter').value, sort = $('#archive-sort').value;
   const entries = selectEntries(archive.entries, { collection, query, genre, language, sort });
   document.querySelectorAll('[data-collection]').forEach(link => { link.classList.toggle('active', link.dataset.collection === collection); if (link.dataset.collection === collection) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
@@ -110,6 +111,28 @@ function renderCollection(reset = false) {
   $('#empty-title').textContent = base.length ? 'NO MATCHING RECORDS.' : collection === 'anime' ? 'NO ANIME ON RECORD. YET.' : collection === 'series' ? 'NO SERIES ON RECORD. YET.' : collection === 'watchlist' ? 'AN OPEN EVENING.' : 'THE FIRST RECORD IS STILL TO COME.';
   $('#empty-copy').textContent = base.length ? 'Try another search, language, or genre.' : collection === 'series' || collection === 'anime' ? 'This part of the archive is still unwritten. Explore the films in the meantime.' : collection === 'watchlist' ? 'There’s nothing waiting on this list right now.' : 'A personal archive starts with a single film.';
   $('#empty-link').hidden = collection === 'films';
+}
+
+// Puts a parsed filter state into the existing controls, ignoring values this
+// collection does not offer.
+function applyFilters({ q = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
+  const offered = (select, value) => [...select.options].some(option => option.value === value);
+  $('#archive-search').value = q;
+  $('#genre-filter').value = offered($('#genre-filter'), genre) ? genre : 'all';
+  $('#language-filter').value = offered($('#language-filter'), language) ? language : 'all';
+  $('#archive-sort').value = offered($('#archive-sort'), sort) ? sort : 'recent';
+}
+
+// Mirrors the current filters into the address bar. Typing replaces the current
+// entry so one search is not a dozen history steps; deliberate changes push one.
+function syncFilters(push = false) {
+  if ($('#view-archive').hidden) return;
+  const params = archiveFilterParams({ q: $('#archive-search').value, genre: $('#genre-filter').value, language: $('#language-filter').value, sort: $('#archive-sort').value });
+  const url = new URL(location.href);
+  for (const key of ['q', 'genre', 'language', 'sort']) url.searchParams.delete(key);
+  for (const [key, value] of params) url.searchParams.set(key, value);
+  if (url.href === location.href) return;
+  history[push ? 'pushState' : 'replaceState'](null, '', url.href);
 }
 
 function showView(view) {
@@ -151,7 +174,7 @@ function route() {
     const entry = archive.entries.find(x => x.id === hash.slice(5));
     const target = entry?.status === 'watchlist' ? 'watchlist' : entry?.category === 'anime' ? 'anime' : entry?.type === 'series' ? 'series' : 'films';
     const reset = collection !== target;
-    collection = target; showView('collection'); renderCollection(reset);
+    collection = target; showView('collection'); renderCollection(reset, readArchiveFilters(location.search)); syncFilters();
     openEntry(hash.slice(5)); return;
   }
   const closingEntry = $('#entry-dialog').open ? entryFocus : null;
@@ -159,7 +182,7 @@ function route() {
   document.body.classList.remove('dialog-open');
   if (['films', 'series', 'anime', 'watchlist'].includes(hash)) {
     const reset = lastRoute !== hash;
-    collection = hash; showView('collection'); renderCollection(reset);
+    collection = hash; showView('collection'); renderCollection(reset, readArchiveFilters(location.search)); syncFilters();
     document.title = `${hash === 'films' ? 'Film archive' : hash === 'series' ? 'Series archive' : hash === 'anime' ? 'Anime archive' : 'Watchlist'} // Adeeb’s Vault`;
   } else {
     // Projects and Contact live inside the About me page now; old links still land there.
@@ -211,17 +234,24 @@ $('#mobile-nav').addEventListener('click', event => { if (event.target.closest('
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#mobile-nav').hidden) { event.preventDefault(); closeNavigation({ restoreFocus: true }); } });
 document.addEventListener('click', event => { if (!$('#mobile-nav').hidden && !event.target.closest('#mobile-nav, .menu-toggle')) closeNavigation(); });
 window.matchMedia('(max-width: 1100px)').addEventListener('change', event => { if (!event.matches) closeNavigation(); });
-$('#archive-search').addEventListener('input', () => renderCollection());
-$('#genre-filter').addEventListener('change', () => renderCollection());
-$('#language-filter').addEventListener('change', () => renderCollection());
-$('#archive-sort').addEventListener('change', () => renderCollection());
-$('#clear-filters').addEventListener('click', () => { renderCollection(true); $('#archive-search').focus(); });
+$('#archive-search').addEventListener('input', () => { renderCollection(); syncFilters(); });
+$('#genre-filter').addEventListener('change', () => { renderCollection(); syncFilters(true); });
+$('#language-filter').addEventListener('change', () => { renderCollection(); syncFilters(true); });
+$('#archive-sort').addEventListener('change', () => { renderCollection(); syncFilters(true); });
+$('#clear-filters').addEventListener('click', () => { renderCollection(true); syncFilters(true); $('#archive-search').focus(); });
 document.querySelectorAll('[data-layout]').forEach(button => button.addEventListener('click', () => { layout = button.dataset.layout; document.querySelectorAll('[data-layout]').forEach(b => { b.classList.toggle('active', b === button); b.setAttribute('aria-pressed', String(b === button)); }); renderCollection(); }));
 $('.dialog-close').addEventListener('click', closeEntry);
 $('#entry-dialog').addEventListener('cancel', event => { event.preventDefault(); closeEntry(); });
 $('#entry-dialog').addEventListener('click', event => { if (event.target === $('#entry-dialog')) { const rect = $('#entry-dialog').getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeEntry(); } const copyButton = event.target.closest('[data-copy-entry]'); if (copyButton) { const url = new URL(safeURL(archive.profile.website) || location.href); url.hash = `film/${copyButton.dataset.copyEntry}`; copy(url.href); } });
 $('#share-site').addEventListener('click', () => copy(safeURL(archive.profile.website) || `${location.origin}${location.pathname}`));
 window.addEventListener('hashchange', route);
+// Back and Forward through filter states keep the same hash, so only popstate
+// fires; hash moves are handled by route() itself.
+window.addEventListener('popstate', () => {
+  const hash = location.hash.slice(1) || 'home';
+  if (!['films', 'series', 'anime', 'watchlist'].includes(hash) || $('#view-archive').hidden) return;
+  renderCollection(false, readArchiveFilters(location.search));
+});
 
 async function init() {
   $('#loading').hidden = false; $('#error-state').hidden = true;
