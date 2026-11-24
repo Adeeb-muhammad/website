@@ -35,10 +35,15 @@
 .vault-cursor-ring::after{width:6px;height:1px;left:-4px;top:50%;transform:translateY(-50%)}
 body.vault-cursor-ready:not(.vault-native-cursor),
 body.vault-cursor-ready:not(.vault-native-cursor) *{cursor:none!important}
+/* Prose keeps the native caret so selecting and copying text feels normal. */
+body.vault-cursor-ready.vault-text-cursor:not(.vault-native-cursor) :is(p,li,blockquote,dd,dt,figcaption,td,th,time,h1,h2,h3,h4,h5,h6),
+body.vault-cursor-ready.vault-text-cursor:not(.vault-native-cursor) :is(p,li,blockquote,dd,dt,figcaption,td,th,time,h1,h2,h3,h4,h5,h6) *{cursor:text!important}
 body.vault-cursor-ready .vault-cursor-dot,
 body.vault-cursor-ready .vault-cursor-ring{opacity:1}
 body.vault-native-cursor .vault-cursor-dot,
 body.vault-native-cursor .vault-cursor-ring,
+body.vault-text-cursor .vault-cursor-dot,
+body.vault-text-cursor .vault-cursor-ring,
 body.vault-cursor-hidden .vault-cursor-dot,
 body.vault-cursor-hidden .vault-cursor-ring{opacity:0}
 body.vault-cursor-hover .vault-cursor-ring{width:48px;height:48px;border-color:var(--accent,#faff00);background:rgba(250,255,0,.045)}

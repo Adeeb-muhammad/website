@@ -1,4 +1,4 @@
-/* Original smooth reticle cursor. Native cursors return over inputs and canvases. */
+/* Original smooth reticle cursor. Native cursors return over prose, inputs and canvases. */
 (() => {
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -19,9 +19,22 @@
 
   const nativeSelector = 'canvas, input, textarea, select, [contenteditable="true"], [data-native-cursor]';
   const interactiveSelector = 'a, button, summary, [role="button"], [role="link"], label';
+  const textSelector = 'p, li, blockquote, dd, dt, figcaption, td, th, time, h1, h2, h3, h4, h5, h6';
 
-  const setNative = (element) => {
-    document.body.classList.toggle('vault-native-cursor', !!element?.closest?.(nativeSelector));
+  // An interactive ancestor wins over the text inside it, so a paragraph or heading
+  // wrapped in a card link keeps the pointer cursor instead of the selection caret.
+  let state = '';
+  const setState = (element) => {
+    const target = element && typeof element.closest === 'function' ? element : null;
+    let next = '';
+    if (target && target.closest(nativeSelector)) next = 'native';
+    else if (target && target.closest(interactiveSelector)) next = 'interactive';
+    else if (target && target.closest(textSelector)) next = 'text';
+    if (next === state) return;
+    state = next;
+    document.body.classList.toggle('vault-native-cursor', next === 'native');
+    document.body.classList.toggle('vault-text-cursor', next === 'text');
+    document.body.classList.toggle('vault-cursor-hover', next === 'interactive');
   };
 
   const render = () => {
@@ -45,13 +58,12 @@
     if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
     targetX = event.clientX;
     targetY = event.clientY;
-    setNative(event.target);
-    document.body.classList.toggle('vault-cursor-hover', !!event.target?.closest?.(interactiveSelector));
+    setState(event.target);
     show();
   }, { passive: true });
 
-  document.addEventListener('pointerover', (event) => setNative(event.target), { passive: true });
-  document.addEventListener('pointerout', (event) => { if (!event.relatedTarget) setNative(null); }, { passive: true });
+  document.addEventListener('pointerover', (event) => setState(event.target), { passive: true });
+  document.addEventListener('pointerout', (event) => { if (!event.relatedTarget) setState(null); }, { passive: true });
   document.addEventListener('pointerdown', () => { pressed = true; document.body.classList.add('vault-cursor-pressed'); }, { passive: true });
   document.addEventListener('pointerup', () => { pressed = false; document.body.classList.remove('vault-cursor-pressed'); }, { passive: true });
   document.addEventListener('pointercancel', () => { pressed = false; document.body.classList.remove('vault-cursor-pressed'); }, { passive: true });
