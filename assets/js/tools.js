@@ -1,6 +1,6 @@
 import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=5';
 import { initNotebook } from './notebook.js?v=4';
-import { escapeHTML as e } from './core.js?v=6';
+import { escapeHTML as e } from './core.js?v=7';
 
 const $ = selector => document.querySelector(selector);
 const setStatus = (id, message, error = false) => { const node = $(id); node.textContent = message; node.dataset.error = String(error); };

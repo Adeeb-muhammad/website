@@ -80,6 +80,34 @@ export function selectEntries(entries, { collection = 'films', query = '', genre
   });
 }
 
+export const ARCHIVE_SORTS = ['recent', 'rating', 'year', 'title'];
+
+// Turns a query string into archive filter state. Values the archive cannot
+// offer are dropped rather than trusted, so a hand-edited URL never breaks it.
+export function readArchiveFilters(search = '') {
+  let params;
+  try { params = new URLSearchParams(search); } catch { params = new URLSearchParams(); }
+  const sort = params.get('sort');
+  return {
+    q: (params.get('q') || '').slice(0, 200),
+    genre: params.get('genre') || 'all',
+    language: params.get('language') || 'all',
+    sort: ARCHIVE_SORTS.includes(sort) ? sort : 'recent'
+  };
+}
+
+// Builds the query string for a filter state. Defaults are left out so a
+// filtered archive keeps a short, readable link.
+export function archiveFilterParams({ q = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
+  const params = new URLSearchParams();
+  const query = typeof q === 'string' ? q.trim() : '';
+  if (query) params.set('q', query);
+  if (genre && genre !== 'all') params.set('genre', genre);
+  if (language && language !== 'all') params.set('language', language);
+  if (ARCHIVE_SORTS.includes(sort) && sort !== 'recent') params.set('sort', sort);
+  return params;
+}
+
 export function archiveStats(entries) {
   const watched = entries.filter(x => x.status === 'watched' && !x.isSample);
   const rated = watched.filter(x => Number.isFinite(x.rating));
