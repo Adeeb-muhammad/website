@@ -18,7 +18,7 @@
   <link rel="icon" href="assets/favicon.svg?v=6" type="image/svg+xml">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="assets/css/style.css?v=16">
-  <link rel="stylesheet" href="assets/css/tools.css?v=7">
+  <link rel="stylesheet" href="assets/css/tools.css?v=9">
   <title>Small tools // Adeeb’s Vault</title>
   <link rel="stylesheet" href="assets/css/cursor.css?v=1">
 </head>
@@ -172,11 +172,11 @@
       <section id="tool-notes" class="tool-panel" aria-labelledby="notes-heading" hidden>
         <div class="tool-intro"><div><p class="eyebrow">01 / ROOM FOR AN UNFINISHED THOUGHT</p><h2 id="notes-heading" tabindex="-1">Notes canvas</h2><p>Pick a pen and make space for an idea. Up to 20 drawing pages.</p></div></div>
         <div class="tool-bar drawing-toolbar">
-          <div class="segmented-controls" role="group" aria-label="Drawing tool"><button id="notes-pen" type="button" aria-pressed="true">Pen</button><button id="notes-eraser" type="button" aria-pressed="false">Eraser</button></div>
+          <div class="segmented-controls" role="group" aria-label="Drawing tool"><button id="notes-pen" type="button" aria-pressed="true" aria-label="Pen" title="Pen" data-tooltip="Pen"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9-1 4z"/><path d="M14 7l3 3"/></svg></button><button id="notes-eraser" type="button" aria-pressed="false" aria-label="Eraser" title="Eraser" data-tooltip="Eraser"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10 3 3-10 10H7z"/><path d="M4 20h16"/></svg></button></div>
           <label class="inline-field notebook-ink">Ink<input id="notes-color" type="color" value="#252525" aria-label="Ink color"></label>
           <label class="inline-field notebook-width">Width<select id="notes-width"><option value="3">Fine</option><option value="7" selected>Medium</option><option value="15">Bold</option></select></label>
-          <button id="notes-undo" class="small-tool-button" type="button" aria-label="Undo stroke" title="Undo" disabled>↶</button>
-          <button id="notes-redo" class="small-tool-button" type="button" aria-label="Redo stroke" title="Redo" disabled>↷</button>
+          <button id="notes-undo" class="small-tool-button toolbar-icon-button" type="button" aria-label="Undo stroke" title="Undo" data-tooltip="Undo" disabled><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+          <button id="notes-redo" class="small-tool-button toolbar-icon-button" type="button" aria-label="Redo stroke" title="Redo" data-tooltip="Redo" disabled><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
           <div class="canvas-page-nav" role="group" aria-label="Switch drawing pages"><button id="notes-previous" class="small-tool-button" type="button" aria-label="Previous page">←</button><span id="notes-page-count" class="micro" role="status" aria-label="Page 1 of 1">1 / 1</span><button id="notes-next" class="small-tool-button" type="button" aria-label="Next page">→</button><button id="notes-add" class="small-tool-button" type="button" aria-label="Add page" title="Add page (up to 20)">+</button></div>
           <button id="notes-enlarge" class="button button-outline" type="button" aria-pressed="false">ENLARGE ↗</button>
         </div>
