@@ -13,7 +13,16 @@
   document.body.append(dot, ring);
   document.body.classList.add('vault-cursor-hidden');
 
+  const DOT_EASE = 0.72;
+  const RING_EASE = 0.2;
+  // Below a tenth of a pixel the eased tail is invisible, so the loop can stop there.
+  const SETTLE = 0.1;
+
   let targetX = -100, targetY = -100, dotX = -100, dotY = -100, ringX = -100, ringY = -100;
+  // The target the pointer last settled on; equal targets mean nothing to animate.
+  let restX = NaN, restY = NaN;
+  // Pending requestAnimationFrame id, or 0 while the loop is idle.
+  let frame = 0;
   let shown = false;
   let pressed = false;
 
@@ -37,14 +46,38 @@
     document.body.classList.toggle('vault-cursor-hover', next === 'interactive');
   };
 
-  const render = () => {
-    dotX += (targetX - dotX) * 0.72;
-    dotY += (targetY - dotY) * 0.72;
-    ringX += (targetX - ringX) * 0.2;
-    ringY += (targetY - ringY) * 0.2;
+  const paint = () => {
     dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
     ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
-    requestAnimationFrame(render);
+  };
+
+  // A frame is only ever scheduled by a new pointer position, and the loop
+  // stops itself as soon as both elements sit on that target.
+  const render = () => {
+    dotX += (targetX - dotX) * DOT_EASE;
+    dotY += (targetY - dotY) * DOT_EASE;
+    ringX += (targetX - ringX) * RING_EASE;
+    ringY += (targetY - ringY) * RING_EASE;
+    const dotSettled = Math.abs(targetX - dotX) < SETTLE && Math.abs(targetY - dotY) < SETTLE;
+    const ringSettled = Math.abs(targetX - ringX) < SETTLE && Math.abs(targetY - ringY) < SETTLE;
+    // Land exactly on the target so a stopped loop never leaves a fractional offset.
+    if (dotSettled) { dotX = targetX; dotY = targetY; }
+    if (ringSettled) { ringX = targetX; ringY = targetY; }
+    paint();
+    if (dotSettled && ringSettled) {
+      restX = targetX;
+      restY = targetY;
+      frame = 0;
+      return;
+    }
+    frame = requestAnimationFrame(render);
+  };
+
+  // One loop at a time, and none while the pointer has not moved since it rested.
+  const start = () => {
+    if (frame || reducedMotion.matches) return;
+    if (targetX === restX && targetY === restY) return;
+    frame = requestAnimationFrame(render);
   };
 
   const show = () => {
@@ -60,6 +93,7 @@
     targetY = event.clientY;
     setState(event.target);
     show();
+    start();
   }, { passive: true });
 
   document.addEventListener('pointerover', (event) => setState(event.target), { passive: true });
@@ -72,5 +106,10 @@
   window.addEventListener('blur', () => document.body.classList.add('vault-cursor-hidden'));
   window.addEventListener('focus', () => { if (shown) document.body.classList.remove('vault-cursor-hidden'); });
 
-  requestAnimationFrame(render);
+  // Turning reduced motion on mid-visit parks the loop; CSS hides the elements.
+  reducedMotion.addEventListener('change', () => {
+    if (!reducedMotion.matches) return;
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+  });
 })();
