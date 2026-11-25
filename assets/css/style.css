@@ -119,3 +119,5 @@
 .view-toggle .icon-button{min-width:44px;min-height:44px}
 .select-field select{min-height:44px}
 @media(max-width:650px){.collection-tabs a{min-height:44px}}
+/* The footer title wraps to two lines on phones and only a ~26-32px band of each line was clickable. Vertical padding on an inline link does not change line height, so it grows the clickable band past 44px on both lines while the type keeps its exact position and spacing. */
+.footer-title{padding-block:10px}
