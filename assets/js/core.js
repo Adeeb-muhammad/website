@@ -82,6 +82,21 @@ export function selectEntries(entries, { collection = 'films', query = '', genre
 
 export const ARCHIVE_SORTS = ['recent', 'rating', 'year', 'title'];
 
+// One shared cap for every path a search query takes: the live input, the
+// result filtering, and the address bar all run through the same
+// normalisation, so the three can never disagree.
+export const FILTER_QUERY_LIMIT = 200;
+
+// Trims a search query and caps it at FILTER_QUERY_LIMIT Unicode code
+// points. Counting code points instead of UTF-16 units means a wide
+// character such as an emoji is never cut in half into a lone surrogate.
+export function normaliseArchiveQuery(value) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (text.length <= FILTER_QUERY_LIMIT) return text;
+  const points = [...text];
+  return points.length <= FILTER_QUERY_LIMIT ? text : points.slice(0, FILTER_QUERY_LIMIT).join('');
+}
+
 // Turns a query string into archive filter state. Values the archive cannot
 // offer are dropped rather than trusted, so a hand-edited URL never breaks it.
 export function readArchiveFilters(search = '') {
@@ -89,7 +104,7 @@ export function readArchiveFilters(search = '') {
   try { params = new URLSearchParams(search); } catch { params = new URLSearchParams(); }
   const sort = params.get('sort');
   return {
-    q: (params.get('q') || '').slice(0, 200),
+    q: normaliseArchiveQuery(params.get('q')),
     genre: params.get('genre') || 'all',
     language: params.get('language') || 'all',
     sort: ARCHIVE_SORTS.includes(sort) ? sort : 'recent'
@@ -100,7 +115,7 @@ export function readArchiveFilters(search = '') {
 // filtered archive keeps a short, readable link.
 export function archiveFilterParams({ q = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
   const params = new URLSearchParams();
-  const query = typeof q === 'string' ? q.trim() : '';
+  const query = normaliseArchiveQuery(q);
   if (query) params.set('q', query);
   if (genre && genre !== 'all') params.set('genre', genre);
   if (language && language !== 'all') params.set('language', language);
