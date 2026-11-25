@@ -182,7 +182,7 @@ $('#cp-sc').oninput = (e) => { G.sc = e.target.value; later(); };
 $('#cp-hc').oninput = (e) => { G.hc = e.target.value; later(); };
 ['#cp-size', '#cp-opacity', '#cp-smooth', '#cp-n'].forEach((id) => $(id).addEventListener('input', (e) => { $(id + '-v').textContent = e.target.value; }));
 ['#1a1a1a', '#ffffff', '#faff00', '#e63946', '#ff9a4d', '#2a9d8f', '#3a86ff', '#8338ec'].forEach((c) => {
-  const b = document.createElement('button'); b.type = 'button'; b.style.background = c; b.setAttribute('aria-label', 'Use colour ' + c);
+  const b = document.createElement('button'); b.type = 'button'; b.style.setProperty('--sw', c); b.setAttribute('aria-label', 'Use colour ' + c);
   b.onclick = () => { st.color = c; $('#cp-color').value = c; }; $('#cp-swatches').append(b);
 });
 $('#cp-undo').onclick = () => step(undo, redo); $('#cp-redo').onclick = () => step(redo, undo);
