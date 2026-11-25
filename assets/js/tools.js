@@ -1,7 +1,7 @@
 import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=5';
 import { initNotebook } from './notebook.js?v=4';
 import { unixTimestampDate } from './time-core.js?v=1';
-import { escapeHTML as e } from './core.js?v=7';
+import { escapeHTML as e } from './core.js?v=9';
 import { csvToObjects, jsonToCSV } from './csv-core.js?v=1';
 
 const $ = selector => document.querySelector(selector);
