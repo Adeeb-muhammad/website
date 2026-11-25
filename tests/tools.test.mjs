@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analyzeLinks, classifyHTTP, createImagePDF, imagePlacement, linksCSV, safeFilename, validateNotebook, upgradeNotebook } from '../assets/js/tools-core.js';
+import { unixTimestampDate } from '../assets/js/time-core.js';
 
 test('PDF pages contain images without cropping and can follow each image orientation', () => {
   const fit = imagePlacement(200, 100, 600, 800, 30);
@@ -95,4 +96,32 @@ test('portrait drawing pages validate their own bounds while legacy pages stay l
   assert.throws(() => validateNotebook({ ...data, pages: [{ ...page, strokes: [{ ...stroke, points: [[901, 1400]] }] }] }));
   const legacy = { kind: data.kind, version: 1, title: data.title, text: page.text, strokes: [{ ...stroke, points: [[1400, 900]] }] };
   assert.deepEqual(upgradeNotebook(legacy).pages[0].strokes, legacy.strokes);
+});
+
+test('Unix timestamps read older millisecond values as milliseconds', () => {
+  // 946684800000 is 2000-01-01 in milliseconds; read as seconds it lands in year 31969.
+  assert.equal(unixTimestampDate(946684800000).toISOString(), '2000-01-01T00:00:00.000Z');
+  // 31536000000 is 1971 in milliseconds; read as seconds it lands in 2969.
+  assert.equal(unixTimestampDate(31536000000).toISOString(), '1971-01-01T00:00:00.000Z');
+});
+
+test('Unix timestamps keep reading normal seconds and milliseconds', () => {
+  assert.equal(unixTimestampDate(946684800).toISOString(), '2000-01-01T00:00:00.000Z');
+  assert.equal(unixTimestampDate(1764000000).toISOString(), '2025-11-24T16:00:00.000Z');
+  assert.equal(unixTimestampDate(1764000000000).toISOString(), '2025-11-24T16:00:00.000Z');
+  assert.equal(unixTimestampDate('1764000000').toISOString(), '2025-11-24T16:00:00.000Z');
+  // A far-future millisecond value is still milliseconds, not seconds.
+  assert.equal(unixTimestampDate(5000000000000).toISOString(), '2128-06-11T08:53:20.000Z');
+});
+
+test('Unix timestamps handle negative values by magnitude', () => {
+  assert.equal(unixTimestampDate(-946684800000).toISOString(), '1940-01-02T00:00:00.000Z');
+  assert.equal(unixTimestampDate(-946684800).toISOString(), '1940-01-02T00:00:00.000Z');
+  assert.equal(unixTimestampDate(-31536000000).toISOString(), '1969-01-01T00:00:00.000Z');
+});
+
+test('Unix timestamps reject empty and invalid input instead of guessing', () => {
+  for (const bad of ['', '   ', 'abc', '1,000', null, undefined, NaN, 1e20]) {
+    assert.ok(Number.isNaN(unixTimestampDate(bad).getTime()), `expected an invalid date for ${String(bad)}`);
+  }
 });
