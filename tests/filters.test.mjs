@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { archiveFilterParams, readArchiveFilters } from '../assets/js/core.js';
+import { archiveFilterParams, readArchiveFilters, FILTER_QUERY_LIMIT } from '../assets/js/core.js';
 
 const defaults = { q: '', genre: 'all', language: 'all', sort: 'recent' };
 
@@ -53,4 +53,15 @@ test('once written, an invalid sort is dropped from the URL', () => {
 test('a very long query is capped rather than trusted', () => {
   const q = 'x'.repeat(500);
   assert.equal(readArchiveFilters('?' + archiveFilterParams({ q })).q.length, 200);
+});
+
+test('a very long search is capped in the link as well as on the way back in', () => {
+  const long = 'a'.repeat(FILTER_QUERY_LIMIT + 250);
+  const params = archiveFilterParams({ q: long });
+  assert.equal(params.get('q').length, FILTER_QUERY_LIMIT);
+  // The address bar the page writes reopens exactly the query the page was showing.
+  assert.equal(readArchiveFilters('?' + params).q, long.slice(0, FILTER_QUERY_LIMIT));
+  assert.equal(readArchiveFilters('?' + params).q, params.get('q'));
+  // Short searches are untouched.
+  assert.equal(archiveFilterParams({ q: '  the  ' }).get('q'), 'the');
 });

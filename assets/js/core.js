@@ -82,6 +82,10 @@ export function selectEntries(entries, { collection = 'films', query = '', genre
 
 export const ARCHIVE_SORTS = ['recent', 'rating', 'year', 'title'];
 
+// One search cap for reading and writing the address bar, so a link always
+// reopens the query the page shows instead of a silently truncated one.
+export const FILTER_QUERY_LIMIT = 200;
+
 // Turns a query string into archive filter state. Values the archive cannot
 // offer are dropped rather than trusted, so a hand-edited URL never breaks it.
 export function readArchiveFilters(search = '') {
@@ -89,7 +93,7 @@ export function readArchiveFilters(search = '') {
   try { params = new URLSearchParams(search); } catch { params = new URLSearchParams(); }
   const sort = params.get('sort');
   return {
-    q: (params.get('q') || '').slice(0, 200),
+    q: (params.get('q') || '').slice(0, FILTER_QUERY_LIMIT),
     genre: params.get('genre') || 'all',
     language: params.get('language') || 'all',
     sort: ARCHIVE_SORTS.includes(sort) ? sort : 'recent'
@@ -100,7 +104,7 @@ export function readArchiveFilters(search = '') {
 // filtered archive keeps a short, readable link.
 export function archiveFilterParams({ q = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
   const params = new URLSearchParams();
-  const query = typeof q === 'string' ? q.trim() : '';
+  const query = (typeof q === 'string' ? q.trim() : '').slice(0, FILTER_QUERY_LIMIT);
   if (query) params.set('q', query);
   if (genre && genre !== 'all') params.set('genre', genre);
   if (language && language !== 'all') params.set('language', language);

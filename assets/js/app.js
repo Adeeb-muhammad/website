@@ -1,4 +1,4 @@
-import { DRAFT_KEY, archiveFilterParams, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, readArchiveFilters, safeURL, selectEntries, validateArchive } from './core.js?v=7';
+import { DRAFT_KEY, archiveFilterParams, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, readArchiveFilters, safeURL, selectEntries, validateArchive } from './core.js?v=8';
 
 const $ = selector => document.querySelector(selector);
 let archive;
