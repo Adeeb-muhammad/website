@@ -4,7 +4,7 @@ import path from 'node:path';
 import { validateArchive } from '../assets/js/core.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const CACHE_VERSION = '18';
+const CACHE_VERSION = '19';
 const data = JSON.parse(await readFile(path.join(root, 'data/archive.json'), 'utf8'));
 const errors = validateArchive(data);
 if (errors.length) throw new Error(`Invalid archive:\n${errors.join('\n')}`);
