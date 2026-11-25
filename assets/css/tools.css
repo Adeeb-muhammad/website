@@ -231,3 +231,6 @@
 #tool-notes.notes-expanded{background:#fff}
 #tool-notes.notes-expanded .notes-workspace{background:#fff}
 #tool-notes.notes-expanded .drawing-paper{box-shadow:0 0 0 1px #d9d4ca}
+
+/* Touch targets: the Notes toolbar's square buttons reach 44px wide. */
+#tool-notes .small-tool-button{min-width:44px}

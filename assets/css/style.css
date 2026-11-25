@@ -100,3 +100,15 @@
 .poster-frame.has-image::before,
 .feature-media.has-image::before{content:"";position:absolute;inset:-30px;z-index:0;pointer-events:none;background-image:var(--poster);background-position:center;background-size:cover;filter:blur(26px) saturate(.85) brightness(.5);transform:scale(1.1)}
 .view h1[tabindex="-1"]:focus,#projects[tabindex="-1"]:focus,#contact[tabindex="-1"]:focus{outline:none}
+
+/* Touch targets: widen the interactive box to 44px without moving the painted design. */
+.brand{position:relative}
+.brand:after{content:'';position:absolute;inset:-13px -8px}
+.menu-toggle{position:relative}
+.menu-toggle:after{content:'';position:absolute;inset:-5px}
+.rail-monogram{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.rail-monogram:after{content:'';position:absolute;inset:-8px}
+.rail-links a:after{content:'';position:absolute;inset:-4px -8px}
+.text-link{position:relative}
+.text-link:after{content:'';position:absolute;inset:-5px -8px}
+@media(max-width:650px){.section-heading>.text-link:after{inset:-10px -6px}}

@@ -48,3 +48,14 @@ body.studio-page [role="dialog"] button[aria-pressed="true"] {
   border-color: #39ff88;
   box-shadow: 0 0 0 1px #39ff88, 0 0 12px rgb(57 255 136 / 45%);
 }
+
+/* Touch targets inside the DAW: enlarge the hit box, never the glyph. */
+#root .h-10.w-10{min-width:44px;min-height:44px}
+#root button.fixed.right-3{min-height:44px}
+#root button.w-full.items-center.justify-between{min-height:44px;min-width:44px;position:relative}
+#root button.w-full.items-center.justify-between::after{content:'';position:absolute;inset:-1px -3px}
+#root header button{min-height:44px}
+#root header button.h-7{min-width:44px}
+#root footer:has(> a[href*="LICENSES"]){min-height:44px;padding-block:0}
+#root a[href*="LICENSES"]{display:inline-flex;align-items:center;min-height:44px;position:relative}
+#root a[href*="LICENSES"]::after{content:'';position:absolute;inset:0 -8px}
