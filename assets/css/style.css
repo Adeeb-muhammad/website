@@ -112,3 +112,7 @@
 .text-link{position:relative}
 .text-link:after{content:'';position:absolute;inset:-5px -8px}
 @media(max-width:650px){.section-heading>.text-link:after{inset:-10px -6px}}
+.collection-tabs a{display:inline-flex;align-items:center;min-height:44px}
+.view-toggle .icon-button{min-width:44px;min-height:44px}
+.select-field select{min-height:44px}
+@media(max-width:650px){.collection-tabs a{min-height:44px}}
