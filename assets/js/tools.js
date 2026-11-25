@@ -3,6 +3,7 @@ import { initNotebook } from './notebook.js?v=4';
 import { unixTimestampDate } from './time-core.js?v=1';
 import { escapeHTML as e } from './core.js?v=9';
 import { csvToObjects, jsonToCSV } from './csv-core.js?v=1';
+import { countLines } from './text-core.js?v=1';
 
 const $ = selector => document.querySelector(selector);
 const setStatus = (id, message, error = false) => { const node = $(id); node.textContent = message; node.dataset.error = String(error); };
@@ -353,7 +354,7 @@ function runTextConversion() {
       case 'trim-lines': result=source.split(/\r?\n/).map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter((line,i,arr)=>line!=='' || (i>0 && arr[i-1]!=='')).join('\n').trim(); break;
       case 'csv-json': result=JSON.stringify(csvToObjects(source),null,2); break;
       case 'json-csv': result=jsonToCSV(JSON.parse(source)); break;
-      case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=source?source.split(/\r?\n/).length:0; result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
+      case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=countLines(source); result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
     }
     textOutput.value=result;
     $('#text-input-count').textContent=source.length.toLocaleString()+' characters';
