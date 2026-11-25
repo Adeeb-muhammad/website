@@ -2,6 +2,7 @@ import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, rea
 import { initNotebook } from './notebook.js?v=4';
 import { unixTimestampDate } from './time-core.js?v=1';
 import { escapeHTML as e } from './core.js?v=7';
+import { countLines } from './text-core.js?v=1';
 
 const $ = selector => document.querySelector(selector);
 const setStatus = (id, message, error = false) => { const node = $(id); node.textContent = message; node.dataset.error = String(error); };
@@ -367,7 +368,7 @@ function runTextConversion() {
       case 'trim-lines': result=source.split(/\r?\n/).map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter((line,i,arr)=>line!=='' || (i>0 && arr[i-1]!=='')).join('\n').trim(); break;
       case 'csv-json': { const rows=csvParse(source); if(!rows.length){result='[]';break;} const headers=rows[0].map((h,i)=>h.trim()||'column_'+(i+1)); result=JSON.stringify(rows.slice(1).map(row=>Object.fromEntries(headers.map((key,i)=>[key,row[i]??'']))),null,2); break; }
       case 'json-csv': { const data=JSON.parse(source); if(!Array.isArray(data)||data.some(row=>!row||typeof row!=='object'||Array.isArray(row))) throw new Error('Input must be a JSON array of objects.'); const headers=[...new Set(data.flatMap(row=>Object.keys(row)))]; result=[headers.map(csvEscape).join(','),...data.map(row=>headers.map(key=>csvEscape(typeof row[key]==='object'&&row[key]!==null?JSON.stringify(row[key]):row[key])).join(','))].join('\r\n'); break; }
-      case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=source?source.split(/\r?\n/).length:0; result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
+      case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=countLines(source); result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
     }
     textOutput.value=result;
     $('#text-input-count').textContent=source.length.toLocaleString()+' characters';
