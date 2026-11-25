@@ -103,7 +103,7 @@
 
 /* Touch targets: widen the interactive box to 44px without moving the painted design. */
 .brand{position:relative}
-.brand:after{content:'';position:absolute;inset:-13px -8px}
+.brand:after{content:'';position:absolute;inset:-15px -8px}
 .menu-toggle{position:relative}
 .menu-toggle:after{content:'';position:absolute;inset:-5px}
 .rail-monogram{position:relative;display:inline-flex;align-items:center;justify-content:center}

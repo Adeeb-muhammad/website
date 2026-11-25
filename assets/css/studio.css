@@ -7,3 +7,20 @@
 
 @media(max-width:650px){.studio-header .brand{font-size:17px}.studio-label{display:none}.studio-header-actions{gap:8px}.studio-header-actions .micro{max-width:62px}.studio-header-actions .text-link{font-size:6px}.studio-header{gap:12px}}
 @media(max-width:365px){.studio-header .brand{font-size:15px}.studio-header-actions .micro{max-width:50px;font-size:5px}}
+
+/* Last Studio controls under 44px: the panel tabs (43px at phone sizes), the import
+   disclosure (20px) and the checkbox labels (21px). Each keeps its painted box; only
+   the interactive area grows, and the tab strip's 1px growth is offset on its own
+   margin so nothing below it moves. */
+@media(max-width:650px){
+  .studio-tabs>button{min-height:44px;padding-block:16.5px 17.5px}
+  .studio-tabs{margin-bottom:21px}
+  /* The two checkbox labels stack on phones; 23px between them gives each a
+     full 44px band without them stealing each other's clicks. The 9px comes out
+     of the row's own top margin, so the form ends where it always did. */
+  .checkbox-row{margin-top:16px;row-gap:23px}
+}
+.import-details>summary{position:relative}
+.import-details>summary:after{content:'';position:absolute;left:0;right:0;bottom:0;height:44px}
+.checkbox-row label{position:relative}
+.checkbox-row label:after{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:44px}
