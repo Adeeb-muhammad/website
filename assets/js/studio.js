@@ -1,4 +1,4 @@
-import { DRAFT_KEY, escapeHTML as e, loadArchive, makeSlug, ratingMarkup, safeURL, validateArchive } from './core.js?v=7';
+import { DRAFT_KEY, escapeHTML as e, loadArchive, makeSlug, ratingMarkup, safeURL, validateArchive } from './core.js?v=9';
 
 const $ = selector => document.querySelector(selector);
 const BASE_KEY = 'adeeb-vault-base-v1';

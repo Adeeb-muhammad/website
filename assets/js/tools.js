@@ -1,7 +1,8 @@
 import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=5';
 import { initNotebook } from './notebook.js?v=4';
 import { unixTimestampDate } from './time-core.js?v=1';
-import { escapeHTML as e } from './core.js?v=7';
+import { escapeHTML as e } from './core.js?v=9';
+import { csvToObjects, jsonToCSV } from './csv-core.js?v=1';
 import { countLines } from './text-core.js?v=1';
 
 const $ = selector => document.querySelector(selector);
@@ -331,21 +332,6 @@ $('#links-export').addEventListener('click', () => download(linksCSV(linkRows), 
 // Text & code converter suite. Input is treated as data, never as executable markup.
 const textInput = $('#text-input');
 const textOutput = $('#text-output');
-function csvParse(source) {
-  const rows=[]; let row=[], cell='', quoted=false;
-  for(let i=0;i<source.length;i++){
-    const ch=source[i];
-    if(quoted){ if(ch==='"' && source[i+1]==='"'){cell+='"';i++;} else if(ch==='"') quoted=false; else cell+=ch; }
-    else if(ch==='"' && cell==='') quoted=true;
-    else if(ch===','){row.push(cell);cell='';}
-    else if(ch==='\n' || ch==='\r'){ if(ch==='\r' && source[i+1]==='\n')i++; row.push(cell); if(row.some(v=>v!==''))rows.push(row); row=[];cell=''; }
-    else cell+=ch;
-  }
-  if(quoted) throw new Error('CSV has an unclosed quoted field.');
-  row.push(cell); if(row.some(v=>v!=='')) rows.push(row);
-  return rows;
-}
-function csvEscape(value) { const s=value==null?'':String(value); return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
 function runTextConversion() {
   const source=textInput.value, mode=$('#text-mode').value;
   try {
@@ -366,8 +352,8 @@ function runTextConversion() {
       case 'sort-lines': result=source.split(/\r?\n/).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).join('\n'); break;
       case 'unique-lines': { const seen=new Set(); result=source.split(/\r?\n/).filter(line=>{const k=line.trim();if(seen.has(k))return false;seen.add(k);return true;}).join('\n'); break; }
       case 'trim-lines': result=source.split(/\r?\n/).map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter((line,i,arr)=>line!=='' || (i>0 && arr[i-1]!=='')).join('\n').trim(); break;
-      case 'csv-json': { const rows=csvParse(source); if(!rows.length){result='[]';break;} const headers=rows[0].map((h,i)=>h.trim()||'column_'+(i+1)); result=JSON.stringify(rows.slice(1).map(row=>Object.fromEntries(headers.map((key,i)=>[key,row[i]??'']))),null,2); break; }
-      case 'json-csv': { const data=JSON.parse(source); if(!Array.isArray(data)||data.some(row=>!row||typeof row!=='object'||Array.isArray(row))) throw new Error('Input must be a JSON array of objects.'); const headers=[...new Set(data.flatMap(row=>Object.keys(row)))]; result=[headers.map(csvEscape).join(','),...data.map(row=>headers.map(key=>csvEscape(typeof row[key]==='object'&&row[key]!==null?JSON.stringify(row[key]):row[key])).join(','))].join('\r\n'); break; }
+      case 'csv-json': result=JSON.stringify(csvToObjects(source),null,2); break;
+      case 'json-csv': result=jsonToCSV(JSON.parse(source)); break;
       case 'word-count': { const words=(source.trim().match(/\S+/g)||[]).length; const lines=countLines(source); result='Words: '+words+'\nCharacters (with spaces): '+source.length+'\nCharacters (without spaces): '+source.replace(/\s/g,'').length+'\nLines: '+lines+'\nBytes (UTF-8): '+new TextEncoder().encode(source).length; break; }
     }
     textOutput.value=result;
@@ -456,17 +442,6 @@ async function getPDFJS(){if(!window.pdfjsLib)await loadScript('https://cdnjs.cl
 async function readAsArrayBuffer(file){return file.arrayBuffer();}
 function outputName(ext){return (safeFilename($('#file-convert-name').value,'vault-converted')||'vault-converted')+'.'+ext;}
 function downloadBlob(blob,name){download(blob,name,blob.type||'application/octet-stream');}
-function csvParseFile(text){
- const rows=[];let row=[],cell='',quoted=false;
- for(let i=0;i<text.length;i++){const ch=text[i];if(quoted){if(ch==='"'&&text[i+1]==='"'){cell+='"';i++;}else if(ch==='"')quoted=false;else cell+=ch;}else if(ch==='"'&&cell==='')quoted=true;else if(ch===','){row.push(cell);cell='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))rows.push(row);row=[];cell='';}else cell+=ch;}
- row.push(cell);if(row.some(v=>v!==''))rows.push(row);if(quoted)throw new Error('CSV has an unclosed quoted field.');return rows;
-}
-function csvCell(v){const s=v==null?'':typeof v==='object'?JSON.stringify(v):String(v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
-function jsonToCSV(data){
- if(!Array.isArray(data)||!data.length||data.some(x=>!x||typeof x!=='object'||Array.isArray(x)))throw new Error('JSON → CSV needs a non-empty array of objects.');
- const keys=[...new Set(data.flatMap(Object.keys))];return [keys,...data.map(o=>keys.map(k=>o[k]))].map(r=>r.map(csvCell).join(',')).join('\r\n');
-}
-function csvToJSON(text){const rows=csvParseFile(text);if(rows.length<2)throw new Error('CSV needs a header row and at least one data row.');const heads=rows[0].map(x=>x.trim());if(heads.some(x=>!x)||new Set(heads).size!==heads.length)throw new Error('CSV headers must be non-empty and unique.');return rows.slice(1).map(row=>Object.fromEntries(heads.map((h,i)=>[h,row[i]??''])));}
 function xmlNode(node){
  if(node.nodeType===3)return node.nodeValue.trim();const children=[...node.children];if(!children.length)return node.textContent.trim();
  const out={};for(const child of children){const value=xmlNode(child);if(Object.prototype.hasOwnProperty.call(out,child.tagName))out[child.tagName]=[].concat(out[child.tagName],value);else out[child.tagName]=value;}
@@ -522,7 +497,7 @@ async function convertFiles(){
   } else if(mode==='json-csv'||mode==='csv-json'||mode==='xml-json'||mode==='json-xml'){
    const source=await files[0].text();let result,ext,type;
    if(mode==='json-csv'){result=jsonToCSV(JSON.parse(source));ext='csv';type='text/csv;charset=utf-8';}
-   if(mode==='csv-json'){result=JSON.stringify(csvToJSON(source),null,2);ext='json';type='application/json';}
+   if(mode==='csv-json'){result=JSON.stringify(csvToObjects(source),null,2);ext='json';type='application/json';}
    if(mode==='xml-json'){const parsed=new DOMParser().parseFromString(source,'application/xml');if(parsed.querySelector('parsererror'))throw new Error('The XML is not well-formed.');result=JSON.stringify({[parsed.documentElement.tagName]:xmlNode(parsed.documentElement)},null,2);ext='json';type='application/json';}
    if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n<root>'+jsonToXML(data)+'</root>';ext='xml';type='application/xml';}
    blob=new Blob([result],{type});filename=outputName(ext);

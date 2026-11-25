@@ -1,4 +1,4 @@
-import { DRAFT_KEY, archiveFilterParams, archiveStats, escapeHTML as e, loadArchive, ratingMarkup, readArchiveFilters, safeURL, selectEntries, validateArchive } from './core.js?v=7';
+import { DRAFT_KEY, archiveFilterParams, archiveStats, escapeHTML as e, loadArchive, normaliseArchiveQuery, ratingMarkup, readArchiveFilters, safeURL, selectEntries, validateArchive } from './core.js?v=9';
 
 const $ = selector => document.querySelector(selector);
 let archive;
@@ -117,7 +117,7 @@ function renderCollection(reset = false, filters = null) {
 // collection does not offer.
 function applyFilters({ q = '', genre = 'all', language = 'all', sort = 'recent' } = {}) {
   const offered = (select, value) => [...select.options].some(option => option.value === value);
-  $('#archive-search').value = q;
+  $('#archive-search').value = normaliseArchiveQuery(q);
   $('#genre-filter').value = offered($('#genre-filter'), genre) ? genre : 'all';
   $('#language-filter').value = offered($('#language-filter'), language) ? language : 'all';
   $('#archive-sort').value = offered($('#archive-sort'), sort) ? sort : 'recent';
@@ -234,7 +234,13 @@ $('#mobile-nav').addEventListener('click', event => { if (event.target.closest('
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#mobile-nav').hidden) { event.preventDefault(); closeNavigation({ restoreFocus: true }); } });
 document.addEventListener('click', event => { if (!$('#mobile-nav').hidden && !event.target.closest('#mobile-nav, .menu-toggle')) closeNavigation(); });
 window.matchMedia('(max-width: 1100px)').addEventListener('change', event => { if (!event.matches) closeNavigation(); });
-$('#archive-search').addEventListener('input', () => { renderCollection(); syncFilters(); });
+// The field itself is normalised before anything reads it, so the visible
+// query, the filtered results, and the address bar always share one value.
+$('#archive-search').addEventListener('input', () => {
+  const normalised = normaliseArchiveQuery($('#archive-search').value);
+  if ($('#archive-search').value !== normalised) $('#archive-search').value = normalised;
+  renderCollection(); syncFilters();
+});
 $('#genre-filter').addEventListener('change', () => { renderCollection(); syncFilters(true); });
 $('#language-filter').addEventListener('change', () => { renderCollection(); syncFilters(true); });
 $('#archive-sort').addEventListener('change', () => { renderCollection(); syncFilters(true); });
@@ -246,11 +252,12 @@ $('#entry-dialog').addEventListener('click', event => { if (event.target === $('
 $('#share-site').addEventListener('click', () => copy(safeURL(archive.profile.website) || `${location.origin}${location.pathname}`));
 window.addEventListener('hashchange', route);
 // Back and Forward through filter states keep the same hash, so only popstate
-// fires; hash moves are handled by route() itself.
+// fires; hash moves are handled by route() itself. The restored state is
+// re-synced so the field and the address bar show the same normalised query.
 window.addEventListener('popstate', () => {
   const hash = location.hash.slice(1) || 'home';
   if (!['films', 'series', 'anime', 'watchlist'].includes(hash) || $('#view-archive').hidden) return;
-  renderCollection(false, readArchiveFilters(location.search));
+  renderCollection(false, readArchiveFilters(location.search)); syncFilters();
 });
 
 async function init() {
