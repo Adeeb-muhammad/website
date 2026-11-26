@@ -1,4 +1,5 @@
 import { upgradeNotebook, validateNotebook, safeFilename } from './tools-core.js?v=5';
+import { notebookSyncAction } from './notebook-sync.js?v=1';
 
 export function initNotebook({ download, confirmChange }) {
   const $ = selector => document.querySelector(selector);
@@ -6,7 +7,7 @@ export function initNotebook({ download, confirmChange }) {
   const KEY = 'adeeb-vault-notebook-v2', LEGACY_KEY = 'adeeb-vault-notebook-v1';
   const blankPage = title => ({ title, text: '', strokes: [], orientation: window.innerHeight > window.innerWidth ? 'portrait' : 'landscape' });
   const blankBook = () => ({ kind: 'adeeb-vault-notebook', version: 2, title: '', activePage: 0, pages: [blankPage('Page 1')] });
-  let book = blankBook(), histories = new WeakMap();
+  let book = blankBook(), histories = new WeakMap(), lastSerialized = null;
   let activeStroke = null, activePointer = null, erase = false, drawFrame = null, saveTimer = null;
   const board = $('#notes-canvas'), context = board.getContext('2d');
   const ink = document.createElement('canvas'); ink.width = board.width; ink.height = board.height;
@@ -19,7 +20,9 @@ export function initNotebook({ download, confirmChange }) {
     clearTimeout(saveTimer); saveTimer = null;
     try {
       validateNotebook(book);
-      localStorage.setItem(KEY, JSON.stringify(book));
+      const serialized = JSON.stringify(book);
+      localStorage.setItem(KEY, serialized);
+      lastSerialized = serialized;
       status(`All ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} saved in this browser. Download a backup for a separate copy.`);
     } catch { status('This notebook could not be saved in the browser. Download a .json backup before leaving.', true); }
   }
@@ -46,6 +49,9 @@ export function initNotebook({ download, confirmChange }) {
   }
   function queueDraw() { if (drawFrame !== null) return; drawFrame = requestAnimationFrame(() => { drawFrame = null; renderBoard(); }); }
   function renderPages() {
+    // Rebuilding the page buttons destroys the focused one, so remember which
+    // page it was and put focus back instead of dropping it on <body>.
+    const focusedPage = $('#notes-pages').contains(document.activeElement) ? document.activeElement.dataset.page : undefined;
     $('#notes-pages').innerHTML = book.pages.map((p, i) => `<button type="button" data-page="${i}" ${i === book.activePage ? 'aria-current="page"' : ''} aria-label="Go to page ${i + 1}">${String(i + 1).padStart(2, '0')}</button>`).join('');
     $('#notes-page-count').textContent = `${book.activePage + 1} / ${book.pages.length}`;
     $('#notes-page-count').setAttribute('aria-label', `Page ${book.activePage + 1} of ${book.pages.length}`);
@@ -60,6 +66,7 @@ export function initNotebook({ download, confirmChange }) {
       if (left < strip.scrollLeft) strip.scrollLeft = left;
       else if (left + selected.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left + selected.offsetWidth - strip.clientWidth;
     }
+    if (focusedPage !== undefined) $('#notes-pages [data-page="' + focusedPage + '"]')?.focus({ preventScroll: true });
   }
   function showPage() {
     const [width, height] = page().orientation === 'portrait' ? [900, 1400] : [1400, 900];
@@ -69,6 +76,16 @@ export function initNotebook({ download, confirmChange }) {
     renderPages(); renderBoard();
     fitPaper();
   }
+  // Disabling a button while it has focus moves focus to <body>; send it to the
+  // panel heading instead so the next Tab continues from the notes, not the top.
+  const keepFocusInPanel = (id) => requestAnimationFrame(() => {
+    const button = document.getElementById(id);
+    // A disabled button is blurred a frame or two later, so move focus before
+    // that can drop it on <body>.
+    if (document.activeElement === document.body || (button && document.activeElement === button && button.disabled)) {
+      $('#notes-heading')?.focus({ preventScroll: true });
+    }
+  });
   function finishStroke() {
     if (!activeStroke) return;
     activeStroke = null; activePointer = null; queueDraw(); queueSave();
@@ -126,11 +143,11 @@ export function initNotebook({ download, confirmChange }) {
   function choosePen(value) { erase = value; $('#notes-pen').setAttribute('aria-pressed', String(!erase)); $('#notes-eraser').setAttribute('aria-pressed', String(erase)); }
   $('#notes-pen').addEventListener('click', () => choosePen(false));
   $('#notes-eraser').addEventListener('click', () => choosePen(true));
-  $('#notes-undo').addEventListener('click', () => { if (activeStroke || !page().strokes.length) return; history().push(page().strokes.pop()); renderBoard(); queueSave(); });
+  $('#notes-undo').addEventListener('click', () => { if (activeStroke || !page().strokes.length) return; history().push(page().strokes.pop()); renderBoard(); queueSave(); keepFocusInPanel('notes-undo'); });
   $('#notes-redo').addEventListener('click', () => {
     if (activeStroke || !history().length) return;
     if (pointCount() + history().at(-1).points.length > 120000) { status('Notebook drawing limit reached. Back up the notebook before adding more drawing data.', true); return; }
-    page().strokes.push(history().pop()); renderBoard(); queueSave();
+    page().strokes.push(history().pop()); renderBoard(); queueSave(); keepFocusInPanel('notes-redo');
   });
   $('#notes-png').addEventListener('click', () => {
     renderBoard(); const name = `${safeFilename(book.title, 'my-notebook')}-page-${book.activePage + 1}.png`;
@@ -186,9 +203,26 @@ export function initNotebook({ download, confirmChange }) {
 
   try {
     const current = localStorage.getItem(KEY), legacy = current ? null : localStorage.getItem(LEGACY_KEY);
+    lastSerialized = current || null;
     if (current || legacy) { load(JSON.parse(current || legacy)); if (legacy) save(); else status('Restored all your notebook pages from this browser.'); }
     else { showPage(); status('Start on page one. Add up to 20 drawing pages.'); }
   } catch { showPage(); status('Saved notes could not be loaded. Restore a downloaded backup if available.', true); }
+
+  // Another tab writing the same key is the one case where this tab's in-memory
+  // copy can silently replace newer work. Adopt the newer notebook while idle;
+  // warn and keep both versions while there is unsaved work here.
+  window.addEventListener('storage', event => {
+    const action = notebookSyncAction({ key: KEY, eventKey: event.key, incomingValue: event.newValue, currentValue: lastSerialized, busy: !!saveTimer || !!activeStroke });
+    if (action === 'ignore') return;
+    if (action === 'warn') { status('Another tab saved a different notebook. Your unsaved work is still here; reload to load that version instead.', true); return; }
+    try {
+      const incoming = upgradeNotebook(JSON.parse(event.newValue));
+      clearTimeout(saveTimer); saveTimer = null;
+      book = incoming; lastSerialized = event.newValue;
+      histories = new WeakMap(); activeStroke = null; activePointer = null;
+      showPage(); status('Updated from another tab.');
+    } catch { status('Another tab saved a notebook this browser could not read. Your current pages are unchanged.', true); }
+  });
   window.addEventListener('pagehide', () => { if (saveTimer || activeStroke) save(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && (saveTimer || activeStroke)) save(); });
 }

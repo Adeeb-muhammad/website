@@ -1,5 +1,5 @@
 import { createImagePDF, analyzeLinks, classifyHTTP, linksCSV, safeFilename, readTar, loadScript, CONVERSION_LIMITS } from './tools-core.js?v=5';
-import { initNotebook } from './notebook.js?v=4';
+import { initNotebook } from './notebook.js?v=6';
 import { unixTimestampDate } from './time-core.js?v=1';
 import { escapeHTML as e } from './core.js?v=9';
 import { csvToObjects, jsonToCSV } from './csv-core.js?v=1';
@@ -19,12 +19,15 @@ function download(data, name, type) {
 async function confirmChange(message) {
   const dialog = $('#tool-confirm');
   $('#confirm-copy').textContent = message;
+  // Closing a dialog does not restore focus by itself; remember what opened it.
+  const opener = document.activeElement;
   return new Promise(resolve => {
     const finish = accepted => {
       dialog.close();
       $('#confirm-cancel').removeEventListener('click', cancel);
       $('#confirm-accept').removeEventListener('click', accept);
       dialog.removeEventListener('cancel', cancel);
+      if (opener && opener.isConnected && !opener.disabled) opener.focus({ preventScroll: true });
       resolve(accepted);
     };
     const cancel = event => { event?.preventDefault(); finish(false); };
