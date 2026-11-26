@@ -360,7 +360,12 @@ function runTextConversion() {
     $('#text-input-count').textContent=source.length.toLocaleString()+' characters';
     $('#text-output-count').textContent=result.length.toLocaleString()+' characters';
     setStatus('#text-status','Done. '+result.length.toLocaleString()+' output characters.');
-  } catch(error) { setStatus('#text-status',error.message||'Could not convert this input.',true); }
+  } catch(error) {
+    // A failed conversion must not leave the previous result on screen: it would
+    // look like the output for the current input.
+    textOutput.value=''; $('#text-output-count').textContent='0 characters';
+    setStatus('#text-status',error.message||'Could not convert this input.',true);
+  }
 }
 $('#text-run').addEventListener('click',runTextConversion);
 textInput.addEventListener('input',()=>$('#text-input-count').textContent=textInput.value.length.toLocaleString()+' characters');
