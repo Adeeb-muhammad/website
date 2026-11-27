@@ -192,8 +192,9 @@ function route() {
     document.title = view === 'home' ? 'Adeeb’s Vault' : `${view === 'about' ? 'About me' : 'Miscellaneous'} // Adeeb’s Vault`;
   }
   lastRoute = ['films', 'series', 'anime', 'watchlist'].includes(hash) ? hash : 'films';
-  if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: 'smooth' }));
-  else if (hash === 'contact' || hash === 'projects') requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' }));
+  const smoothScroll = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: smoothScroll }));
+  else if (hash === 'contact' || hash === 'projects') requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: smoothScroll }));
   else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
   const anchor = hash === 'contact' || hash === 'projects' ? hash : '';
   const focusTarget = closingEntry

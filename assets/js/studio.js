@@ -13,7 +13,7 @@ function notice(text, error = false) {
   $('#studio-notice').textContent = error ? '' : text;
   $('#studio-error').textContent = error ? text : '';
   $('#studio-error').hidden = !error;
-  if (error) $('#studio-error').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (error) $('#studio-error').scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 
 function check(data) {
@@ -72,7 +72,7 @@ function editEntry(id = null) {
   $('#delete-entry').hidden = !entry;
   $('#entry-start').hidden = true; entryForm.hidden = false; formDirty = false;
   updateEntryOptions(); renderEntries();
-  if (window.innerWidth < 651) entryForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window.innerWidth < 651) entryForm.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   entryForm.elements.title.focus({ preventScroll: true });
 }
 
@@ -141,7 +141,7 @@ function editProject(id = null) {
   projectForm.elements.tags.value = project ? project.tags.join(', ') : '';
   $('#project-form-label').textContent = project ? `EDITING / ${project.name.toUpperCase()}` : 'NEW PROJECT / SHOW THE WORK';
   $('#delete-project').hidden = !project; $('#project-start').hidden = true; projectForm.hidden = false; formDirty = false; renderProjects();
-  if (window.innerWidth < 651) projectForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (window.innerWidth < 651) projectForm.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   projectForm.elements.namedItem('name').focus({ preventScroll: true });
 }
 
