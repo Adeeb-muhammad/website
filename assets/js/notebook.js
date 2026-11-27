@@ -69,23 +69,34 @@ export function initNotebook({ download, confirmChange }) {
     if (focusedPage !== undefined) $('#notes-pages [data-page="' + focusedPage + '"]')?.focus({ preventScroll: true });
   }
   function showPage() {
+    // A page switch can disable the control that launched it (first/last page,
+    // page 20, a single page left). Remember it before the disabled states change.
+    const focusedControl = document.activeElement?.id;
     const [width, height] = page().orientation === 'portrait' ? [900, 1400] : [1400, 900];
     if (board.width !== width || board.height !== height) { board.width = ink.width = width; board.height = ink.height = height; }
     board.style.aspectRatio = `${width} / ${height}`;
     $('#notes-txt').hidden = !book.pages.some(p => p.text);
     renderPages(); renderBoard();
     fitPaper();
+    const control = focusedControl && document.getElementById(focusedControl);
+    if (control?.disabled) keepFocusInPanel(focusedControl);
   }
   // Disabling a button while it has focus moves focus to <body>; send it to the
   // panel heading instead so the next Tab continues from the notes, not the top.
-  const keepFocusInPanel = (id) => requestAnimationFrame(() => {
-    const button = document.getElementById(id);
-    // A disabled button is blurred a frame or two later, so move focus before
-    // that can drop it on <body>.
-    if (document.activeElement === document.body || (button && document.activeElement === button && button.disabled)) {
-      $('#notes-heading')?.focus({ preventScroll: true });
-    }
-  });
+  function keepFocusInPanel(id) {
+    requestAnimationFrame(() => {
+      const button = document.getElementById(id);
+      // A disabled button is blurred a frame or two later, so move focus before
+      // that can drop it on <body>.
+      if (document.activeElement === document.body || (button && document.activeElement === button && button.disabled)) {
+        const heading = $('#notes-heading');
+        // The heading sits inside the intro, which is hidden in the expanded
+        // drawing view; fall back to the always-visible enlarge control there.
+        const target = heading && heading.offsetParent !== null ? heading : $('#notes-enlarge');
+        target?.focus({ preventScroll: true });
+      }
+    });
+  }
   function finishStroke() {
     if (!activeStroke) return;
     activeStroke = null; activePointer = null; queueDraw(); queueSave();

@@ -234,3 +234,12 @@
 
 /* Touch targets: the Notes toolbar's square buttons reach 44px wide. */
 #tool-notes .small-tool-button{min-width:44px}
+
+/* The expanded drawing view hides the status line to make room for the paper,
+   but a save or drawing-limit error must stay visible there. */
+#tool-notes.notes-expanded #notes-status[data-error="true"]{
+  display:block;position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  z-index:3;width:max-content;max-width:calc(100% - 32px);margin:0;
+  padding:10px 14px;border:1px solid #e4a492;background:#2b1712;color:#f1c8bb;
+  font-size:11px;line-height:1.5;
+}

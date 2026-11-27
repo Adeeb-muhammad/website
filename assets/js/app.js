@@ -196,7 +196,7 @@ function route() {
   if (hash === 'home-latest') requestAnimationFrame(() => $('#home-latest').scrollIntoView({ behavior: smoothScroll }));
   else if (hash === 'contact' || hash === 'projects') requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: smoothScroll }));
   else window.scrollTo({ top: closingEntry && hash === collection ? entryScrollY : 0, behavior: 'instant' });
-  const anchor = hash === 'contact' || hash === 'projects' ? hash : '';
+  const anchor = ['contact', 'projects', 'home-latest'].includes(hash) ? hash : '';
   const focusTarget = closingEntry
     ? $(`#collection-grid a[href="#film/${closingEntry}"]`)
     : anchor
