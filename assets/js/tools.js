@@ -4,6 +4,7 @@ import { unixTimestampDate } from './time-core.js?v=1';
 import { escapeHTML as e } from './core.js?v=9';
 import { csvToObjects, jsonToCSV } from './csv-core.js?v=1';
 import { countLines } from './text-core.js?v=1';
+import { decodeBase64, jsonToXML } from './convert-core.js?v=1';
 
 const $ = selector => document.querySelector(selector);
 const setStatus = (id, message, error = false) => { const node = $(id); node.textContent = message; node.dataset.error = String(error); };
@@ -160,6 +161,7 @@ $('#image-export').addEventListener('click', async () => {
 
 function initImageBatch(prefix, mode) {
   const files = [];
+  let busy = false;
   const input = document.querySelector('#' + prefix + '-files');
   const drop = document.querySelector('#' + prefix + '-drop');
   const list = document.querySelector('#' + prefix + '-list');
@@ -168,33 +170,43 @@ function initImageBatch(prefix, mode) {
   const status = '#' + prefix + '-status';
   const quality = document.querySelector('#' + prefix + '-quality');
   const qualityValue = document.querySelector('#' + prefix + '-quality-value');
+  const formatSelect = document.querySelector('#' + prefix + '-format');
+  const sizeSelect = document.querySelector('#' + prefix + '-size');
   quality.addEventListener('input', () => qualityValue.textContent = quality.value + '%');
   function render() {
-    list.innerHTML = files.map((f, i) => '<li><img src="' + f.preview + '" alt=""><div class="image-info"><strong>' + e(f.name) + '</strong><span>' + (f.size / 1024).toFixed(1) + ' KB · ' + f.width + ' × ' + f.height + '</span></div><div class="image-actions"><button type="button" data-remove="' + i + '" aria-label="Remove image">×</button></div></li>').join('');
-    run.disabled = clear.disabled = !files.length;
+    list.innerHTML = files.map((f, i) => '<li><img src="' + f.preview + '" alt=""><div class="image-info"><strong>' + e(f.name) + '</strong><span>' + (f.size / 1024).toFixed(1) + ' KB · ' + f.width + ' × ' + f.height + '</span></div><div class="image-actions"><button type="button" data-remove="' + i + '" aria-label="Remove image"' + (busy ? ' disabled' : '') + '>×</button></div></li>').join('');
+    run.disabled = clear.disabled = busy || !files.length;
+    input.disabled = quality.disabled = formatSelect.disabled = sizeSelect.disabled = busy;
   }
   async function add(selected) {
+    if (busy) return;
+    busy = true; render();
+    const errors = [];
     for (const file of selected) {
-      if (files.length >= 20) { setStatus(status, 'Maximum 20 images per batch.', true); break; }
-      if (file.size > 15 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setStatus(status, file.name + ': use JPG, PNG, or WebP up to 15 MB.', true); continue; }
+      if (files.length >= 20) { errors.push('Maximum 20 images per batch.'); break; }
+      if (file.size > 15 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { errors.push(file.name + ': use JPG, PNG, or WebP up to 15 MB.'); continue; }
       const url = URL.createObjectURL(file);
       try { const img = new Image(); await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; }); if (img.naturalWidth * img.naturalHeight > 40000000) throw new Error('Maximum 40 megapixels.'); files.push({ file, name: file.name, size: file.size, width: img.naturalWidth, height: img.naturalHeight, preview: URL.createObjectURL(file) }); }
-      catch (err) { setStatus(status, file.name + ': could not read image. ' + (err.message || ''), true); }
+      catch (err) { errors.push(file.name + ': could not read image. ' + (err.message || '')); }
       finally { URL.revokeObjectURL(url); }
     }
-    input.value = ''; render(); if (files.length) setStatus(status, files.length + ' image(s) ready. Choose settings, then process.');
+    busy = false; input.value = ''; render();
+    if (errors.length) setStatus(status, errors.join(' '), true);
+    else if (files.length) setStatus(status, files.length + ' image(s) ready. Choose settings, then process.');
   }
   input.addEventListener('change', ev => add([...ev.target.files]));
   ['dragover', 'dragenter'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.add('is-dragging'); }));
   ['dragleave', 'drop'].forEach(type => drop.addEventListener(type, ev => { ev.preventDefault(); drop.classList.remove('is-dragging'); }));
-  drop.addEventListener('drop', ev => add([...ev.dataTransfer.files]));
-  list.addEventListener('click', ev => { const btn = ev.target.closest('[data-remove]'); if (!btn) return; const gone = files.splice(Number(btn.dataset.remove), 1)[0]; if (gone) URL.revokeObjectURL(gone.preview); render(); });
-  clear.addEventListener('click', () => { files.forEach(f => URL.revokeObjectURL(f.preview)); files.length = 0; render(); setStatus(status, 'Image list cleared.'); });
+  drop.addEventListener('drop', ev => { if (!busy) add([...ev.dataTransfer.files]); });
+  list.addEventListener('click', ev => { if (busy) return; const btn = ev.target.closest('[data-remove]'); if (!btn) return; const gone = files.splice(Number(btn.dataset.remove), 1)[0]; if (gone) URL.revokeObjectURL(gone.preview); render(); });
+  clear.addEventListener('click', () => { if (busy) return; files.forEach(f => URL.revokeObjectURL(f.preview)); files.length = 0; render(); setStatus(status, 'Image list cleared.'); });
   run.addEventListener('click', async () => {
-    if (!files.length) return; run.disabled = clear.disabled = input.disabled = true;
-    let done = 0, outputTotal = 0; const inputTotal = files.reduce((sum, f) => sum + f.size, 0);
-    const format = document.querySelector('#' + prefix + '-format').value;
-    const max = document.querySelector('#' + prefix + '-size').value;
+    if (!files.length || busy) return;
+    busy = true; render();
+    let done = 0, outputTotal = 0; const failures = [];
+    const inputTotal = files.reduce((sum, f) => sum + f.size, 0);
+    const format = formatSelect.value;
+    const max = sizeSelect.value;
     const q = Number(quality.value) / 100;
     const ext = format === 'image/jpeg' ? 'jpg' : format === 'image/png' ? 'png' : 'webp';
     try {
@@ -210,10 +222,12 @@ function initImageBatch(prefix, mode) {
           const blob = await new Promise(resolve => canvas.toBlob(resolve, format, q)); if (!blob || blob.type !== format) throw new Error('This browser cannot export ' + ext.toUpperCase() + '.');
           let base = item.name; const dot = base.lastIndexOf('.'); if (dot > 0) base = base.slice(0, dot);
           download(blob, safeFilename(base, 'image') + '-' + (mode === 'compress' ? 'compressed' : 'converted') + '.' + ext, blob.type); done++; outputTotal += blob.size;
-        } catch (err) { setStatus(status, item.name + ': ' + (err.message || 'Conversion failed.'), true); } finally { URL.revokeObjectURL(url); }
+        } catch (err) { failures.push(item.name + ': ' + (err.message || 'Conversion failed.')); } finally { URL.revokeObjectURL(url); }
       }
-      if (done) { const delta = inputTotal - outputTotal; setStatus(status, done + ' file(s) processed. Total: ' + (inputTotal / 1024).toFixed(1) + ' KB → ' + (outputTotal / 1024).toFixed(1) + ' KB. ' + (delta >= 0 ? Math.round(delta / inputTotal * 100) + '% smaller overall.' : 'Output is larger; try WebP or lower quality.')); }
-    } finally { input.disabled = false; run.disabled = clear.disabled = !files.length; }
+      const skipped = failures.length ? ' Not converted: ' + failures.join(' ') : '';
+      if (done) { const delta = inputTotal - outputTotal; setStatus(status, done + ' file(s) processed. Total: ' + (inputTotal / 1024).toFixed(1) + ' KB → ' + (outputTotal / 1024).toFixed(1) + ' KB. ' + (delta >= 0 ? Math.round(delta / inputTotal * 100) + '% smaller overall.' : 'Output is larger; try WebP or lower quality.') + skipped, failures.length > 0); }
+      else if (failures.length) setStatus(status, failures.join(' '), true);
+    } finally { busy = false; render(); }
   });
 }
 initImageBatch('convert', 'convert');
@@ -343,7 +357,7 @@ function runTextConversion() {
       case 'json-format': result=JSON.stringify(JSON.parse(source),null,2); break;
       case 'json-minify': result=JSON.stringify(JSON.parse(source)); break;
       case 'base64-encode': result=btoa(Array.from(new TextEncoder().encode(source),b=>String.fromCharCode(b)).join('')); break;
-      case 'base64-decode': { const bin=atob(source.trim()); result=new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(bin,ch=>ch.charCodeAt(0))); break; }
+      case 'base64-decode': result=decodeBase64(source); break;
       case 'url-encode': result=encodeURIComponent(source); break;
       case 'url-decode': result=decodeURIComponent(source.replace(/\+/g,'%20')); break;
       case 'html-encode': result=source.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); break;
@@ -388,7 +402,14 @@ const unitSets={
 };
 const unitLabels={length:{m:'metres (m)',km:'kilometres (km)',cm:'centimetres (cm)',mm:'millimetres (mm)',µm:'micrometres (µm)',inch:'inches (in)',ft:'feet (ft)',yd:'yards (yd)',mi:'miles (mi)'},mass:{kg:'kilograms (kg)',g:'grams (g)',mg:'milligrams (mg)',µg:'micrograms (µg)',lb:'pounds (lb)',oz:'ounces (oz)',tonne:'metric tonnes'},data:{B:'bytes (B)',KB:'kilobytes (KB, decimal)',MB:'megabytes (MB, decimal)',GB:'gigabytes (GB, decimal)',TB:'terabytes (TB, decimal)',KiB:'kibibytes (KiB)',MiB:'mebibytes (MiB)',GiB:'gibibytes (GiB)',TiB:'tebibytes (TiB)'},time:{s:'seconds (s)',ms:'milliseconds (ms)',µs:'microseconds (µs)',min:'minutes (min)',h:'hours (h)',day:'days',week:'weeks'},speed:{'m/s':'metres per second', 'km/h':'kilometres per hour',mph:'miles per hour','ft/s':'feet per second'},temperature:{C:'Celsius (°C)',F:'Fahrenheit (°F)',K:'Kelvin (K)'}};
 function populateUnits(){const category=$('#units-category').value;const keys=category==='temperature'?['C','F','K']:Object.keys(unitSets[category]);for(const id of ['units-from','units-to']){const select=$('#'+id),old=select.value;select.innerHTML=keys.map(k=>'<option value="'+k+'">'+(unitLabels[category][k]||k)+'</option>').join('');if(keys.includes(old))select.value=old;}if($('#units-from').value===$('#units-to').value&&keys.length>1)$('#units-to').value=keys[1];}
-function runUnitConversion(){const category=$('#units-category').value,from=$('#units-from').value,to=$('#units-to').value,value=Number($('#units-value').value);if(!$('#units-value').value.trim()||!Number.isFinite(value)){setStatus('#units-status','Enter a valid finite number.',true);return;}let result;if(category==='temperature'){const c=from==='C'?value:from==='F'?(value-32)*5/9:value-273.15;result=to==='C'?c:to==='F'?c*9/5+32:c+273.15;}else result=value*unitSets[category][from]/unitSets[category][to];if(!Number.isFinite(result)){setStatus('#units-status','This conversion produced an invalid result.',true);return;}const format=n=>Number(n.toPrecision(12)).toLocaleString(undefined,{maximumFractionDigits:10});$('#units-result').textContent=format(value)+' '+from+' = '+format(result)+' '+to;setStatus('#units-status','Converted using standard unit factors.');}
+function runUnitConversion(){
+ const category=$('#units-category').value,from=$('#units-from').value,to=$('#units-to').value,value=Number($('#units-value').value);
+ // A failed conversion must not leave the previous result on screen.
+ if(!$('#units-value').value.trim()||!Number.isFinite(value)){$('#units-result').textContent='—';setStatus('#units-status','Enter a valid finite number.',true);return;}
+ let result;if(category==='temperature'){const c=from==='C'?value:from==='F'?(value-32)*5/9:value-273.15;result=to==='C'?c:to==='F'?c*9/5+32:c+273.15;}else result=value*unitSets[category][from]/unitSets[category][to];
+ if(!Number.isFinite(result)){$('#units-result').textContent='—';setStatus('#units-status','This conversion produced an invalid result.',true);return;}
+ const format=n=>Number(n.toPrecision(12)).toLocaleString(undefined,{maximumFractionDigits:10});$('#units-result').textContent=format(value)+' '+from+' = '+format(result)+' '+to;setStatus('#units-status','Converted using standard unit factors.');
+}
 $('#units-category').addEventListener('change',()=>{populateUnits();runUnitConversion();});
 $('#units-from').addEventListener('change',runUnitConversion);$('#units-to').addEventListener('change',runUnitConversion);$('#units-value').addEventListener('input',runUnitConversion);$('#units-run').addEventListener('click',runUnitConversion);
 populateUnits();runUnitConversion();
@@ -405,11 +426,12 @@ function colorFromInput(value){
  let h=0,s=0;if(delta){s=delta/(1-Math.abs(2*l-1));if(max===rn)h=60*(((gn-bn)/delta)%6);else if(max===gn)h=60*((bn-rn)/delta+2);else h=60*((rn-gn)/delta+4);if(h<0)h+=360;}
  return {r,g,b,hex:hexOut,hsl:'hsl('+Math.round(h)+' '+Math.round(s*100)+'% '+Math.round(l*100)+'%)'};
 }
-function runColorConversion(){try{const c=colorFromInput($('#color-input').value);$('#color-swatch').style.background=c.hex;$('#color-hex').textContent='HEX · '+c.hex;$('#color-rgb').textContent='RGB · rgb('+c.r+', '+c.g+', '+c.b+')';$('#color-hsl').textContent='HSL · '+c.hsl;setStatus('#color-status','Color converted.');}catch(error){setStatus('#color-status',error.message,true);}}
+function clearColorResult(){$('#color-swatch').style.background='transparent';$('#color-hex').textContent='HEX · —';$('#color-rgb').textContent='RGB · —';$('#color-hsl').textContent='HSL · —';$('#color-copy').disabled=true;}
+function runColorConversion(){try{const c=colorFromInput($('#color-input').value);$('#color-swatch').style.background=c.hex;$('#color-hex').textContent='HEX · '+c.hex;$('#color-rgb').textContent='RGB · rgb('+c.r+', '+c.g+', '+c.b+')';$('#color-hsl').textContent='HSL · '+c.hsl;$('#color-copy').disabled=false;setStatus('#color-status','Color converted.');}catch(error){clearColorResult();setStatus('#color-status',error.message,true);}}
 $('#color-run').addEventListener('click',runColorConversion);$('#color-input').addEventListener('keydown',e=>{if(e.key==='Enter')runColorConversion();});$('#color-copy').addEventListener('click',async()=>{const values=$('#color-hex').textContent+'\n'+$('#color-rgb').textContent+'\n'+$('#color-hsl').textContent;try{await navigator.clipboard.writeText(values);setStatus('#color-status','CSS colour values copied.');}catch{setStatus('#color-status','Clipboard permission was blocked; select the values to copy.',true);}});runColorConversion();
 
 // Unix timestamps are accepted in seconds or milliseconds.
-function runTimestampConversion(){const mode=$('#timestamp-mode').value,raw=$('#timestamp-input').value.trim();try{let date,result;if(!raw)throw new Error('Enter a timestamp or date.');if(mode==='to-date'){if(!/^-?\d+(\.\d+)?$/.test(raw))throw new Error('Enter a numeric Unix timestamp.');date=unixTimestampDate(raw);if(Number.isNaN(date.getTime()))throw new Error('Timestamp is outside the supported date range.');result=date.toISOString()+'\nLocal: '+date.toLocaleString();}else{date=new Date(raw);if(Number.isNaN(date.getTime()))throw new Error('Enter a valid date such as 2026-10-29T12:30:00Z.');result='Seconds: '+Math.floor(date.getTime()/1000)+'\nMilliseconds: '+date.getTime();}$('#timestamp-result').textContent=result;setStatus('#timestamp-status','Converted.');}catch(error){$('#timestamp-result').textContent='—';setStatus('#timestamp-status',error.message,true);}}
+function runTimestampConversion(){const mode=$('#timestamp-mode').value,raw=$('#timestamp-input').value.trim();try{let date,result;if(!raw)throw new Error('Enter a timestamp or date.');if(mode==='to-date'){if(!/^-?\d+(\.\d+)?$/.test(raw))throw new Error('Enter a numeric Unix timestamp.');date=unixTimestampDate(raw);if(Number.isNaN(date.getTime()))throw new Error('Timestamp is outside the supported date range.');result=date.toISOString()+'\nLocal: '+date.toLocaleString();}else{date=new Date(raw);if(Number.isNaN(date.getTime()))throw new Error('Enter a valid date such as 2026-10-29T12:30:00Z.');result='Seconds: '+Math.floor(date.getTime()/1000)+'\nMilliseconds: '+date.getTime();}$('#timestamp-result').textContent=result;$('#timestamp-copy').disabled=false;setStatus('#timestamp-status','Converted.');}catch(error){$('#timestamp-result').textContent='—';$('#timestamp-copy').disabled=true;setStatus('#timestamp-status',error.message,true);}}
 $('#timestamp-run').addEventListener('click',runTimestampConversion);$('#timestamp-mode').addEventListener('change',()=>{$('#timestamp-input').value=$('#timestamp-mode').value==='to-date'?String(Math.floor(Date.now()/1000)):new Date().toISOString();runTimestampConversion();});$('#timestamp-copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#timestamp-result').textContent);setStatus('#timestamp-status','Result copied.');}catch{setStatus('#timestamp-status','Clipboard permission was blocked.',true);}});runTimestampConversion();
 
 /* File conversion suite. Conversion runs locally; external libraries are loaded only when needed. */
@@ -454,13 +476,6 @@ function xmlNode(node){
  if(node.nodeType===3)return node.nodeValue.trim();const children=[...node.children];if(!children.length)return node.textContent.trim();
  const out={};for(const child of children){const value=xmlNode(child);if(Object.prototype.hasOwnProperty.call(out,child.tagName))out[child.tagName]=[].concat(out[child.tagName],value);else out[child.tagName]=value;}
  for(const a of [...node.attributes]){out['@'+a.name]=a.value;}return out;
-}
-function jsonToXML(value,tag='root'){
- const valid=/^[A-Za-z_][\w.:-]*$/;if(!valid.test(tag))tag='item';
- const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
- if(Array.isArray(value))return value.map(v=>jsonToXML(v,'item')).join('');
- if(value&&typeof value==='object')return Object.entries(value).map(([k,v])=>{const key=valid.test(k)&&!k.startsWith('@')?k:'item';return '<'+key+'>'+jsonToXML(v,key)+'</'+key+'>';}).join('');
- return esc(value==null?'':value);
 }
 async function imageFileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read '+file.name));r.readAsDataURL(file);});}
 async function convertFiles(){
@@ -507,7 +522,7 @@ async function convertFiles(){
    if(mode==='json-csv'){result=jsonToCSV(JSON.parse(source));ext='csv';type='text/csv;charset=utf-8';}
    if(mode==='csv-json'){result=JSON.stringify(csvToObjects(source),null,2);ext='json';type='application/json';}
    if(mode==='xml-json'){const parsed=new DOMParser().parseFromString(source,'application/xml');if(parsed.querySelector('parsererror'))throw new Error('The XML is not well-formed.');result=JSON.stringify({[parsed.documentElement.tagName]:xmlNode(parsed.documentElement)},null,2);ext='json';type='application/json';}
-   if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n<root>'+jsonToXML(data)+'</root>';ext='xml';type='application/xml';}
+   if(mode==='json-xml'){const data=JSON.parse(source);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('JSON → XML needs an object at the top level.');result='<?xml version="1.0" encoding="UTF-8"?>\n'+jsonToXML(data);ext='xml';type='application/xml';}
    blob=new Blob([result],{type});filename=outputName(ext);
   } else if(mode==='tar-zip'){
    const JSZip=await getJSZip();const input=await readAsArrayBuffer(files[0]);
