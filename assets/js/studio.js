@@ -219,6 +219,9 @@ $('#import-file').addEventListener('change', async event => {
 });
 
 async function loadLatest() {
+  // Unsaved form edits exist only in the DOM, so the archive confirmation would
+  // otherwise throw them away without the usual discard prompt.
+  if (!allowDiscard()) return;
   if (!window.confirm('Discard your local draft and load the published archive? Download your draft first if you want to keep it.')) return;
   try {
     const latest = await loadArchive(); archive = structuredClone(latest); published = latest;

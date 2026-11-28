@@ -33,3 +33,7 @@
 .contact button:focus-visible, .contact a:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
 .hp { position: absolute; left: -9999px; }
 #form-status { color: var(--c-muted); font-size: .85rem; }
+
+/* iOS Safari zooms the page when a focused form field is smaller than 16px.
+   The fields inherit the site's 15px body size, so pin them at 16px. */
+.contact-form input, .contact-form textarea { font-size: 16px; }
