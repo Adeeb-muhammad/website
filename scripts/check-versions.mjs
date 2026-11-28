@@ -5,7 +5,7 @@
 //
 // Usage: node scripts/check-versions.mjs [base-ref]   (default origin/main)
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, relative, resolve, sep } from 'node:path';
 
 const base = process.argv[2] || 'origin/main';
@@ -70,7 +70,9 @@ if (unversioned.length) {
 let changed = [];
 try {
   changed = git(['diff', '--name-only', `${base}...HEAD`, '--', 'assets/css', 'assets/js'])
-    .split('\n').filter(Boolean).filter(file => /\.(css|js)$/.test(file));
+    .split('\n').filter(Boolean).filter(file => /\.(css|js)$/.test(file))
+    // A deleted asset no longer has a page or module reference to version.
+    .filter(file => existsSync(resolve(root, file)));
 } catch {
   console.warn(`Could not compare against ${base}; checking version presence only.`);
 }

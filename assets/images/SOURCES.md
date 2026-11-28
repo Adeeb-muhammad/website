@@ -25,6 +25,8 @@ The cover art below identifies the films and series reviewed in Adeeb’s Vault.
 
 `chrome-hero.webp` comes from the original supplied website design. `social-card.png` is an original typographic graphic.
 
+`about-black-rose.jpg` is an original image generated for the About page (November 2026), guided by Adeeb’s supplied black-rose references. It is not a photograph of a real flower.
+
 
 ## Films added October 2026
 
