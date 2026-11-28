@@ -5,10 +5,11 @@ export function initNotebook({ download, confirmChange }) {
   const $ = selector => document.querySelector(selector);
   const status = (text, error = false) => { $('#notes-status').textContent = text; $('#notes-status').dataset.error = String(error); };
   const KEY = 'adeeb-vault-notebook-v2', LEGACY_KEY = 'adeeb-vault-notebook-v1';
+  const CONFLICT_MESSAGE = 'Another tab saved a different notebook. Saving is paused in this tab so it cannot overwrite that version. Download a backup of these pages, then reload to open the newer notebook.';
   const blankPage = title => ({ title, text: '', strokes: [], orientation: window.innerHeight > window.innerWidth ? 'portrait' : 'landscape' });
   const blankBook = () => ({ kind: 'adeeb-vault-notebook', version: 2, title: '', activePage: 0, pages: [blankPage('Page 1')] });
   let book = blankBook(), histories = new WeakMap(), lastSerialized = null;
-  let activeStroke = null, activePointer = null, erase = false, drawFrame = null, saveTimer = null;
+  let activeStroke = null, activePointer = null, erase = false, drawFrame = null, saveTimer = null, savePaused = false;
   const board = $('#notes-canvas'), context = board.getContext('2d');
   const ink = document.createElement('canvas'); ink.width = board.width; ink.height = board.height;
   const inkContext = ink.getContext('2d');
@@ -18,15 +19,26 @@ export function initNotebook({ download, confirmChange }) {
 
   function save() {
     clearTimeout(saveTimer); saveTimer = null;
+    if (savePaused) { status(CONFLICT_MESSAGE, true); return; }
     try {
       validateNotebook(book);
       const serialized = JSON.stringify(book);
+      // Another tab may have written since this tab's last successful save
+      // before its storage event arrived. Never replace that newer notebook.
+      if (localStorage.getItem(KEY) !== lastSerialized) {
+        savePaused = true;
+        status(CONFLICT_MESSAGE, true);
+        return;
+      }
       localStorage.setItem(KEY, serialized);
       lastSerialized = serialized;
       status(`All ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} saved in this browser. Download a backup for a separate copy.`);
     } catch { status('This notebook could not be saved in the browser. Download a .json backup before leaving.', true); }
   }
-  function queueSave() { status('Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
+  function queueSave() {
+    if (savePaused) { status(CONFLICT_MESSAGE, true); return; }
+    status('Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 400);
+  }
 
   function renderBoard() {
     if (!context || !inkContext) return;
@@ -223,11 +235,19 @@ export function initNotebook({ download, confirmChange }) {
   // copy can silently replace newer work. Adopt the newer notebook while idle;
   // warn and keep both versions while there is unsaved work here.
   window.addEventListener('storage', event => {
-    const action = notebookSyncAction({ key: KEY, eventKey: event.key, incomingValue: event.newValue, currentValue: lastSerialized, busy: !!saveTimer || !!activeStroke });
+    const action = notebookSyncAction({ key: KEY, eventKey: event.key, incomingValue: event.newValue, currentValue: lastSerialized, busy: savePaused || !!saveTimer || !!activeStroke });
     if (action === 'ignore') return;
-    if (action === 'warn') { status('Another tab saved a different notebook. Your unsaved work is still here; reload to load that version instead.', true); return; }
+    if (action === 'warn') {
+      // Cancel the queued write as well as pausing later ones. Otherwise this
+      // tab's stale copy would replace the newer notebook moments later.
+      savePaused = true;
+      clearTimeout(saveTimer); saveTimer = null;
+      status(CONFLICT_MESSAGE, true);
+      return;
+    }
     try {
       const incoming = upgradeNotebook(JSON.parse(event.newValue));
+      savePaused = false;
       clearTimeout(saveTimer); saveTimer = null;
       book = incoming; lastSerialized = event.newValue;
       histories = new WeakMap(); activeStroke = null; activePointer = null;
