@@ -8,11 +8,11 @@
 
 /* ---- the scene ---------------------------------------------------------- */
 .rose-scene{
-  --open:0;
   --rx:0deg;
   --ry:0deg;
   --zoom:1;
   --lift:0px;
+  --flare:0;
   --mx:50%;
   --my:46%;
   position:relative;
@@ -73,8 +73,24 @@
   -webkit-mask-image:radial-gradient(ellipse 78% 82% at 50% 50%,#000 66%,transparent 96%);
   mask-image:radial-gradient(ellipse 78% 82% at 50% 50%,#000 66%,transparent 96%);
 }
-.rose-scene__body img:first-child{opacity:calc(1 - var(--open))}
-.rose-scene__body img:last-child{opacity:var(--open)}
+/* One frame at a time: a cut, never a blend, so a stopped scroll still shows a
+   single solid flower. */
+.rose-scene__body img:first-child{opacity:1}
+.rose-scene__body img:last-child{opacity:0}
+.rose-scene[data-bloom="open"] .rose-scene__body img:first-child{opacity:0}
+.rose-scene[data-bloom="open"] .rose-scene__body img:last-child{opacity:1}
+
+/* the light bloom that covers the change of frame */
+.rose-scene__plate::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3;
+  opacity:var(--flare);
+  pointer-events:none;
+  background:radial-gradient(circle 22vmax at 50% 48%,rgba(238,235,255,.26),rgba(172,154,220,.09) 44%,transparent 70%);
+  transition:none;
+}
 
 /* a soft highlight that follows the pointer across the metal */
 .rose-scene__light{
